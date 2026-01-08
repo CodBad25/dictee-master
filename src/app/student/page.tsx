@@ -22,6 +22,7 @@ import { useAppStore } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import TrainingMode from "@/components/training-mode";
 import FillBlanksMode from "@/components/fill-blanks-mode";
+import ComprehensiveTraining from "@/components/comprehensive-training";
 import SessionHistory from "@/components/session-history";
 
 export default function StudentPage() {
@@ -97,6 +98,9 @@ export default function StudentPage() {
   if (currentList && currentWords.length > 0) {
     if (currentList.mode === "fill-blanks") {
       return <FillBlanksMode />;
+    }
+    if (currentList.mode === "progression") {
+      return <ComprehensiveTraining />;
     }
     return <TrainingMode />;
   }
