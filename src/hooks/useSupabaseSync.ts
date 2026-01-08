@@ -62,7 +62,7 @@ export function useSupabaseSync() {
   // Créer une liste dans Supabase
   const createList = async (
     title: string,
-    mode: 'flashcard' | 'audio' | 'progression',
+    mode: 'flashcard' | 'audio' | 'progression' | 'fill-blanks',
     words: string[],
     teacherId?: string
   ) => {

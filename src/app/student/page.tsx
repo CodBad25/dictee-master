@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import TrainingMode from "@/components/training-mode";
+import FillBlanksMode from "@/components/fill-blanks-mode";
 import SessionHistory from "@/components/session-history";
 
 export default function StudentPage() {
@@ -92,8 +93,11 @@ export default function StudentPage() {
     setCurrentTraining(list, words);
   };
 
-  // If in training mode, show the training interface
+  // If in training mode, show the appropriate training interface
   if (currentList && currentWords.length > 0) {
+    if (currentList.mode === "fill-blanks") {
+      return <FillBlanksMode />;
+    }
     return <TrainingMode />;
   }
 

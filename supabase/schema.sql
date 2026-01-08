@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS word_lists (
   teacher_id UUID REFERENCES teachers(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
-  mode TEXT NOT NULL DEFAULT 'progression' CHECK (mode IN ('flashcard', 'audio', 'progression')),
+  mode TEXT NOT NULL DEFAULT 'progression' CHECK (mode IN ('flashcard', 'audio', 'progression', 'fill-blanks')),
   share_code TEXT UNIQUE NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

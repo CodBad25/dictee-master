@@ -19,6 +19,9 @@ import {
   Loader2,
   ChevronRight,
   Eye,
+  Settings,
+  Key,
+  PenTool,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,20 +43,26 @@ import ListDetail from "@/components/list-detail";
 import TeacherDashboard from "@/components/teacher-dashboard";
 import type { WordList, Word, TrainingMode } from "@/types/database";
 
-const modeLabels: Record<TrainingMode, { label: string; icon: React.ReactNode; color: string }> = {
+const modeLabels: Record<TrainingMode, { label: string; icon: React.ReactNode; color: string; description?: string }> = {
   flashcard: { label: "Flashcard", icon: <BookOpen className="w-4 h-4" />, color: "bg-blue-100 text-blue-700" },
   audio: { label: "Audio", icon: <Volume2 className="w-4 h-4" />, color: "bg-green-100 text-green-700" },
   progression: { label: "Progression", icon: <Layers className="w-4 h-4" />, color: "bg-purple-100 text-purple-700" },
+  "fill-blanks": { label: "Dictée à trous", icon: <PenTool className="w-4 h-4" />, color: "bg-orange-100 text-orange-700", description: "Texte avec trous + audio" },
 };
 
 export default function TeacherPage() {
   const router = useRouter();
-  const { user, setUser, demoLists, demoWords } = useAppStore();
+  const { user, setUser, demoLists, demoWords, apiConfig, setApiConfig } = useAppStore();
   const { createList, deleteList, isSyncing } = useSupabaseSync();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isProcessingFile, setIsProcessingFile] = useState(false);
   const [selectedList, setSelectedList] = useState<WordList | null>(null);
+
+  // Configuration API
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [tempApiKey, setTempApiKey] = useState(apiConfig?.apiKey || "");
+  const [tempApiType, setTempApiType] = useState<'openai' | 'claude' | 'mistral'>(apiConfig?.apiType || "openai");
 
   // Sections détectées dans un fichier
   const [detectedSections, setDetectedSections] = useState<DetectedSection[]>([]);
@@ -203,16 +212,103 @@ export default function TeacherPage() {
             </h1>
             <p className="text-xs text-gray-400 font-medium">Espace enseignant</p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleLogout}
-            className="hover:bg-red-50 hover:text-red-500 transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setTempApiKey(apiConfig?.apiKey || "");
+                setTempApiType(apiConfig?.apiType || "openai");
+                setIsSettingsOpen(true);
+              }}
+              className="hover:bg-purple-50 hover:text-purple-500 transition-colors"
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="hover:bg-red-50 hover:text-red-500 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </header>
+
+      {/* Modal Configuration API */}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5 text-purple-500" />
+              Configuration IA
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-bold text-gray-700">Type d&apos;API</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {(['openai', 'claude', 'mistral'] as const).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setTempApiType(type)}
+                    className={`p-2 rounded-xl border-2 text-sm font-medium transition-all ${
+                      tempApiType === type
+                        ? "border-purple-400 bg-purple-50 text-purple-700"
+                        : "border-gray-100 bg-gray-50 text-gray-500 hover:border-purple-200"
+                    }`}
+                  >
+                    {type === 'openai' ? 'OpenAI' : type === 'claude' ? 'Claude' : 'Mistral'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-bold text-gray-700">Clé API</Label>
+              <Input
+                type="password"
+                value={tempApiKey}
+                onChange={(e) => setTempApiKey(e.target.value)}
+                placeholder="sk-..."
+                className="font-mono"
+              />
+              <p className="text-xs text-gray-400">
+                La clé est stockée localement. Sans clé, des templates simples seront utilisés.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setApiConfig(null);
+                  setTempApiKey("");
+                  toast.success("Configuration supprimée");
+                  setIsSettingsOpen(false);
+                }}
+              >
+                Supprimer
+              </Button>
+              <Button
+                className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600"
+                onClick={() => {
+                  if (tempApiKey.trim()) {
+                    setApiConfig({ apiKey: tempApiKey.trim(), apiType: tempApiType });
+                    toast.success("Configuration sauvegardée");
+                  } else {
+                    setApiConfig(null);
+                  }
+                  setIsSettingsOpen(false);
+                }}
+              >
+                Sauvegarder
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Stats avec effet 3D */}
@@ -344,7 +440,7 @@ export default function TeacherPage() {
 
                 <div className="space-y-3">
                   <Label className="text-sm font-bold text-gray-700">Mode d&apos;entraînement</Label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {(Object.keys(modeLabels) as TrainingMode[]).map((m) => (
                       <button
                         key={m}
@@ -370,6 +466,7 @@ export default function TeacherPage() {
                     {mode === "flashcard" && "L'élève voit le mot puis l'écrit"}
                     {mode === "audio" && "L'élève entend le mot et l'écrit"}
                     {mode === "progression" && "Flashcard puis audio quand maîtrisé"}
+                    {mode === "fill-blanks" && "Texte à trous avec dictée audio"}
                   </p>
                 </div>
 
@@ -379,7 +476,7 @@ export default function TeacherPage() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".pdf,.docx,.doc,.txt"
+                    accept=".pdf,.docx,.doc,.odt,.txt"
                     onChange={handleFileUpload}
                     className="hidden"
                     id="file-upload"
@@ -404,7 +501,7 @@ export default function TeacherPage() {
                         </div>
                         <div className="text-left">
                           <p className="font-medium text-gray-700">Glisser ou cliquer</p>
-                          <p className="text-xs text-gray-400">PDF, Word ou TXT</p>
+                          <p className="text-xs text-gray-400">PDF, Word, ODT ou TXT</p>
                         </div>
                       </>
                     )}

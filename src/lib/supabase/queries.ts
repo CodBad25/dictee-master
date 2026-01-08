@@ -101,7 +101,7 @@ export async function getWordListsByTeacher(teacherId: string) {
 export async function createWordList(
   teacherId: string | null,
   title: string,
-  mode: 'flashcard' | 'audio' | 'progression',
+  mode: 'flashcard' | 'audio' | 'progression' | 'fill-blanks',
   description?: string
 ) {
   const supabase = createClient();

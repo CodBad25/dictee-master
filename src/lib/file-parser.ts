@@ -1,4 +1,5 @@
 import mammoth from 'mammoth';
+import JSZip from 'jszip';
 
 // Mots à ignorer (titres, instructions, etc.)
 const IGNORED_WORDS = new Set([
@@ -160,6 +161,59 @@ export async function extractTextFromPDF(file: File): Promise<string> {
 }
 
 /**
+ * Extrait le texte et les tableaux d'un fichier ODT (LibreOffice)
+ */
+export async function extractFromODT(file: File): Promise<{
+  text: string;
+  tables: string[][];
+}> {
+  const arrayBuffer = await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+
+  const contentXml = await zip.file('content.xml')?.async('string');
+  if (!contentXml) {
+    throw new Error('Fichier ODT invalide');
+  }
+
+  // Parser le XML
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(contentXml, 'text/xml');
+
+  // Extraire le texte brut
+  const textElements = doc.getElementsByTagName('text:p');
+  let fullText = '';
+  for (let i = 0; i < textElements.length; i++) {
+    fullText += textElements[i].textContent + '\n';
+  }
+
+  // Extraire les tableaux
+  const tables: string[][] = [];
+  const tableElements = doc.getElementsByTagName('table:table');
+
+  for (let t = 0; t < tableElements.length; t++) {
+    const table = tableElements[t];
+    const tableWords: string[] = [];
+
+    // Parcourir les cellules du tableau
+    const cells = table.getElementsByTagName('table:table-cell');
+    for (let c = 0; c < cells.length; c++) {
+      const cellText = cells[c].textContent?.trim();
+      if (cellText) {
+        // Séparer si plusieurs mots dans une cellule
+        const words = cellText.split(/[\s,;]+/).map(cleanWord).filter(isValidWord);
+        tableWords.push(...words);
+      }
+    }
+
+    if (tableWords.length > 0) {
+      tables.push(tableWords);
+    }
+  }
+
+  return { text: fullText, tables };
+}
+
+/**
  * Extrait le texte brut d'un fichier
  */
 export async function extractTextFromFile(file: File): Promise<string> {
@@ -169,22 +223,59 @@ export async function extractTextFromFile(file: File): Promise<string> {
     return await extractTextFromPDF(file);
   } else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
     return await extractTextFromWord(file);
+  } else if (fileName.endsWith('.odt')) {
+    const result = await extractFromODT(file);
+    return result.text;
   } else if (fileName.endsWith('.txt')) {
     return await file.text();
   } else {
-    throw new Error('Format non supporté. Utilisez PDF, Word (.docx) ou texte (.txt)');
+    throw new Error('Format non supporté. Utilisez PDF, Word (.docx), LibreOffice (.odt) ou texte (.txt)');
   }
 }
 
 /**
- * Extrait les mots d'un fichier (PDF, Word, ou texte)
+ * Extrait les mots d'un fichier (PDF, Word, ODT ou texte)
  * Retourne aussi les sections détectées si plusieurs
+ * Pour ODT : chaque tableau devient une section
  */
 export async function extractWordsFromFile(file: File): Promise<{
   words: string[];
   sections: DetectedSection[];
   hasMultipleSections: boolean;
 }> {
+  const fileName = file.name.toLowerCase();
+
+  // Traitement spécial pour ODT : extraire les tableaux comme sections
+  if (fileName.endsWith('.odt')) {
+    const { text, tables } = await extractFromODT(file);
+
+    // Si des tableaux sont trouvés, les utiliser comme sections
+    if (tables.length > 0) {
+      const sections: DetectedSection[] = tables.map((tableWords, index) => ({
+        id: `table-${index + 1}`,
+        title: `Liste ${index + 1}`,
+        words: tableWords.filter((word, i, self) =>
+          self.findIndex(w => w.toLowerCase() === word.toLowerCase()) === i
+        ),
+      }));
+
+      return {
+        words: sections.length === 1 ? sections[0].words : sections.flatMap(s => s.words),
+        sections,
+        hasMultipleSections: sections.length > 1,
+      };
+    }
+
+    // Sinon, traiter comme du texte normal
+    const textSections = detectSections(text);
+    return {
+      words: textSections.length === 1 ? textSections[0].words : extractWordsFromSection(text),
+      sections: textSections,
+      hasMultipleSections: textSections.length > 1,
+    };
+  }
+
+  // Traitement standard pour les autres formats
   const text = await extractTextFromFile(file);
   const sections = detectSections(text);
 

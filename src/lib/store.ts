@@ -29,10 +29,20 @@ export interface SessionHistoryEntry {
   }[];
 }
 
+// Configuration API pour la génération de texte IA
+export interface ApiConfig {
+  apiKey: string;
+  apiType: 'openai' | 'claude' | 'mistral';
+}
+
 interface AppState {
   // User
   user: DemoUser | null;
   setUser: (user: DemoUser | null) => void;
+
+  // API Configuration
+  apiConfig: ApiConfig | null;
+  setApiConfig: (config: ApiConfig | null) => void;
 
   // Student name for session tracking
   currentStudentName: string;
@@ -81,6 +91,10 @@ export const useAppStore = create<AppState>()(
       // User
       user: null,
       setUser: (user) => set({ user }),
+
+      // API Configuration
+      apiConfig: null,
+      setApiConfig: (config) => set({ apiConfig: config }),
 
       // Student name
       currentStudentName: '',
@@ -176,6 +190,7 @@ export const useAppStore = create<AppState>()(
       name: 'dictee-master-storage',
       partialize: (state) => ({
         user: state.user,
+        apiConfig: state.apiConfig,
         currentStudentName: state.currentStudentName,
         streak: state.streak,
         badges: state.badges,
