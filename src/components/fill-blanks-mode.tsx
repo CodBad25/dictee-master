@@ -59,7 +59,7 @@ export default function FillBlanksMode() {
 
       let text: GeneratedText;
       if (apiConfig?.apiKey) {
-        text = await generateTextWithAI(words, apiConfig.apiKey, apiConfig.apiType);
+        text = await generateTextWithAI(words, apiConfig.apiKey);
       } else {
         text = generateTextWithBlanks(words);
       }

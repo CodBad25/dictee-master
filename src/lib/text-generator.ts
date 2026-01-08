@@ -1,66 +1,65 @@
 /**
- * Générateur de textes à trous pour les dictées
- * Utilise des templates simples ou une API IA
+ * Generateur de textes a trous pour les dictees
+ * Utilise des templates simples ou l'API DeepSeek
  */
 
-// Templates de phrases avec placeholder {word}
+// Templates de phrases avec placeholder {word} - SANS ARTICLES
 const SENTENCE_TEMPLATES = [
-  // Phrases simples
-  "Le {word} est très important.",
-  "J'ai vu un {word} dans le jardin.",
-  "Ma mère a acheté un {word}.",
-  "Le {word} se trouve sur la table.",
-  "Nous avons trouvé un {word} magnifique.",
-  "Il y a un {word} près de la maison.",
-  "Le petit {word} joue dehors.",
-  "Elle a dessiné un joli {word}.",
-  "Le {word} brille au soleil.",
-  "Nous aimons beaucoup le {word}.",
+  // Phrases simples sans article
+  "{word} est tres important.",
+  "{word} se trouve sur la table.",
+  "{word} brille au soleil.",
+  "{word} joue dans le jardin.",
+  "{word} est magnifique.",
+  "{word} est pres de la maison.",
+  "{word} est vraiment extraordinaire.",
+  "{word} peut etre grand ou petit.",
+  "{word} a sa propre histoire.",
 
   // Phrases avec contexte
-  "Dans la forêt, on peut voir un {word}.",
-  "À l'école, nous avons appris le mot {word}.",
-  "Pendant les vacances, j'ai découvert un {word}.",
-  "Mon ami préfère le {word} bleu.",
-  "La maîtresse a expliqué ce qu'est un {word}.",
-  "Sur le chemin, nous avons rencontré un {word}.",
-  "Dans mon livre, il y a un {word} intéressant.",
-  "Le week-end dernier, j'ai observé un {word}.",
+  "Dans la foret, on peut voir {word}.",
+  "A l'ecole, nous avons appris {word}.",
+  "Pendant les vacances, j'ai decouvert {word}.",
+  "Mon ami prefere {word}.",
+  "La maitresse a explique {word}.",
+  "Sur le chemin, nous avons rencontre {word}.",
+  "Dans mon livre, il y a {word}.",
+  "Ce week-end, j'ai observe {word}.",
 
   // Phrases descriptives
-  "Ce {word} est vraiment extraordinaire.",
-  "Un {word} peut être grand ou petit.",
-  "Le {word} de mon frère est cassé.",
-  "Chaque {word} a sa propre histoire.",
-  "Ce beau {word} appartient à ma sœur.",
-  "Le vieux {word} était abandonné.",
-  "Un nouveau {word} est arrivé ce matin.",
+  "J'ai vu {word} dans le jardin.",
+  "Ma mere a achete {word}.",
+  "Nous avons trouve {word}.",
+  "Elle a dessine {word}.",
+  "Nous aimons beaucoup {word}.",
+  "J'ai decouvert {word} ce matin.",
+  "Papa a repare {word}.",
 ];
 
-// Templates pour 2 mots dans la même phrase
+// Templates pour 2 mots dans la meme phrase - SANS ARTICLES
 const DOUBLE_TEMPLATES = [
-  "Le {word1} et le {word2} sont dans la classe.",
-  "J'ai vu un {word1} près du {word2}.",
-  "Le {word1} regarde le {word2} avec attention.",
-  "Entre le {word1} et le {word2}, je préfère le premier.",
-  "Un {word1} et un {word2} jouent ensemble.",
-  "Le {word1} est plus grand que le {word2}.",
+  "{word1} et {word2} sont dans la classe.",
+  "J'ai vu {word1} pres de {word2}.",
+  "{word1} regarde {word2} avec attention.",
+  "Entre {word1} et {word2}, je prefere le premier.",
+  "{word1} et {word2} jouent ensemble.",
+  "{word1} est plus grand que {word2}.",
 ];
 
 /**
- * Interface pour un texte généré avec ses trous
+ * Interface pour un texte genere avec ses trous
  */
 export interface GeneratedText {
-  fullText: string;           // Texte complet pour la dictée audio
+  fullText: string;           // Texte complet pour la dictee audio
   displayText: string;        // Texte avec les trous (_____) pour l'affichage
   blanks: {
-    word: string;             // Le mot à deviner
+    word: string;             // Le mot a deviner
     position: number;         // Position du trou dans le texte
   }[];
 }
 
 /**
- * Génère un texte à trous à partir d'une liste de mots
+ * Genere un texte a trous a partir d'une liste de mots
  * Utilise des templates simples
  */
 export function generateTextWithBlanks(words: string[]): GeneratedText {
@@ -68,7 +67,7 @@ export function generateTextWithBlanks(words: string[]): GeneratedText {
   const blanks: GeneratedText['blanks'] = [];
   let currentPosition = 0;
 
-  // Mélanger les mots
+  // Melanger les mots
   const shuffledWords = [...words].sort(() => Math.random() - 0.5);
 
   // Grouper les mots par 1 ou 2
@@ -112,9 +111,9 @@ export function generateTextWithBlanks(words: string[]): GeneratedText {
 
   const fullText = sentences.join(' ');
 
-  // Créer le texte avec les trous
+  // Creer le texte avec les trous
   let displayText = fullText;
-  // Remplacer les mots par des trous (du dernier au premier pour ne pas décaler les positions)
+  // Remplacer les mots par des trous (du dernier au premier pour ne pas decaler les positions)
   const sortedBlanks = [...blanks].sort((a, b) => b.position - a.position);
   for (const blank of sortedBlanks) {
     const before = displayText.substring(0, blank.position);
@@ -130,79 +129,70 @@ export function generateTextWithBlanks(words: string[]): GeneratedText {
 }
 
 /**
- * Génère un texte avec une API IA (pour utilisation future)
+ * Genere un texte avec l'API DeepSeek (compatible OpenAI)
  */
 export async function generateTextWithAI(
   words: string[],
-  apiKey: string,
-  apiType: 'openai' | 'claude' | 'mistral' = 'openai'
+  apiKey: string
 ): Promise<GeneratedText> {
-  // Pour l'instant, fallback sur les templates
-  // TODO: Implémenter les appels API
-
   if (!apiKey) {
     return generateTextWithBlanks(words);
   }
 
   try {
-    if (apiType === 'openai') {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: `Tu es un professeur de français. Génère un court texte (3-5 phrases) de niveau école primaire qui utilise TOUS ces mots de vocabulaire de manière naturelle. Le texte doit être simple et compréhensible pour des enfants.`,
-            },
-            {
-              role: 'user',
-              content: `Mots à inclure : ${words.join(', ')}`,
-            },
-          ],
-          max_tokens: 300,
-          temperature: 0.7,
-        }),
-      });
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: `Tu es un professeur de francais. Genere un court texte (3-5 phrases) de niveau ecole primaire qui utilise TOUS ces mots de vocabulaire de maniere naturelle. Le texte doit etre simple et comprehensible pour des enfants. IMPORTANT: N'ajoute PAS d'articles devant les mots de la liste - utilise-les tels quels.`,
+          },
+          {
+            role: 'user',
+            content: `Mots a inclure exactement tels quels (sans ajouter d'articles) : ${words.join(', ')}`,
+          },
+        ],
+        max_tokens: 300,
+        temperature: 0.7,
+      }),
+    });
 
-      if (!response.ok) {
-        console.error('API Error:', await response.text());
-        return generateTextWithBlanks(words);
-      }
-
-      const data = await response.json();
-      const generatedText = data.choices[0]?.message?.content || '';
-
-      if (!generatedText) {
-        return generateTextWithBlanks(words);
-      }
-
-      // Créer les trous pour les mots de la liste
-      const blanks: GeneratedText['blanks'] = [];
-      let displayText = generatedText;
-
-      for (const word of words) {
-        const regex = new RegExp(`\\b${word}\\b`, 'gi');
-        const match = regex.exec(generatedText);
-        if (match) {
-          blanks.push({ word, position: match.index });
-          displayText = displayText.replace(regex, '_'.repeat(Math.max(5, word.length)));
-        }
-      }
-
-      return {
-        fullText: generatedText,
-        displayText,
-        blanks: blanks.sort((a, b) => a.position - b.position),
-      };
+    if (!response.ok) {
+      console.error('API Error:', await response.text());
+      return generateTextWithBlanks(words);
     }
 
-    // Fallback pour les autres APIs
-    return generateTextWithBlanks(words);
+    const data = await response.json();
+    const generatedText = data.choices[0]?.message?.content || '';
+
+    if (!generatedText) {
+      return generateTextWithBlanks(words);
+    }
+
+    // Creer les trous pour les mots de la liste
+    const blanks: GeneratedText['blanks'] = [];
+    let displayText = generatedText;
+
+    for (const word of words) {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      const match = regex.exec(generatedText);
+      if (match) {
+        blanks.push({ word, position: match.index });
+        displayText = displayText.replace(regex, '_'.repeat(Math.max(5, word.length)));
+      }
+    }
+
+    return {
+      fullText: generatedText,
+      displayText,
+      blanks: blanks.sort((a, b) => a.position - b.position),
+    };
   } catch (error) {
     console.error('Error generating text with AI:', error);
     return generateTextWithBlanks(words);

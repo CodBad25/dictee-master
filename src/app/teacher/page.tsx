@@ -62,7 +62,6 @@ export default function TeacherPage() {
   // Configuration API
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tempApiKey, setTempApiKey] = useState(apiConfig?.apiKey || "");
-  const [tempApiType, setTempApiType] = useState<'openai' | 'claude' | 'mistral'>(apiConfig?.apiType || "openai");
 
   // Sections détectées dans un fichier
   const [detectedSections, setDetectedSections] = useState<DetectedSection[]>([]);
@@ -218,7 +217,6 @@ export default function TeacherPage() {
               size="icon"
               onClick={() => {
                 setTempApiKey(apiConfig?.apiKey || "");
-                setTempApiType(apiConfig?.apiType || "openai");
                 setIsSettingsOpen(true);
               }}
               className="hover:bg-purple-50 hover:text-purple-500 transition-colors"
@@ -248,34 +246,16 @@ export default function TeacherPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-sm font-bold text-gray-700">Type d&apos;API</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {(['openai', 'claude', 'mistral'] as const).map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setTempApiType(type)}
-                    className={`p-2 rounded-xl border-2 text-sm font-medium transition-all ${
-                      tempApiType === type
-                        ? "border-purple-400 bg-purple-50 text-purple-700"
-                        : "border-gray-100 bg-gray-50 text-gray-500 hover:border-purple-200"
-                    }`}
-                  >
-                    {type === 'openai' ? 'OpenAI' : type === 'claude' ? 'Claude' : 'Mistral'}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-bold text-gray-700">Clé API</Label>
+              <Label className="text-sm font-bold text-gray-700">Cle API</Label>
               <Input
                 type="password"
                 value={tempApiKey}
                 onChange={(e) => setTempApiKey(e.target.value)}
-                placeholder="sk-..."
+                placeholder="Coller votre cle API..."
                 className="font-mono"
               />
               <p className="text-xs text-gray-400">
-                La clé est stockée localement. Sans clé, des templates simples seront utilisés.
+                La cle est stockee localement. Sans cle, des templates simples seront utilises.
               </p>
             </div>
             <div className="flex gap-2">
@@ -285,7 +265,7 @@ export default function TeacherPage() {
                 onClick={() => {
                   setApiConfig(null);
                   setTempApiKey("");
-                  toast.success("Configuration supprimée");
+                  toast.success("Configuration supprimee");
                   setIsSettingsOpen(false);
                 }}
               >
@@ -295,8 +275,8 @@ export default function TeacherPage() {
                 className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600"
                 onClick={() => {
                   if (tempApiKey.trim()) {
-                    setApiConfig({ apiKey: tempApiKey.trim(), apiType: tempApiType });
-                    toast.success("Configuration sauvegardée");
+                    setApiConfig({ apiKey: tempApiKey.trim() });
+                    toast.success("Configuration sauvegardee");
                   } else {
                     setApiConfig(null);
                   }

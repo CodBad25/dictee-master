@@ -29,10 +29,9 @@ export interface SessionHistoryEntry {
   }[];
 }
 
-// Configuration API pour la génération de texte IA
+// Configuration API pour la génération de texte IA (DeepSeek compatible OpenAI)
 export interface ApiConfig {
   apiKey: string;
-  apiType: 'openai' | 'claude' | 'mistral';
 }
 
 interface AppState {
