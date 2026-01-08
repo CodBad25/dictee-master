@@ -76,16 +76,32 @@ export default function TrainingMode() {
   const [autoHideCountdown, setAutoHideCountdown] = useState(3);
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const mode = currentList?.mode || "progression";
+  const listMode = currentList?.mode || "progression";
+
+  // État pour le mode progression intelligent
+  const [progressionState, setProgressionState] = useState<{
+    consecutiveCorrect: number; // Nombre de bonnes réponses d'affilée
+    currentMode: "flashcard" | "audio"; // Mode actuel dans la progression
+    hasUnlockedAudio: boolean; // A débloqué le mode audio au moins une fois
+  }>({
+    consecutiveCorrect: 0,
+    currentMode: "flashcard",
+    hasUnlockedAudio: false,
+  });
+
+  // Seuil pour passer en mode audio
+  const AUDIO_UNLOCK_THRESHOLD = 3;
 
   // Determine current mode based on list setting
   const getCurrentMode = useCallback((): "flashcard" | "audio" => {
-    if (mode === "flashcard") return "flashcard";
-    if (mode === "audio") return "audio";
-    return "flashcard";
-  }, [mode]);
+    if (listMode === "flashcard") return "flashcard";
+    if (listMode === "audio") return "audio";
+    // Mode progression : utilise l'état de progression
+    return progressionState.currentMode;
+  }, [listMode, progressionState.currentMode]);
 
   const currentMode = getCurrentMode();
+  const isProgressionMode = listMode === "progression";
   const currentWordIndex = sessionProgress?.currentWordIndex ?? 0;
   const currentWord = currentWords[currentWordIndex];
 
@@ -223,6 +239,36 @@ export default function TrainingMode() {
       isCorrect: correct,
     }]);
 
+    // Mettre à jour la progression (seulement en mode progression)
+    if (isProgressionMode) {
+      setProgressionState(prev => {
+        if (correct) {
+          const newConsecutive = prev.consecutiveCorrect + 1;
+          // Passer en audio après AUDIO_UNLOCK_THRESHOLD réponses correctes d'affilée
+          if (newConsecutive >= AUDIO_UNLOCK_THRESHOLD && prev.currentMode === "flashcard") {
+            toast.success("Mode Audio débloqué ! 🎧", { duration: 2000 });
+            return {
+              consecutiveCorrect: newConsecutive,
+              currentMode: "audio",
+              hasUnlockedAudio: true,
+            };
+          }
+          return { ...prev, consecutiveCorrect: newConsecutive };
+        } else {
+          // Erreur : revenir en flashcard si on était en audio
+          if (prev.currentMode === "audio") {
+            toast.info("Retour en mode visuel 👀", { duration: 1500 });
+            return {
+              consecutiveCorrect: 0,
+              currentMode: "flashcard",
+              hasUnlockedAudio: prev.hasUnlockedAudio,
+            };
+          }
+          return { ...prev, consecutiveCorrect: 0 };
+        }
+      });
+    }
+
     setPhase("result");
 
     if (correct) {
@@ -304,6 +350,14 @@ export default function TrainingMode() {
     if (chronoEnabled) {
       setChronoTime(0);
       setChronoRunning(false);
+    }
+    // Reset progression state
+    if (isProgressionMode) {
+      setProgressionState({
+        consecutiveCorrect: 0,
+        currentMode: "flashcard",
+        hasUnlockedAudio: false,
+      });
     }
     startSession(currentMode);
   };
@@ -456,6 +510,31 @@ export default function TrainingMode() {
               {currentList.title}
             </h1>
             <div className="flex items-center gap-2">
+              {/* Progression mode indicator */}
+              {isProgressionMode && (
+                <motion.div
+                  key={progressionState.currentMode}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-md ${
+                    progressionState.currentMode === "audio"
+                      ? "bg-gradient-to-r from-cyan-400 to-blue-500 text-white shadow-blue-200"
+                      : "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-700"
+                  }`}
+                >
+                  {progressionState.currentMode === "audio" ? (
+                    <>
+                      <Volume2 className="w-3.5 h-3.5" />
+                      Audio
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3.5 h-3.5" />
+                      {progressionState.consecutiveCorrect}/{AUDIO_UNLOCK_THRESHOLD}
+                    </>
+                  )}
+                </motion.div>
+              )}
               {/* Chrono display when active */}
               {chronoEnabled && (
                 <motion.div
@@ -467,8 +546,8 @@ export default function TrainingMode() {
                   {formatTime(chronoTime)}
                 </motion.div>
               )}
-              {/* Auto-hide indicator */}
-              {autoHideEnabled && (
+              {/* Auto-hide indicator (only show in flashcard mode) */}
+              {autoHideEnabled && currentMode === "flashcard" && (
                 <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-600 rounded-full text-xs font-medium">
                   <Eye className="w-3 h-3" />
                   {autoHideDuration}s
