@@ -158,8 +158,9 @@ export default function TeacherPage() {
       return;
     }
 
-    // Créer dans Supabase
-    const result = await createList(title.trim(), mode, wordsList, user?.id);
+    // Créer dans Supabase (passer null si c'est un ID démo, pas un vrai UUID)
+    const teacherId = user?.id?.startsWith('demo-') ? null : user?.id;
+    const result = await createList(title.trim(), mode, wordsList, teacherId);
 
     if (result) {
       toast.success(`Liste "${title}" créée avec ${wordsList.length} mots !`);
