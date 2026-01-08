@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy,
@@ -11,13 +11,67 @@ import {
   ChevronRight,
   History,
   Trash2,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore, SessionHistoryEntry } from "@/lib/store";
+import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 
 export default function SessionHistory() {
-  const { sessionHistory, clearSessionHistory } = useAppStore();
+  const { sessionHistory: localHistory, clearSessionHistory, currentStudentName } = useAppStore();
+  const { loadStudentSessions } = useSupabaseSync();
   const [selectedSession, setSelectedSession] = useState<SessionHistoryEntry | null>(null);
+  const [supabaseSessions, setSupabaseSessions] = useState<SessionHistoryEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Charger les sessions depuis Supabase quand le prénom change
+  const fetchSessions = async () => {
+    if (!currentStudentName.trim()) return;
+    setIsLoading(true);
+    try {
+      const sessions = await loadStudentSessions(currentStudentName);
+      const converted: SessionHistoryEntry[] = sessions.map((s: any) => ({
+        id: s.id,
+        date: s.started_at || s.finished_at,
+        listId: s.list_id,
+        listTitle: s.word_lists?.title || "Liste inconnue",
+        studentName: s.student_name,
+        percentage: s.percentage,
+        correctCount: s.correct_words,
+        totalWords: s.total_words,
+        timeSpent: s.time_spent_seconds,
+        chronoTime: s.chrono_time_seconds,
+        answers: [], // Les détails sont en local uniquement
+      }));
+      setSupabaseSessions(converted);
+    } catch (error) {
+      console.error("Error loading sessions:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Charger au mount si prénom renseigné
+  useEffect(() => {
+    if (currentStudentName.trim()) {
+      fetchSessions();
+    }
+  }, [currentStudentName]);
+
+  // Combiner sessions locales et Supabase (dédupliquer)
+  const allSessionIds = new Set<string>();
+  const sessionHistory: SessionHistoryEntry[] = [];
+
+  // Priorité aux sessions locales (ont les détails des réponses)
+  [...localHistory, ...supabaseSessions].forEach(session => {
+    if (!allSessionIds.has(session.id)) {
+      allSessionIds.add(session.id);
+      sessionHistory.push(session);
+    }
+  });
+
+  // Trier par date décroissante
+  sessionHistory.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -56,7 +110,7 @@ export default function SessionHistory() {
     return "bg-orange-50 border-orange-200";
   };
 
-  if (sessionHistory.length === 0) {
+  if (sessionHistory.length === 0 && !isLoading) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
@@ -66,6 +120,17 @@ export default function SessionHistory() {
         <p className="text-gray-400 text-sm">
           Tes résultats apparaîtront ici après chaque entraînement
         </p>
+        {currentStudentName && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fetchSessions}
+            className="mt-4 text-purple-500"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Charger mes résultats
+          </Button>
+        )}
       </div>
     );
   }
@@ -83,20 +148,33 @@ export default function SessionHistory() {
             {sessionHistory.length}
           </span>
         </div>
-        {sessionHistory.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              if (confirm("Effacer tout l'historique ?")) {
-                clearSessionHistory();
-              }
-            }}
-            className="text-gray-400 hover:text-red-500"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        )}
+        <div className="flex items-center gap-1">
+          {currentStudentName && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchSessions}
+              disabled={isLoading}
+              className="text-gray-400 hover:text-purple-500"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+            </Button>
+          )}
+          {sessionHistory.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (confirm("Effacer l'historique local ?")) {
+                  clearSessionHistory();
+                }
+              }}
+              className="text-gray-400 hover:text-red-500"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Session cards */}

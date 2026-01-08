@@ -38,7 +38,7 @@ export default function TeacherDashboard() {
       const converted: SessionHistoryEntry[] = sessions.map((s: any) => ({
         id: s.id,
         date: s.started_at || s.finished_at,
-        listId: s.word_list_id,
+        listId: s.list_id,
         listTitle: s.word_lists?.title || "Liste inconnue",
         studentName: s.student_name,
         percentage: s.percentage,

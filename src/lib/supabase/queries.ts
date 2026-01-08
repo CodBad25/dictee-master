@@ -35,7 +35,7 @@ export interface DbStudent {
 export interface DbTrainingSession {
   id: string;
   student_id: string | null;
-  word_list_id: string;
+  list_id: string;
   student_name: string | null;
   mode_used: 'flashcard' | 'audio';
   total_words: number;
@@ -287,7 +287,7 @@ export async function createTrainingSession(session: {
     .from('training_sessions')
     .insert({
       student_id: session.studentId || null,
-      word_list_id: session.listId,
+      list_id: session.listId,
       student_name: session.studentName || null,
       mode_used: session.modeUsed,
       total_words: session.totalWords,
@@ -312,7 +312,7 @@ export async function getSessionsByListId(listId: string) {
   const { data, error } = await supabase
     .from('training_sessions')
     .select('*')
-    .eq('word_list_id', listId)
+    .eq('list_id', listId)
     .order('started_at', { ascending: false });
 
   if (error) {
@@ -350,6 +350,25 @@ export async function getAllSessions() {
 
   if (error) {
     console.error('Error fetching all sessions:', error);
+    return [];
+  }
+  return data;
+}
+
+export async function getSessionsByStudentName(studentName: string) {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('training_sessions')
+    .select(`
+      *,
+      word_lists (title, share_code)
+    `)
+    .ilike('student_name', studentName)
+    .order('started_at', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error('Error fetching sessions by student name:', error);
     return [];
   }
   return data;

@@ -11,6 +11,7 @@ import {
   createTrainingSession,
   createWordAttempts,
   getAllSessions,
+  getSessionsByStudentName,
   DbWordList,
   DbWord,
 } from '@/lib/supabase/queries';
@@ -190,6 +191,17 @@ export function useSupabaseSync() {
     }
   };
 
+  // Charger les sessions d'un élève par son prénom
+  const loadStudentSessions = async (studentName: string) => {
+    if (!studentName.trim()) return [];
+    try {
+      return await getSessionsByStudentName(studentName.trim());
+    } catch (error) {
+      console.error('Error loading student sessions:', error);
+      return [];
+    }
+  };
+
   return {
     isOnline,
     isSyncing,
@@ -198,5 +210,6 @@ export function useSupabaseSync() {
     findListByCode,
     saveSession,
     loadAllSessions,
+    loadStudentSessions,
   };
 }
