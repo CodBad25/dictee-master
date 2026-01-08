@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
@@ -14,15 +14,69 @@ import {
   ChevronUp,
   Calendar,
   Download,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAppStore, SessionHistoryEntry } from "@/lib/store";
+import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 
 export default function TeacherDashboard() {
-  const { sessionHistory, demoLists } = useAppStore();
+  const { sessionHistory: localHistory } = useAppStore();
+  const { loadAllSessions } = useSupabaseSync();
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<"all" | "week" | "month">("all");
+  const [supabaseSessions, setSupabaseSessions] = useState<SessionHistoryEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Charger les sessions Supabase
+  const fetchSessions = async () => {
+    setIsLoading(true);
+    try {
+      const sessions = await loadAllSessions();
+      // Convertir les sessions Supabase en format SessionHistoryEntry
+      const converted: SessionHistoryEntry[] = sessions.map((s: any) => ({
+        id: s.id,
+        date: s.started_at || s.finished_at,
+        listId: s.word_list_id,
+        listTitle: s.word_lists?.title || "Liste inconnue",
+        studentName: s.student_name,
+        percentage: s.percentage,
+        correctCount: s.correct_words,
+        totalWords: s.total_words,
+        timeSpent: s.time_spent_seconds,
+        chronoTime: s.chrono_time_seconds,
+        answers: [], // Les answers ne sont pas chargées ici pour la perf
+      }));
+      setSupabaseSessions(converted);
+    } catch (error) {
+      console.error("Error loading sessions:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Charger au premier expand
+  useEffect(() => {
+    if (isExpanded && supabaseSessions.length === 0) {
+      fetchSessions();
+    }
+  }, [isExpanded]);
+
+  // Combiner sessions locales et Supabase (dédupliquer par id)
+  const allSessionIds = new Set<string>();
+  const sessionHistory: SessionHistoryEntry[] = [];
+
+  // Priorité aux sessions Supabase (plus complètes)
+  [...supabaseSessions, ...localHistory].forEach(session => {
+    if (!allSessionIds.has(session.id)) {
+      allSessionIds.add(session.id);
+      sessionHistory.push(session);
+    }
+  });
+
+  // Trier par date décroissante
+  sessionHistory.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Filter sessions by period
   const filteredSessions = sessionHistory.filter(session => {
@@ -167,10 +221,6 @@ export default function TeacherDashboard() {
     toast.success(`${filteredSessions.length} sessions exportées`);
   };
 
-  if (totalSessions === 0 && selectedPeriod === "all") {
-    return null;
-  }
-
   return (
     <div className="space-y-4">
       {/* Header with toggle */}
@@ -180,11 +230,17 @@ export default function TeacherDashboard() {
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-            <BarChart3 className="w-5 h-5" />
+            {isLoading ? (
+              <RefreshCw className="w-5 h-5 animate-spin" />
+            ) : (
+              <BarChart3 className="w-5 h-5" />
+            )}
           </div>
           <div className="text-left">
-            <h2 className="font-bold">Statistiques</h2>
-            <p className="text-xs text-white/80">{totalSessions} sessions</p>
+            <h2 className="font-bold">Statistiques élèves</h2>
+            <p className="text-xs text-white/80">
+              {isLoading ? "Chargement..." : `${totalSessions} sessions`}
+            </p>
           </div>
         </div>
         {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -219,15 +275,26 @@ export default function TeacherDashboard() {
                   </button>
                 ))}
               </div>
-              <Button
-                onClick={handleExportCSV}
-                variant="outline"
-                size="sm"
-                className="gap-2 rounded-xl border-2 hover:bg-green-50 hover:border-green-300 hover:text-green-700"
-              >
-                <Download className="w-4 h-4" />
-                Export CSV
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={fetchSessions}
+                  variant="outline"
+                  size="sm"
+                  disabled={isLoading}
+                  className="gap-2 rounded-xl border-2 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
+                </Button>
+                <Button
+                  onClick={handleExportCSV}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 rounded-xl border-2 hover:bg-green-50 hover:border-green-300 hover:text-green-700"
+                >
+                  <Download className="w-4 h-4" />
+                  CSV
+                </Button>
+              </div>
             </div>
 
             {/* Stats grid */}
