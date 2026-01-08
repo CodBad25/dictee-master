@@ -82,7 +82,6 @@ function parseODTXml(xmlString: string): { tables: string[][][] } {
       const cells = row.getElementsByTagName('tablecell');
       for (let c = 0; c < cells.length; c++) {
         const cell = cells[c];
-        // Recuperer tout le texte de la cellule
         const cellText = cell.textContent?.trim() || '';
         rowData.push(cellText);
       }
@@ -101,54 +100,58 @@ function parseODTXml(xmlString: string): { tables: string[][][] } {
 }
 
 /**
- * Detecte les en-tetes "Liste X" dans la premiere ligne d'un tableau
+ * Detecte les en-tetes "Liste X" ou "Dictee X" dans une ligne
  */
-function detectListHeaders(firstRow: string[]): { headers: Map<number, string> } {
+function detectListHeaders(row: string[]): Map<number, string> {
   const headers = new Map<number, string>();
-  const headerPattern = /liste\s*(\d+)/i;
+  const headerPattern = /(liste|dictée|dictee)\s*n?°?\s*(\d+)/i;
 
-  firstRow.forEach((cell, index) => {
+  row.forEach((cell, index) => {
     const match = cell.match(headerPattern);
     if (match) {
-      headers.set(index, `Liste ${match[1]}`);
+      const type = match[1].toLowerCase().includes('dict') ? 'Dictée' : 'Liste';
+      headers.set(index, `${type} ${match[2]}`);
     }
   });
 
-  return { headers };
+  return headers;
 }
 
 /**
  * Extrait les listes depuis un tableau ODT
+ * Detecte automatiquement la structure (colonnes avec en-tetes)
  */
 function extractListsFromTable(tableData: string[][]): DetectedSection[] {
   if (tableData.length === 0) return [];
 
   const firstRow = tableData[0];
-  const { headers } = detectListHeaders(firstRow);
+  const headers = detectListHeaders(firstRow);
 
-  // Si on a detecte des en-tetes "Liste X"
+  console.log('Table first row:', firstRow);
+  console.log('Detected headers:', Array.from(headers.entries()));
+
+  // Si on a detecte des en-tetes
   if (headers.size >= 1) {
     const sections: DetectedSection[] = [];
     const headerIndices = Array.from(headers.keys()).sort((a, b) => a - b);
 
-    // Pour chaque liste detectee
     headerIndices.forEach((startIndex, i) => {
       const listTitle = headers.get(startIndex) || `Liste ${i + 1}`;
       const words: string[] = [];
 
-      // Determiner la fin de cette liste (debut de la suivante ou fin du tableau)
+      // Fin = debut de la liste suivante ou fin de ligne
       const endIndex = i < headerIndices.length - 1
         ? headerIndices[i + 1]
         : firstRow.length;
 
-      // Nombre de colonnes pour cette liste
       const numCols = endIndex - startIndex;
 
-      // Parcourir les lignes (sauf la premiere = en-tete)
+      console.log(`Processing ${listTitle}: cols ${startIndex} to ${endIndex - 1}`);
+
+      // Parcourir les lignes de donnees (apres l'en-tete)
       for (let rowIndex = 1; rowIndex < tableData.length; rowIndex++) {
         const row = tableData[rowIndex];
 
-        // Extraire les mots des colonnes de cette liste
         for (let colOffset = 0; colOffset < numCols; colOffset++) {
           const colIndex = startIndex + colOffset;
           if (colIndex < row.length) {
@@ -169,9 +172,11 @@ function extractListsFromTable(tableData: string[][]): DetectedSection[] {
         self.findIndex(w => w.toLowerCase() === word.toLowerCase()) === index
       );
 
+      console.log(`${listTitle}: ${uniqueWords.length} words`);
+
       if (uniqueWords.length > 0) {
         sections.push({
-          id: `liste-${listTitle.replace(/\s+/g, '-').toLowerCase()}`,
+          id: `${listTitle.replace(/\s+/g, '-').toLowerCase()}`,
           title: listTitle,
           words: uniqueWords,
         });
@@ -181,9 +186,62 @@ function extractListsFromTable(tableData: string[][]): DetectedSection[] {
     return sections;
   }
 
-  // Pas d'en-tetes detectes - extraire tous les mots comme une seule liste
-  const allWords: string[] = [];
+  // Pas d'en-tetes - essayer de diviser le tableau en 2 moities
+  const totalCols = firstRow.length;
+  if (totalCols >= 4) {
+    // Supposer que le tableau est divise en 2 listes (gauche et droite)
+    const midPoint = Math.floor(totalCols / 2);
 
+    const list1Words: string[] = [];
+    const list2Words: string[] = [];
+
+    for (const row of tableData) {
+      // Premiere moitie -> Liste 1
+      for (let c = 0; c < midPoint; c++) {
+        if (row[c]) {
+          const cellWords = row[c]
+            .split(/[,\n]+/)
+            .map(w => cleanWord(w))
+            .filter(isValidWord);
+          list1Words.push(...cellWords);
+        }
+      }
+
+      // Deuxieme moitie -> Liste 2
+      for (let c = midPoint; c < row.length; c++) {
+        if (row[c]) {
+          const cellWords = row[c]
+            .split(/[,\n]+/)
+            .map(w => cleanWord(w))
+            .filter(isValidWord);
+          list2Words.push(...cellWords);
+        }
+      }
+    }
+
+    const sections: DetectedSection[] = [];
+
+    const unique1 = list1Words.filter((word, index, self) =>
+      self.findIndex(w => w.toLowerCase() === word.toLowerCase()) === index
+    );
+    const unique2 = list2Words.filter((word, index, self) =>
+      self.findIndex(w => w.toLowerCase() === word.toLowerCase()) === index
+    );
+
+    if (unique1.length > 0) {
+      sections.push({ id: 'liste-1', title: 'Liste 1', words: unique1 });
+    }
+    if (unique2.length > 0) {
+      sections.push({ id: 'liste-2', title: 'Liste 2', words: unique2 });
+    }
+
+    if (sections.length > 0) {
+      return sections;
+    }
+  }
+
+  // Fallback: extraire tous les mots comme une seule liste
+  const allWords: string[] = [];
   for (const row of tableData) {
     for (const cell of row) {
       if (cell) {
@@ -201,11 +259,7 @@ function extractListsFromTable(tableData: string[][]): DetectedSection[] {
   );
 
   if (uniqueWords.length > 0) {
-    return [{
-      id: 'liste-1',
-      title: 'Liste 1',
-      words: uniqueWords,
-    }];
+    return [{ id: 'liste-1', title: 'Liste 1', words: uniqueWords }];
   }
 
   return [];
@@ -216,7 +270,7 @@ function extractListsFromTable(tableData: string[][]): DetectedSection[] {
  */
 export function detectSections(text: string): DetectedSection[] {
   const sections: DetectedSection[] = [];
-  const sectionPattern = /\b(dictée|liste|semaine|période|leçon|série)\s*(\d+)\s*[►▶:\-–—]?\s*/gi;
+  const sectionPattern = /\b(dictée|liste|semaine|période|leçon|série)\s*n?°?\s*(\d+)\s*[►▶:\-–—]?\s*/gi;
 
   const matches: { index: number; title: string; number: string }[] = [];
   let match;
@@ -254,7 +308,7 @@ export function detectSections(text: string): DetectedSection[] {
  */
 function extractWordsFromSection(text: string): string[] {
   const words = text
-    .replace(/(?:dictée|liste|semaine|période|leçon|série)\s*\d+\s*[►▶:\-–—]?\s*/gi, ' ')
+    .replace(/(?:dictée|liste|semaine|période|leçon|série)\s*n?°?\s*\d+\s*[►▶:\-–—]?\s*/gi, ' ')
     .split(/\s*[-–—]\s*|\s*[,;•·▶►]\s*|\n|\t/)
     .map(cleanWord)
     .filter(isValidWord)
@@ -329,22 +383,32 @@ export async function extractFromODT(file: File): Promise<{
   // Parser les tableaux
   const { tables } = parseODTXml(contentXml);
 
-  // Extraire les sections de chaque tableau
-  const allSections: DetectedSection[] = [];
+  console.log(`Found ${tables.length} tables in ODT`);
 
-  for (const tableData of tables) {
-    const tableSections = extractListsFromTable(tableData);
-    allSections.push(...tableSections);
-  }
+  // Extraire les sections du PREMIER tableau seulement (celui avec les listes)
+  // Les autres tableaux sont probablement des exercices
+  let allSections: DetectedSection[] = [];
 
-  // Dedupliquer les sections par titre (garder la premiere de chaque titre)
-  const uniqueSections: DetectedSection[] = [];
-  const seenTitles = new Set<string>();
+  if (tables.length > 0) {
+    // Chercher le tableau qui contient des en-tetes "Liste X"
+    for (const tableData of tables) {
+      if (tableData.length > 0) {
+        const headers = detectListHeaders(tableData[0]);
+        if (headers.size >= 2) {
+          // C'est le tableau principal avec Liste 7 et Liste 8
+          const tableSections = extractListsFromTable(tableData);
+          if (tableSections.length >= 2) {
+            allSections = tableSections;
+            console.log('Found main table with lists:', tableSections.map(s => s.title));
+            break;
+          }
+        }
+      }
+    }
 
-  for (const section of allSections) {
-    if (!seenTitles.has(section.title)) {
-      seenTitles.add(section.title);
-      uniqueSections.push(section);
+    // Si pas trouve, utiliser le premier tableau
+    if (allSections.length === 0 && tables.length > 0) {
+      allSections = extractListsFromTable(tables[0]);
     }
   }
 
@@ -360,7 +424,7 @@ export async function extractFromODT(file: File): Promise<{
     fullText += textElements[i].textContent + '\n';
   }
 
-  return { text: fullText, sections: uniqueSections };
+  return { text: fullText, sections: allSections };
 }
 
 /**
@@ -396,6 +460,8 @@ export async function extractWordsFromFile(file: File): Promise<{
   // Traitement special pour ODT
   if (fileName.endsWith('.odt')) {
     const { text, sections } = await extractFromODT(file);
+
+    console.log('ODT sections found:', sections.map(s => `${s.title} (${s.words.length} words)`));
 
     if (sections.length > 0) {
       return {
