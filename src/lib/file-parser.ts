@@ -33,7 +33,13 @@ function isValidWord(word: string): boolean {
 function cleanWord(word: string): string {
   return word
     .trim()
-    .replace(/^(le|la|les|l'|un|une|des)\s+/i, '')
+    // Convertir les entités HTML
+    .replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    // Supprimer les articles au début
+    .replace(/^(le|la|les|l'|l'|un|une|des|d'|d')\s*/i, '')
+    // Nettoyer les caractères spéciaux au début et à la fin
     .replace(/^[^a-zA-ZÀ-ÿ'(]+/, '')
     .replace(/[^a-zA-ZÀ-ÿ')]+$/, '')
     .trim();
@@ -92,9 +98,14 @@ function parseODTXml(xmlString: string): { tables: string[][][] } {
         let textMatch;
         const textRegexLocal = new RegExp(textRegex.source, 'g');
         while ((textMatch = textRegexLocal.exec(cellContent)) !== null) {
-          // Nettoyer les balises internes (text:span, etc.)
+          // Nettoyer les balises internes (text:span, etc.) et décoder les entités HTML
           const cleanText = textMatch[1]
             .replace(/<[^>]+>/g, '')
+            .replace(/&apos;/g, "'")
+            .replace(/&quot;/g, '"')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
             .trim();
           if (cleanText) {
             cellText += (cellText ? '\n' : '') + cleanText;
