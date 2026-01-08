@@ -127,25 +127,37 @@ function parseODTXml(xmlString: string): { tables: string[][][] } {
 }
 
 /**
- * Detecte les en-tetes "Liste X" ou "Dictee X" dans une ligne
- * Gère plusieurs formats: "Liste 7", "Liste n°7", "LISTE 7", etc.
+ * Detecte les en-tetes "Liste X", "Dictee X", ou "n°X" dans une ligne
+ * Gère plusieurs formats: "Liste 7", "n°7", "N° 7", "Dictée 1", etc.
  */
 function detectListHeaders(row: string[]): Map<number, string> {
   const headers = new Map<number, string>();
-  // Pattern plus flexible pour capturer différents formats
-  const headerPattern = /(liste|dictée|dictee|dict\.?)\s*n?[°º]?\s*(\d+)/i;
+
+  // Patterns pour différents formats
+  const patterns = [
+    // "Liste 7", "Dictée 7", etc.
+    { regex: /(liste|dictée|dictee|dict\.?)\s*n?[°º]?\s*(\d+)/i, prefix: (m: RegExpMatchArray) => m[1].toLowerCase().includes('dict') ? 'Dictée' : 'Liste' },
+    // "n°1", "N° 2", "n°7", etc. (format simple)
+    { regex: /^n[°º]\s*(\d+)$/i, prefix: () => 'Dictée' },
+  ];
 
   console.log('Checking row for headers:', row);
 
   row.forEach((cell, index) => {
     if (!cell || cell.trim() === '') return;
 
-    const match = cell.match(headerPattern);
-    if (match) {
-      const type = match[1].toLowerCase().includes('dict') ? 'Dictée' : 'Liste';
-      const number = match[2];
-      headers.set(index, `${type} ${number}`);
-      console.log(`Found header at col ${index}: "${type} ${number}" (from: "${cell.substring(0, 50)}")`);
+    const cleanCell = cell.trim();
+
+    for (const pattern of patterns) {
+      const match = cleanCell.match(pattern.regex);
+      if (match) {
+        // Pour le pattern "n°X", le numéro est dans match[1], sinon match[2]
+        const number = match[2] || match[1];
+        const prefix = pattern.prefix(match);
+        headers.set(index, `${prefix} ${number}`);
+        console.log(`Found header at col ${index}: "${prefix} ${number}" (from: "${cleanCell}")`);
+        break;
+      }
     }
   });
 
