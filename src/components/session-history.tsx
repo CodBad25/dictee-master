@@ -41,7 +41,11 @@ export default function SessionHistory() {
         totalWords: s.total_words,
         timeSpent: s.time_spent_seconds,
         chronoTime: s.chrono_time_seconds,
-        answers: [], // Les détails sont en local uniquement
+        answers: (s.word_attempts || []).map((a: any) => ({
+          word: a.word,
+          userAnswer: a.user_answer,
+          isCorrect: a.is_correct,
+        })),
       }));
       setSupabaseSessions(converted);
     } catch (error) {

@@ -343,7 +343,8 @@ export async function getAllSessions() {
     .from('training_sessions')
     .select(`
       *,
-      word_lists (title, share_code)
+      word_lists (title, share_code),
+      word_attempts (word, user_answer, is_correct)
     `)
     .order('started_at', { ascending: false })
     .limit(100);
@@ -361,7 +362,8 @@ export async function getSessionsByStudentName(studentName: string) {
     .from('training_sessions')
     .select(`
       *,
-      word_lists (title, share_code)
+      word_lists (title, share_code),
+      word_attempts (word, user_answer, is_correct)
     `)
     .ilike('student_name', studentName)
     .order('started_at', { ascending: false })
