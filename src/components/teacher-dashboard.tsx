@@ -17,6 +17,7 @@ import {
   RefreshCw,
   BookOpen,
   ChevronRight,
+  CloudUpload,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -25,11 +26,12 @@ import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 
 export default function TeacherDashboard() {
   const { sessionHistory: localHistory } = useAppStore();
-  const { loadAllSessions } = useSupabaseSync();
+  const { loadAllSessions, syncLocalSessionsToSupabase } = useSupabaseSync();
   const [isExpanded, setIsExpanded] = useState(true); // Toujours ouvert par défaut
   const [selectedPeriod, setSelectedPeriod] = useState<"all" | "week" | "month">("all");
   const [supabaseSessions, setSupabaseSessions] = useState<SessionHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [selectedSession, setSelectedSession] = useState<SessionHistoryEntry | null>(null);
 
   // Charger les sessions Supabase
@@ -281,6 +283,35 @@ export default function TeacherDashboard() {
                 ))}
               </div>
               <div className="flex gap-2">
+                {localHistory.length > 0 && (
+                  <Button
+                    onClick={async () => {
+                      setIsSyncing(true);
+                      try {
+                        const result = await syncLocalSessionsToSupabase();
+                        if (result.synced > 0) {
+                          toast.success(`${result.synced} session(s) synchronisée(s)`);
+                          fetchSessions(); // Recharger après sync
+                        } else if (result.failed > 0) {
+                          toast.error(`Échec: ${result.failed} session(s)`);
+                        } else {
+                          toast.info("Toutes les sessions sont déjà synchronisées");
+                        }
+                      } catch (error) {
+                        toast.error("Erreur de synchronisation");
+                      } finally {
+                        setIsSyncing(false);
+                      }
+                    }}
+                    variant="outline"
+                    size="sm"
+                    disabled={isSyncing}
+                    className="gap-2 rounded-xl border-2 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700"
+                  >
+                    <CloudUpload className={`w-4 h-4 ${isSyncing ? "animate-pulse" : ""}`} />
+                    Sync ({localHistory.length})
+                  </Button>
+                )}
                 <Button
                   onClick={fetchSessions}
                   variant="outline"

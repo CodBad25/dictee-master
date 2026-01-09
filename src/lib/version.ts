@@ -2,7 +2,7 @@
  * Version de l'application et changelog
  */
 
-export const APP_VERSION = "1.2.8";
+export const APP_VERSION = "1.2.9";
 
 export interface ChangelogEntry {
   version: string;
@@ -11,6 +11,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.2.9",
+    date: "2026-01-09",
+    changes: [
+      "Bouton Sync : synchronise les sessions locales vers Supabase",
+      "Les sessions faites hors-ligne sont maintenant recuperables",
+    ],
+  },
   {
     version: "1.2.8",
     date: "2026-01-09",

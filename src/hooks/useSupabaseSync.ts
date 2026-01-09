@@ -191,6 +191,53 @@ export function useSupabaseSync() {
     }
   };
 
+  // Synchroniser les sessions locales vers Supabase
+  const syncLocalSessionsToSupabase = async () => {
+    const localSessions = useAppStore.getState().sessionHistory;
+    if (localSessions.length === 0) {
+      return { synced: 0, failed: 0 };
+    }
+
+    // Récupérer les IDs des sessions déjà dans Supabase
+    const existingSessions = await getAllSessions();
+    const existingIds = new Set(existingSessions.map((s: any) => s.id));
+
+    let synced = 0;
+    let failed = 0;
+
+    for (const session of localSessions) {
+      // Skip si déjà dans Supabase
+      if (existingIds.has(session.id)) {
+        continue;
+      }
+
+      try {
+        const dbSession = await createTrainingSession({
+          listId: session.listId,
+          studentName: session.studentName,
+          modeUsed: 'flashcard', // Default, on n'a pas cette info en local
+          totalWords: session.totalWords,
+          correctWords: session.correctCount,
+          percentage: session.percentage,
+          timeSpentSeconds: session.timeSpent,
+          chronoTimeSeconds: session.chronoTime,
+        });
+
+        if (dbSession) {
+          await createWordAttempts(dbSession.id, session.answers);
+          synced++;
+        } else {
+          failed++;
+        }
+      } catch (error) {
+        console.error('Error syncing session:', error);
+        failed++;
+      }
+    }
+
+    return { synced, failed };
+  };
+
   return {
     isOnline,
     isSyncing,
@@ -200,5 +247,6 @@ export function useSupabaseSync() {
     saveSession,
     loadAllSessions,
     loadStudentSessions,
+    syncLocalSessionsToSupabase,
   };
 }
