@@ -340,7 +340,17 @@ export async function getAllSessions() {
   const { data, error } = await supabase
     .from('training_sessions')
     .select(`
-      *,
+      id,
+      list_id,
+      student_name,
+      mode_used,
+      total_words,
+      correct_words,
+      percentage,
+      time_spent_seconds,
+      chrono_time_seconds,
+      started_at,
+      finished_at,
       word_lists (title, share_code),
       word_attempts (word, user_answer, is_correct)
     `)
@@ -359,7 +369,17 @@ export async function getSessionsByStudentName(studentName: string) {
   const { data, error } = await supabase
     .from('training_sessions')
     .select(`
-      *,
+      id,
+      list_id,
+      student_name,
+      mode_used,
+      total_words,
+      correct_words,
+      percentage,
+      time_spent_seconds,
+      chrono_time_seconds,
+      started_at,
+      finished_at,
       word_lists (title, share_code),
       word_attempts (word, user_answer, is_correct)
     `)
