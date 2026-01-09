@@ -271,7 +271,6 @@ export async function createStudent(teacherId: string | null, name: string) {
 // ============================================
 
 export async function createTrainingSession(session: {
-  studentId?: string | null;
   listId: string;
   studentName?: string | null;
   modeUsed: 'flashcard' | 'audio';
@@ -286,7 +285,6 @@ export async function createTrainingSession(session: {
   const { data, error } = await supabase
     .from('training_sessions')
     .insert({
-      student_id: session.studentId || null,
       list_id: session.listId,
       student_name: session.studentName || null,
       mode_used: session.modeUsed,

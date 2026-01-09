@@ -289,15 +289,25 @@ export default function TeacherDashboard() {
                       setIsSyncing(true);
                       try {
                         const result = await syncLocalSessionsToSupabase();
+                        const messages: string[] = [];
+                        if (result.listsCreated > 0) {
+                          messages.push(`${result.listsCreated} liste(s) créée(s)`);
+                        }
                         if (result.synced > 0) {
-                          toast.success(`${result.synced} session(s) synchronisée(s)`);
-                          fetchSessions(); // Recharger après sync
+                          messages.push(`${result.synced} session(s) synchronisée(s)`);
+                          // Vider l'historique local après sync réussi
+                          useAppStore.getState().clearSessionHistory();
+                        }
+                        if (messages.length > 0) {
+                          toast.success(messages.join(", "));
+                          fetchSessions();
                         } else if (result.failed > 0) {
-                          toast.error(`Échec: ${result.failed} session(s)`);
+                          toast.error(`Échec: ${result.failed} session(s) - vérifiez que les listes existent`);
                         } else {
-                          toast.info("Toutes les sessions sont déjà synchronisées");
+                          toast.info("Rien à synchroniser");
                         }
                       } catch (error) {
+                        console.error("Sync error:", error);
                         toast.error("Erreur de synchronisation");
                       } finally {
                         setIsSyncing(false);

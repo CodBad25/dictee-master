@@ -193,29 +193,70 @@ export function useSupabaseSync() {
 
   // Synchroniser les sessions locales vers Supabase
   const syncLocalSessionsToSupabase = async () => {
-    const localSessions = useAppStore.getState().sessionHistory;
-    if (localSessions.length === 0) {
-      return { synced: 0, failed: 0 };
-    }
+    const state = useAppStore.getState();
+    const localSessions = state.sessionHistory;
+    const localLists = state.demoLists;
+    const localWords = state.demoWords;
 
-    // Récupérer les IDs des sessions déjà dans Supabase
-    const existingSessions = await getAllSessions();
-    const existingIds = new Set(existingSessions.map((s: any) => s.id));
+    if (localSessions.length === 0) {
+      return { synced: 0, failed: 0, listsCreated: 0 };
+    }
 
     let synced = 0;
     let failed = 0;
+    let listsCreated = 0;
 
+    // 1. D'abord, s'assurer que toutes les listes référencées existent dans Supabase
+    const listIdsNeeded = new Set(localSessions.map(s => s.listId));
+    const listIdMapping: Record<string, string> = {}; // old ID -> new ID (si recréé)
+
+    for (const listId of listIdsNeeded) {
+      // Chercher la liste locale
+      const localList = localLists.find(l => l.id === listId);
+      if (!localList) {
+        // Pas de liste locale, on ne peut pas sync ces sessions
+        continue;
+      }
+
+      // Vérifier si la liste existe dans Supabase via son share_code
+      const existingList = await getWordListByShareCode(localList.share_code);
+
+      if (existingList) {
+        // La liste existe, utiliser son ID
+        listIdMapping[listId] = existingList.id;
+      } else {
+        // Créer la liste dans Supabase
+        const words = localWords[listId] || [];
+        const wordStrings = words.map(w => w.word);
+
+        const newList = await createWordList(
+          localList.teacher_id || null,
+          localList.title,
+          localList.mode as 'flashcard' | 'audio' | 'progression' | 'fill-blanks',
+          localList.description
+        );
+
+        if (newList) {
+          await createWords(newList.id, wordStrings);
+          listIdMapping[listId] = newList.id;
+          listsCreated++;
+        }
+      }
+    }
+
+    // 2. Synchroniser les sessions
     for (const session of localSessions) {
-      // Skip si déjà dans Supabase
-      if (existingIds.has(session.id)) {
+      const targetListId = listIdMapping[session.listId];
+      if (!targetListId) {
+        failed++;
         continue;
       }
 
       try {
         const dbSession = await createTrainingSession({
-          listId: session.listId,
+          listId: targetListId,
           studentName: session.studentName,
-          modeUsed: 'flashcard', // Default, on n'a pas cette info en local
+          modeUsed: 'flashcard',
           totalWords: session.totalWords,
           correctWords: session.correctCount,
           percentage: session.percentage,
@@ -235,7 +276,7 @@ export function useSupabaseSync() {
       }
     }
 
-    return { synced, failed };
+    return { synced, failed, listsCreated };
   };
 
   return {
