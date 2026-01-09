@@ -64,9 +64,7 @@ function parseODTXml(xmlString: string): { tables: string[][][] } {
   // Extraire les tableaux avec regex pour éviter les problèmes de namespace
   const tableRegex = /<table:table[^>]*>([\s\S]*?)<\/table:table>/g;
   const rowRegex = /<table:table-row[^>]*>([\s\S]*?)<\/table:table-row>/g;
-  const cellRegex = /<table:table-cell([^>]*)>([\s\S]*?)<\/table:table-cell>|<table:covered-table-cell[^>]*\/>/g;
   const textRegex = /<text:p[^>]*>([\s\S]*?)<\/text:p>/g;
-  const repeatAttrRegex = /table:number-columns-repeated="(\d+)"/;
 
   let tableMatch;
   while ((tableMatch = tableRegex.exec(xmlString)) !== null) {
@@ -74,51 +72,79 @@ function parseODTXml(xmlString: string): { tables: string[][][] } {
     const tableData: string[][] = [];
 
     let rowMatch;
-    const rowRegexLocal = new RegExp(rowRegex.source, 'g');
-    while ((rowMatch = rowRegexLocal.exec(tableContent)) !== null) {
+    while ((rowMatch = rowRegex.exec(tableContent)) !== null) {
       const rowContent = rowMatch[1];
       const rowData: string[] = [];
 
-      let cellMatch;
-      const cellRegexLocal = new RegExp(cellRegex.source, 'g');
-      while ((cellMatch = cellRegexLocal.exec(rowContent)) !== null) {
-        const fullMatch = cellMatch[0];
+      // Parser les cellules manuellement pour gérer tous les cas
+      let pos = 0;
+      while (pos < rowContent.length) {
+        // Chercher la prochaine cellule (normale ou couverte)
+        const cellStart = rowContent.indexOf('<table:table-cell', pos);
+        const coveredStart = rowContent.indexOf('<table:covered-table-cell', pos);
 
-        // Cellule couverte (fusionnée) = cellule vide
-        if (fullMatch.includes('covered-table-cell')) {
+        // Déterminer quelle cellule vient en premier
+        let nextPos = -1;
+        let isCovered = false;
+
+        if (cellStart === -1 && coveredStart === -1) break;
+        if (cellStart === -1) {
+          nextPos = coveredStart;
+          isCovered = true;
+        } else if (coveredStart === -1) {
+          nextPos = cellStart;
+          isCovered = false;
+        } else if (coveredStart < cellStart) {
+          nextPos = coveredStart;
+          isCovered = true;
+        } else {
+          nextPos = cellStart;
+          isCovered = false;
+        }
+
+        if (isCovered) {
+          // Cellule couverte = cellule vide
           rowData.push('');
-          continue;
-        }
+          // Avancer après la balise fermante
+          const endTag = rowContent.indexOf('/>', nextPos);
+          pos = endTag !== -1 ? endTag + 2 : nextPos + 30;
+        } else {
+          // Cellule normale - extraire les attributs et le contenu
+          const attrEnd = rowContent.indexOf('>', nextPos);
+          const cellAttrs = rowContent.substring(nextPos, attrEnd);
 
-        const cellAttrs = cellMatch[1] || '';
-        const cellContent = cellMatch[2] || '';
+          // Trouver la fin de la cellule
+          const cellEnd = rowContent.indexOf('</table:table-cell>', attrEnd);
+          const cellContent = rowContent.substring(attrEnd + 1, cellEnd);
 
-        // Extraire le texte des paragraphes
-        let cellText = '';
-        let textMatch;
-        const textRegexLocal = new RegExp(textRegex.source, 'g');
-        while ((textMatch = textRegexLocal.exec(cellContent)) !== null) {
-          // Nettoyer les balises internes (text:span, etc.) et décoder les entités HTML
-          const cleanText = textMatch[1]
-            .replace(/<[^>]+>/g, '')
-            .replace(/&apos;/g, "'")
-            .replace(/&quot;/g, '"')
-            .replace(/&amp;/g, '&')
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .trim();
-          if (cleanText) {
-            cellText += (cellText ? '\n' : '') + cleanText;
+          // Extraire le texte des paragraphes
+          let cellText = '';
+          let textMatch;
+          const localTextRegex = new RegExp(textRegex.source, 'g');
+          while ((textMatch = localTextRegex.exec(cellContent)) !== null) {
+            const cleanText = textMatch[1]
+              .replace(/<[^>]+>/g, '')
+              .replace(/&apos;/g, "'")
+              .replace(/&quot;/g, '"')
+              .replace(/&amp;/g, '&')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .trim();
+            if (cleanText) {
+              cellText += (cellText ? '\n' : '') + cleanText;
+            }
           }
-        }
 
-        // Vérifier si la cellule est répétée
-        const repeatMatch = cellAttrs.match(repeatAttrRegex);
-        const repeatCount = repeatMatch ? parseInt(repeatMatch[1], 10) : 1;
+          // Vérifier si la cellule est répétée
+          const repeatMatch = cellAttrs.match(/table:number-columns-repeated="(\d+)"/);
+          const repeatCount = repeatMatch ? parseInt(repeatMatch[1], 10) : 1;
 
-        // Ajouter la cellule (ou les cellules répétées)
-        for (let i = 0; i < repeatCount; i++) {
-          rowData.push(cellText);
+          // Ajouter la cellule (ou les cellules répétées)
+          for (let i = 0; i < repeatCount; i++) {
+            rowData.push(cellText);
+          }
+
+          pos = cellEnd + 19; // Longueur de '</table:table-cell>'
         }
       }
 
