@@ -614,29 +614,29 @@ export default function ComprehensiveTraining() {
               </div>
 
               {/* Carte du mot */}
-              <div className="bg-white rounded-3xl border-2 border-blue-100 shadow-xl p-8 mb-6 min-h-[200px] flex flex-col items-center justify-center">
+              <div className="bg-white rounded-3xl border-2 border-blue-100 shadow-xl p-8 mb-6 min-h-[250px] flex flex-col items-center justify-center">
                 {showWord && !showResult ? (
                   <>
-                    <p className="text-4xl font-bold text-gray-800 mb-4">
+                    <p className="text-5xl sm:text-6xl font-bold text-gray-800 mb-6">
                       {currentWords[currentWordIndex]?.word}
                     </p>
                     <Button
                       variant="outline"
                       onClick={() => setShowWord(false)}
-                      className="gap-2"
+                      className="gap-2 h-12 text-lg"
                     >
-                      <EyeOff className="w-4 h-4" />
+                      <EyeOff className="w-5 h-5" />
                       Je l'ai memorise
                     </Button>
                   </>
                 ) : showResult ? (
                   <div className="text-center">
-                    <p className={`text-2xl font-bold mb-2 ${
+                    <p className={`text-3xl font-bold mb-3 ${
                       wordProgress[currentWordIndex]?.flashcardCorrect ? "text-green-600" : "text-red-600"
                     }`}>
                       {wordProgress[currentWordIndex]?.flashcardCorrect ? "Correct !" : "Incorrect"}
                     </p>
-                    <p className="text-xl text-gray-600">
+                    <p className="text-2xl text-gray-600">
                       Reponse: <span className="font-bold">{currentWords[currentWordIndex]?.word}</span>
                     </p>
                   </div>
@@ -647,16 +647,16 @@ export default function ComprehensiveTraining() {
                       onChange={(e) => setUserInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && checkFlashcardAnswer()}
                       placeholder="Ecris le mot..."
-                      className="text-center text-2xl h-14 border-2 border-gray-200 rounded-xl mb-4"
+                      className="text-center text-3xl h-16 border-2 border-gray-200 rounded-xl mb-4 w-full max-w-sm"
                       autoFocus
                     />
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setShowWord(true)} className="gap-2">
-                        <Eye className="w-4 h-4" />
+                    <div className="flex gap-3">
+                      <Button variant="outline" onClick={() => setShowWord(true)} className="gap-2 h-12 text-lg">
+                        <Eye className="w-5 h-5" />
                         Revoir
                       </Button>
-                      <Button onClick={checkFlashcardAnswer} className="bg-blue-500 hover:bg-blue-600 gap-2">
-                        <Check className="w-4 h-4" />
+                      <Button onClick={checkFlashcardAnswer} className="bg-blue-500 hover:bg-blue-600 gap-2 h-12 text-lg">
+                        <Check className="w-5 h-5" />
                         Verifier
                       </Button>
                     </div>
@@ -691,40 +691,40 @@ export default function ComprehensiveTraining() {
                 </span>
               </div>
 
-              <div className="bg-white rounded-3xl border-2 border-green-100 shadow-xl p-8 mb-6 min-h-[200px] flex flex-col items-center justify-center">
+              <div className="bg-white rounded-3xl border-2 border-green-100 shadow-xl p-8 mb-6 min-h-[250px] flex flex-col items-center justify-center">
                 {!showResult ? (
                   <>
                     <Button
                       onClick={() => speakWord(currentWords[currentWordIndex]?.word || "")}
-                      className={`w-20 h-20 rounded-full mb-6 ${
+                      className={`w-24 h-24 rounded-full mb-6 ${
                         isPlaying
                           ? "bg-gradient-to-r from-green-400 to-emerald-500"
                           : "bg-gradient-to-r from-green-500 to-emerald-600"
                       }`}
                     >
-                      <Volume2 className={`w-10 h-10 text-white ${isPlaying ? "animate-pulse" : ""}`} />
+                      <Volume2 className={`w-12 h-12 text-white ${isPlaying ? "animate-pulse" : ""}`} />
                     </Button>
                     <Input
                       value={userInput}
                       onChange={(e) => setUserInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && checkAudioAnswer()}
                       placeholder="Ecris ce que tu entends..."
-                      className="text-center text-xl h-14 border-2 border-gray-200 rounded-xl mb-4"
+                      className="text-center text-2xl sm:text-3xl h-16 border-2 border-gray-200 rounded-xl mb-4 w-full max-w-sm"
                       autoFocus
                     />
-                    <Button onClick={checkAudioAnswer} className="bg-green-500 hover:bg-green-600 gap-2">
-                      <Check className="w-4 h-4" />
+                    <Button onClick={checkAudioAnswer} className="bg-green-500 hover:bg-green-600 gap-2 h-12 text-lg">
+                      <Check className="w-5 h-5" />
                       Verifier
                     </Button>
                   </>
                 ) : (
                   <div className="text-center">
-                    <p className={`text-2xl font-bold mb-2 ${
+                    <p className={`text-3xl font-bold mb-3 ${
                       wordProgress[currentWordIndex]?.audioCorrect ? "text-green-600" : "text-red-600"
                     }`}>
                       {wordProgress[currentWordIndex]?.audioCorrect ? "Correct !" : "Incorrect"}
                     </p>
-                    <p className="text-xl text-gray-600">
+                    <p className="text-2xl text-gray-600">
                       Reponse: <span className="font-bold">{currentWords[currentWordIndex]?.word}</span>
                     </p>
                   </div>
@@ -759,7 +759,7 @@ export default function ComprehensiveTraining() {
               </div>
 
               <div className="bg-white rounded-3xl border-2 border-orange-100 shadow-xl p-8 mb-6">
-                <p className="text-center text-lg text-gray-600 mb-6">
+                <p className="text-center text-xl text-gray-600 mb-8">
                   Choisis la bonne orthographe :
                 </p>
 
@@ -780,14 +780,14 @@ export default function ComprehensiveTraining() {
                           key={idx}
                           onClick={() => !selectedChoice && checkSpellingChoice(option)}
                           disabled={selectedChoice !== null}
-                          className={`p-6 text-2xl font-bold rounded-2xl border-2 transition-all ${
+                          className={`p-8 text-2xl sm:text-3xl font-bold rounded-2xl border-3 transition-all ${
                             showFeedback
                               ? isCorrect
                                 ? "border-green-400 bg-green-50 text-green-700"
                                 : isSelected
                                 ? "border-red-400 bg-red-50 text-red-700"
                                 : "border-gray-200 text-gray-400"
-                              : "border-gray-200 hover:border-orange-400 hover:bg-orange-50"
+                              : "border-gray-200 hover:border-orange-400 hover:bg-orange-50 active:scale-95"
                           }`}
                         >
                           {option}
@@ -823,8 +823,8 @@ export default function ComprehensiveTraining() {
                 </Button>
               </div>
 
-              <div className="bg-white rounded-3xl border-2 border-purple-100 shadow-xl p-6 mb-6">
-                <p className="text-lg leading-relaxed text-gray-700">
+              <div className="bg-white rounded-3xl border-2 border-purple-100 shadow-xl p-6 sm:p-8 mb-6">
+                <p className="text-xl sm:text-2xl leading-relaxed text-gray-700">
                   {renderTextWithBlanks()}
                 </p>
               </div>
@@ -884,7 +884,7 @@ export default function ComprehensiveTraining() {
               }
             }}
             disabled={showBlankResults}
-            className={`w-28 h-8 px-2 text-center font-bold rounded-lg border-2 outline-none transition-all ${
+            className={`w-32 sm:w-36 h-10 sm:h-12 px-2 text-center text-lg sm:text-xl font-bold rounded-lg border-2 outline-none transition-all ${
               showBlankResults
                 ? isCorrect
                   ? "border-green-400 bg-green-50 text-green-700"
@@ -894,7 +894,7 @@ export default function ComprehensiveTraining() {
             placeholder="..."
           />
           {isWrong && (
-            <span className="ml-1 text-green-600 font-bold">({blank.word})</span>
+            <span className="ml-2 text-green-600 font-bold text-lg">({blank.word})</span>
           )}
         </span>
       );

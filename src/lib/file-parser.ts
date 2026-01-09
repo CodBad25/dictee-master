@@ -37,8 +37,8 @@ function cleanWord(word: string): string {
     .replace(/&apos;/g, "'")
     .replace(/&quot;/g, '"')
     .replace(/&amp;/g, '&')
-    // Supprimer les articles au début
-    .replace(/^(le|la|les|l'|l'|un|une|des|d'|d')\s*/i, '')
+    // Supprimer les articles au début (mots plus longs en premier pour éviter match partiel)
+    .replace(/^(une|les|des|le|la|l'|l'|un|d'|d')\s*/i, '')
     // Nettoyer les caractères spéciaux au début et à la fin
     .replace(/^[^a-zA-ZÀ-ÿ'(]+/, '')
     .replace(/[^a-zA-ZÀ-ÿ')]+$/, '')
