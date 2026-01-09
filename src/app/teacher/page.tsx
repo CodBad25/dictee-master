@@ -41,6 +41,7 @@ import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import { parseWordsFromText, extractWordsFromFile, DetectedSection } from "@/lib/file-parser";
 import ListDetail from "@/components/list-detail";
 import TeacherDashboard from "@/components/teacher-dashboard";
+import { VersionBadge } from "@/components/changelog-modal";
 import type { WordList, Word, TrainingMode } from "@/types/database";
 
 const modeLabels: Record<TrainingMode, { label: string; icon: React.ReactNode; color: string; description?: string }> = {
@@ -206,9 +207,12 @@ export default function TeacherPage() {
       <header className="sticky top-0 z-10 bg-gradient-to-b from-white to-white/95 backdrop-blur-xl border-b shadow-lg shadow-purple-100/50">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="font-bold text-xl bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              DictéeMaster
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-bold text-xl bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                DictéeMaster
+              </h1>
+              <VersionBadge />
+            </div>
             <p className="text-xs text-gray-400 font-medium">Espace enseignant</p>
           </div>
           <div className="flex items-center gap-2">

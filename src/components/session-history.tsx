@@ -9,9 +9,13 @@ import {
   Check,
   X,
   ChevronRight,
+  ChevronDown,
   History,
   Trash2,
   RefreshCw,
+  BookOpen,
+  TrendingUp,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore, SessionHistoryEntry } from "@/lib/store";
@@ -23,6 +27,7 @@ export default function SessionHistory() {
   const [selectedSession, setSelectedSession] = useState<SessionHistoryEntry | null>(null);
   const [supabaseSessions, setSupabaseSessions] = useState<SessionHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [expandedList, setExpandedList] = useState<string | null>(null);
 
   // Charger les sessions depuis Supabase quand le prénom change
   const fetchSessions = async () => {
@@ -76,6 +81,32 @@ export default function SessionHistory() {
 
   // Trier par date décroissante
   sessionHistory.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Regrouper par liste
+  const groupedByList = sessionHistory.reduce((acc, session) => {
+    if (!acc[session.listId]) {
+      acc[session.listId] = {
+        listId: session.listId,
+        listTitle: session.listTitle,
+        sessions: [],
+        bestScore: 0,
+        totalAttempts: 0,
+      };
+    }
+    acc[session.listId].sessions.push(session);
+    acc[session.listId].totalAttempts++;
+    if (session.percentage > acc[session.listId].bestScore) {
+      acc[session.listId].bestScore = session.percentage;
+    }
+    return acc;
+  }, {} as Record<string, { listId: string; listTitle: string; sessions: SessionHistoryEntry[]; bestScore: number; totalAttempts: number }>);
+
+  const listGroups = Object.values(groupedByList).sort((a, b) => {
+    // Trier par date de dernière session
+    const aLatest = new Date(a.sessions[0].date).getTime();
+    const bLatest = new Date(b.sessions[0].date).getTime();
+    return bLatest - aLatest;
+  });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -145,12 +176,9 @@ export default function SessionHistory() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-            <History className="w-4 h-4 text-purple-600" />
+            <Award className="w-4 h-4 text-purple-600" />
           </div>
           <h2 className="font-bold text-gray-800">Mes résultats</h2>
-          <span className="px-2 py-0.5 bg-gray-100 rounded-full text-xs text-gray-500">
-            {sessionHistory.length}
-          </span>
         </div>
         <div className="flex items-center gap-1">
           {currentStudentName && (
@@ -181,49 +209,130 @@ export default function SessionHistory() {
         </div>
       </div>
 
-      {/* Session cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {sessionHistory.map((session, index) => (
-          <motion.button
-            key={session.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            onClick={() => setSelectedSession(session)}
-            className={`relative p-4 rounded-2xl border-2 text-left transition-all hover:scale-105 hover:shadow-lg ${getScoreBg(session.percentage)}`}
-          >
-            {/* Score badge */}
-            <div className={`absolute -top-2 -right-2 w-10 h-10 rounded-xl bg-gradient-to-br ${getScoreColor(session.percentage)} flex items-center justify-center shadow-lg`}>
-              <span className="text-white text-xs font-bold">{session.percentage}%</span>
-            </div>
+      {/* Grouped by list */}
+      <div className="space-y-3">
+        {listGroups.map((group) => {
+          const isExpanded = expandedList === group.listId;
+          const latestSession = group.sessions[0];
+          const hasPerfect = group.bestScore === 100;
 
-            {/* Content */}
-            <p className="font-semibold text-gray-800 text-sm mb-1 pr-8 line-clamp-1">
-              {session.listTitle}
-            </p>
-            <p className="text-xs text-gray-400 mb-2">
-              {formatDate(session.date)}
-            </p>
+          return (
+            <motion.div
+              key={group.listId}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl border-2 border-gray-100 shadow-sm overflow-hidden"
+            >
+              {/* List header - always visible */}
+              <button
+                onClick={() => setExpandedList(isExpanded ? null : group.listId)}
+                className="w-full p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors"
+              >
+                {/* Best score */}
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${getScoreColor(group.bestScore)} flex flex-col items-center justify-center shadow-md flex-shrink-0`}>
+                  <span className="text-white text-lg font-bold">{group.bestScore}%</span>
+                  {hasPerfect && <Trophy className="w-3 h-3 text-white/80" />}
+                </div>
 
-            {/* Stats */}
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span>{session.correctCount}/{session.totalWords}</span>
-              {session.chronoTime && (
-                <span className="flex items-center gap-0.5">
-                  <Zap className="w-3 h-3 text-orange-400" />
-                  {formatTime(session.chronoTime)}
-                </span>
-              )}
-            </div>
+                {/* Info */}
+                <div className="flex-1 text-left">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-gray-800">{group.listTitle}</h3>
+                    {hasPerfect && (
+                      <span className="px-2 py-0.5 bg-amber-100 text-amber-600 rounded-full text-xs font-medium">
+                        Maîtrisé
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                    <span className="flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" />
+                      Record: {group.bestScore}%
+                    </span>
+                    <span>{group.totalAttempts} essai{group.totalAttempts > 1 ? 's' : ''}</span>
+                  </div>
+                </div>
 
-            {/* Perfect badge */}
-            {session.percentage === 100 && (
-              <div className="absolute bottom-2 right-2">
-                <Trophy className="w-4 h-4 text-amber-400" />
-              </div>
-            )}
-          </motion.button>
-        ))}
+                {/* Expand icon */}
+                <div className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                </div>
+              </button>
+
+              {/* Expanded: show all sessions */}
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="border-t border-gray-100 bg-gray-50"
+                  >
+                    <div className="p-3 space-y-2">
+                      {group.sessions.map((session, idx) => {
+                        const wrongWords = session.answers.filter(a => !a.isCorrect).map(a => a.word);
+
+                        return (
+                          <button
+                            key={session.id}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedSession(session);
+                            }}
+                            className={`w-full p-3 rounded-xl text-left transition-all hover:shadow-md ${
+                              session.percentage === 100
+                                ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200'
+                                : 'bg-white border border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-lg ${getScoreColor(session.percentage)} bg-gradient-to-br flex items-center justify-center`}>
+                                  <span className="text-white text-sm font-bold">{session.percentage}%</span>
+                                </div>
+                                <div>
+                                  <p className="text-sm text-gray-600">{formatDate(session.date)}</p>
+                                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                                    <span>{session.correctCount}/{session.totalWords}</span>
+                                    <span>•</span>
+                                    <span>{formatTime(session.timeSpent)}</span>
+                                    {session.chronoTime && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="text-orange-500 flex items-center gap-0.5">
+                                          <Zap className="w-3 h-3" />
+                                          {formatTime(session.chronoTime)}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Wrong words preview */}
+                              {wrongWords.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs text-red-500">{wrongWords.length} erreur{wrongWords.length > 1 ? 's' : ''}</span>
+                                  <ChevronRight className="w-4 h-4 text-gray-300" />
+                                </div>
+                              )}
+                              {wrongWords.length === 0 && (
+                                <div className="flex items-center gap-1">
+                                  <Trophy className="w-4 h-4 text-amber-400" />
+                                  <ChevronRight className="w-4 h-4 text-gray-300" />
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Detail modal */}

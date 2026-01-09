@@ -15,6 +15,8 @@ import {
   Calendar,
   Download,
   RefreshCw,
+  BookOpen,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,10 +26,11 @@ import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 export default function TeacherDashboard() {
   const { sessionHistory: localHistory } = useAppStore();
   const { loadAllSessions } = useSupabaseSync();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true); // Toujours ouvert par défaut
   const [selectedPeriod, setSelectedPeriod] = useState<"all" | "week" | "month">("all");
   const [supabaseSessions, setSupabaseSessions] = useState<SessionHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<SessionHistoryEntry | null>(null);
 
   // Charger les sessions Supabase
   const fetchSessions = async () => {
@@ -60,12 +63,10 @@ export default function TeacherDashboard() {
     }
   };
 
-  // Charger au premier expand
+  // Charger automatiquement au mount
   useEffect(() => {
-    if (isExpanded && supabaseSessions.length === 0) {
-      fetchSessions();
-    }
-  }, [isExpanded]);
+    fetchSessions();
+  }, []);
 
   // Combiner sessions locales et Supabase (dédupliquer par id)
   const allSessionIds = new Set<string>();
@@ -301,126 +302,345 @@ export default function TeacherDashboard() {
               </div>
             </div>
 
-            {/* Stats grid */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-white rounded-2xl border-2 border-gray-100 shadow-md">
-                <div className="flex items-center gap-2 mb-2">
-                  <Target className="w-4 h-4 text-green-500" />
-                  <span className="text-xs text-gray-500">Score moyen</span>
-                </div>
-                <p className="text-2xl font-bold text-gray-800">{avgScore}%</p>
+            {/* Stats grid - compact */}
+            <div className="grid grid-cols-4 gap-2">
+              <div className="p-3 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 text-center">
+                <p className="text-2xl font-bold text-green-600">{avgScore}%</p>
+                <p className="text-xs text-green-600/70">Score moy.</p>
               </div>
-              <div className="p-4 bg-white rounded-2xl border-2 border-gray-100 shadow-md">
-                <div className="flex items-center gap-2 mb-2">
-                  <Trophy className="w-4 h-4 text-amber-500" />
-                  <span className="text-xs text-gray-500">100% parfaits</span>
-                </div>
-                <p className="text-2xl font-bold text-gray-800">{perfectSessions}</p>
+              <div className="p-3 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 text-center">
+                <p className="text-2xl font-bold text-amber-600">{perfectSessions}</p>
+                <p className="text-xs text-amber-600/70">Parfaits</p>
               </div>
-              <div className="p-4 bg-white rounded-2xl border-2 border-gray-100 shadow-md">
-                <div className="flex items-center gap-2 mb-2">
-                  <Users className="w-4 h-4 text-blue-500" />
-                  <span className="text-xs text-gray-500">Élèves actifs</span>
-                </div>
-                <p className="text-2xl font-bold text-gray-800">{uniqueStudents}</p>
+              <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 text-center">
+                <p className="text-2xl font-bold text-blue-600">{uniqueStudents}</p>
+                <p className="text-xs text-blue-600/70">Élèves</p>
               </div>
-              <div className="p-4 bg-white rounded-2xl border-2 border-gray-100 shadow-md">
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-purple-500" />
-                  <span className="text-xs text-gray-500">Temps moyen</span>
-                </div>
-                <p className="text-2xl font-bold text-gray-800">{formatTime(avgTime)}</p>
+              <div className="p-3 bg-gradient-to-br from-purple-50 to-fuchsia-50 rounded-xl border border-purple-100 text-center">
+                <p className="text-2xl font-bold text-purple-600">{formatTime(avgTime)}</p>
+                <p className="text-xs text-purple-600/70">Temps moy.</p>
               </div>
             </div>
 
-            {/* Most missed words */}
-            {mostMissedWords.length > 0 && (
-              <div className="p-4 bg-red-50 rounded-2xl border border-red-100">
-                <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle className="w-4 h-4 text-red-500" />
-                  <h3 className="font-semibold text-red-700 text-sm">Mots les plus ratés</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {mostMissedWords.map(([word, data]) => (
-                    <span
-                      key={word}
-                      className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm"
-                    >
-                      {word} <span className="text-red-400">({data.count}x)</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Combined: Stats par liste + Mots ratés */}
+            {(() => {
+              // Regrouper les sessions par liste
+              const listStats: Record<string, {
+                listId: string;
+                listTitle: string;
+                sessions: number;
+                uniqueStudents: Set<string>;
+                avgScore: number;
+                perfectCount: number;
+                totalScore: number;
+                missedWords: Record<string, number>;
+              }> = {};
 
-            {/* Leaderboard */}
-            {leaderboard.length > 0 && leaderboard[0].name !== "Anonyme" && (
-              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                <div className="flex items-center gap-2 mb-3">
-                  <Trophy className="w-4 h-4 text-amber-600" />
-                  <h3 className="font-semibold text-amber-800 text-sm">Classement des élèves</h3>
-                </div>
-                <div className="space-y-2">
-                  {leaderboard.filter(s => s.name !== "Anonyme").slice(0, 5).map((student, index) => (
-                    <div
-                      key={student.name}
-                      className="flex items-center gap-3 p-2 bg-white rounded-xl"
-                    >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${
-                        index === 0 ? "bg-amber-400 text-white" :
-                        index === 1 ? "bg-gray-300 text-gray-700" :
-                        index === 2 ? "bg-amber-600 text-white" :
-                        "bg-gray-100 text-gray-500"
-                      }`}>
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-800 text-sm">{student.name}</p>
-                        <p className="text-xs text-gray-400">
-                          {student.sessions} sessions • {student.perfectCount} parfaits
-                        </p>
-                      </div>
-                      <span className="font-bold text-green-600">{Math.round(student.avgScore)}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              filteredSessions.forEach(session => {
+                if (!listStats[session.listId]) {
+                  listStats[session.listId] = {
+                    listId: session.listId,
+                    listTitle: session.listTitle,
+                    sessions: 0,
+                    uniqueStudents: new Set(),
+                    avgScore: 0,
+                    perfectCount: 0,
+                    totalScore: 0,
+                    missedWords: {},
+                  };
+                }
+                const stat = listStats[session.listId];
+                stat.sessions++;
+                stat.totalScore += session.percentage;
+                stat.avgScore = Math.round(stat.totalScore / stat.sessions);
+                if (session.studentName) stat.uniqueStudents.add(session.studentName);
+                if (session.percentage === 100) stat.perfectCount++;
 
-            {/* Recent sessions */}
-            {recentSessions.length > 0 && (
-              <div className="p-4 bg-white rounded-2xl border-2 border-gray-100 shadow-md">
-                <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="w-4 h-4 text-purple-500" />
-                  <h3 className="font-semibold text-gray-700 text-sm">Sessions récentes</h3>
-                </div>
+                session.answers.forEach(a => {
+                  if (!a.isCorrect) {
+                    stat.missedWords[a.word] = (stat.missedWords[a.word] || 0) + 1;
+                  }
+                });
+              });
+
+              const listStatsArray = Object.values(listStats)
+                .sort((a, b) => b.sessions - a.sessions);
+
+              if (listStatsArray.length === 0) return null;
+
+              return (
                 <div className="space-y-2">
-                  {recentSessions.map((session) => (
-                    <div
+                  {listStatsArray.map(stat => {
+                    const topMissed = Object.entries(stat.missedWords)
+                      .sort((a, b) => b[1] - a[1])
+                      .slice(0, 4);
+
+                    return (
+                      <div
+                        key={stat.listId}
+                        className="p-3 bg-white rounded-xl border border-gray-200 shadow-sm"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <BookOpen className="w-4 h-4 text-indigo-500" />
+                            <h4 className="font-bold text-gray-800">{stat.listTitle}</h4>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              {stat.uniqueStudents.size} élèves • {stat.sessions} sessions
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                              stat.avgScore >= 80 ? 'bg-green-100 text-green-700' :
+                              stat.avgScore >= 60 ? 'bg-blue-100 text-blue-700' :
+                              'bg-orange-100 text-orange-700'
+                            }`}>
+                              {stat.avgScore}%
+                            </span>
+                            {stat.perfectCount > 0 && (
+                              <span className="flex items-center gap-0.5 text-amber-500">
+                                <Trophy className="w-3 h-3" />
+                                <span className="text-xs font-bold">{stat.perfectCount}</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {topMissed.length > 0 && (
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <AlertTriangle className="w-3 h-3 text-red-400" />
+                            {topMissed.map(([word, count]) => (
+                              <span
+                                key={word}
+                                className="px-1.5 py-0.5 bg-red-50 text-red-600 rounded text-xs"
+                              >
+                                {word} ({count})
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* Classement + Sessions récentes - side by side on larger screens */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Leaderboard */}
+              {leaderboard.length > 0 && leaderboard[0].name !== "Anonyme" && (
+                <div className="p-3 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Trophy className="w-4 h-4 text-amber-600" />
+                    <h3 className="font-bold text-amber-800 text-sm">Top élèves</h3>
+                  </div>
+                  <div className="space-y-1.5">
+                    {leaderboard.filter(s => s.name !== "Anonyme").slice(0, 3).map((student, index) => (
+                      <div
+                        key={student.name}
+                        className="flex items-center gap-2 p-2 bg-white/70 rounded-lg"
+                      >
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${
+                          index === 0 ? "bg-amber-400 text-white" :
+                          index === 1 ? "bg-gray-300 text-gray-700" :
+                          "bg-amber-600 text-white"
+                        }`}>
+                          {index + 1}
+                        </div>
+                        <span className="flex-1 font-medium text-gray-800 text-sm truncate">{student.name}</span>
+                        <span className="font-bold text-green-600 text-sm">{Math.round(student.avgScore)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent sessions */}
+              {recentSessions.length > 0 && (
+                <div className="p-3 bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="w-4 h-4 text-purple-500" />
+                    <h3 className="font-bold text-gray-700 text-sm">Dernières sessions</h3>
+                  </div>
+                  <div className="space-y-1.5">
+                    {recentSessions.slice(0, 4).map((session) => (
+                      <button
+                        key={session.id}
+                        onClick={() => setSelectedSession(session)}
+                        className="w-full flex items-center justify-between p-2 bg-gray-50 rounded-lg hover:bg-purple-50 transition-all text-left"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-800 text-sm truncate">
+                            {session.studentName || "Anonyme"}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {session.listTitle} • {formatDate(session.date)}
+                          </p>
+                        </div>
+                        <span className={`ml-2 px-2 py-0.5 rounded text-xs font-bold ${
+                          session.percentage === 100 ? "bg-amber-100 text-amber-700" :
+                          session.percentage >= 80 ? "bg-green-100 text-green-700" :
+                          "bg-orange-100 text-orange-700"
+                        }`}>
+                          {session.percentage}%
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* All sessions - compact list */}
+            {filteredSessions.length > 4 && (
+              <details className="group">
+                <summary className="flex items-center justify-between p-3 bg-gray-100 rounded-xl cursor-pointer hover:bg-gray-200 transition-colors">
+                  <span className="font-medium text-gray-700 text-sm">
+                    Voir toutes les sessions ({filteredSessions.length})
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform" />
+                </summary>
+                <div className="mt-2 p-2 bg-white rounded-xl border border-gray-200 max-h-48 overflow-y-auto space-y-1">
+                  {filteredSessions.map((session) => (
+                    <button
                       key={session.id}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded-xl"
+                      onClick={() => setSelectedSession(session)}
+                      className="w-full flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-all text-left"
                     >
-                      <div>
-                        <p className="font-medium text-gray-800 text-sm">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm text-gray-800 truncate">
                           {session.studentName || "Anonyme"}
-                        </p>
-                        <p className="text-xs text-gray-400">
+                        </span>
+                        <span className="text-xs text-gray-400 ml-2">
                           {session.listTitle} • {formatDate(session.date)}
-                        </p>
+                        </span>
                       </div>
-                      <span className={`px-2 py-1 rounded-lg text-sm font-bold ${
-                        session.percentage === 100 ? "bg-amber-100 text-amber-700" :
-                        session.percentage >= 80 ? "bg-green-100 text-green-700" :
-                        session.percentage >= 60 ? "bg-blue-100 text-blue-700" :
-                        "bg-red-100 text-red-700"
+                      <span className={`ml-2 px-1.5 py-0.5 rounded text-xs font-bold ${
+                        session.percentage >= 80 ? "text-green-600" : "text-orange-600"
                       }`}>
                         {session.percentage}%
                       </span>
-                    </div>
+                    </button>
                   ))}
                 </div>
-              </div>
+              </details>
             )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Session detail modal */}
+      <AnimatePresence>
+        {selectedSession && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+            onClick={() => setSelectedSession(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl w-full max-w-md max-h-[85vh] overflow-hidden shadow-2xl"
+            >
+              {/* Header */}
+              <div className={`p-6 bg-gradient-to-br ${
+                selectedSession.percentage === 100 ? "from-yellow-400 to-amber-500" :
+                selectedSession.percentage >= 80 ? "from-green-400 to-emerald-500" :
+                selectedSession.percentage >= 60 ? "from-blue-400 to-cyan-500" :
+                "from-orange-400 to-red-400"
+              } text-white`}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-bold text-xl mb-1">
+                      {selectedSession.studentName || "Anonyme"}
+                    </h3>
+                    <p className="text-white/80 text-sm">{selectedSession.listTitle}</p>
+                    <p className="text-white/60 text-xs mt-1">{formatDateFull(selectedSession.date)}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-4xl font-bold">{selectedSession.percentage}%</div>
+                    <div className="text-white/80 text-sm">
+                      {selectedSession.correctCount}/{selectedSession.totalWords} mots
+                    </div>
+                  </div>
+                </div>
+
+                {/* Time stats */}
+                <div className="flex gap-4 mt-4">
+                  <div className="flex items-center gap-2 bg-white/20 rounded-xl px-3 py-2">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm font-medium">{formatTime(selectedSession.timeSpent)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Word list with errors highlighted */}
+              <div className="p-4 max-h-[45vh] overflow-y-auto">
+                <h4 className="font-semibold text-gray-600 mb-3 flex items-center gap-2 text-sm">
+                  Détail des réponses
+                </h4>
+
+                {/* Errors first */}
+                {selectedSession.answers.filter(a => !a.isCorrect).length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs font-bold text-red-500 mb-2 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Mots ratés ({selectedSession.answers.filter(a => !a.isCorrect).length})
+                    </p>
+                    <div className="space-y-2">
+                      {selectedSession.answers.filter(a => !a.isCorrect).map((answer, idx) => (
+                        <div key={idx} className="p-3 rounded-xl bg-red-50 border border-red-100">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-bold text-gray-800">{answer.word}</p>
+                              {answer.userAnswer && (
+                                <p className="text-sm text-red-500">
+                                  Réponse : <span className="line-through">{answer.userAnswer}</span>
+                                </p>
+                              )}
+                            </div>
+                            <span className="text-red-500 text-xl">✗</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Correct answers */}
+                {selectedSession.answers.filter(a => a.isCorrect).length > 0 && (
+                  <div>
+                    <p className="text-xs font-bold text-green-500 mb-2">
+                      Mots réussis ({selectedSession.answers.filter(a => a.isCorrect).length})
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSession.answers.filter(a => a.isCorrect).map((answer, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm border border-green-100"
+                        >
+                          {answer.word} ✓
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Close button */}
+              <div className="p-4 border-t">
+                <Button
+                  onClick={() => setSelectedSession(null)}
+                  className="w-full h-12 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-xl font-bold"
+                >
+                  Fermer
+                </Button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

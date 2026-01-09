@@ -54,12 +54,22 @@ export interface DetectedSection {
   words: string[];
 }
 
+interface ParsedCell {
+  text: string;
+  colSpan: number;
+}
+
+interface ParsedRow {
+  cells: ParsedCell[];
+}
+
 /**
  * Parse le XML ODT et extrait les tableaux
- * Gère les cellules répétées et fusionnées
+ * Gère les cellules répétées et fusionnées avec leurs spans
  */
-function parseODTXml(xmlString: string): { tables: string[][][] } {
+function parseODTXml(xmlString: string): { tables: string[][][]; tableSpans: Map<number, Map<number, number>> } {
   const tables: string[][][] = [];
+  const tableSpans = new Map<number, Map<number, number>>(); // tableIndex -> (colIndex -> span)
 
   // Extraire les tableaux avec regex pour éviter les problèmes de namespace
   const tableRegex = /<table:table[^>]*>([\s\S]*?)<\/table:table>/g;
@@ -67,14 +77,18 @@ function parseODTXml(xmlString: string): { tables: string[][][] } {
   const textRegex = /<text:p[^>]*>([\s\S]*?)<\/text:p>/g;
 
   let tableMatch;
+  let tableIndex = 0;
   while ((tableMatch = tableRegex.exec(xmlString)) !== null) {
     const tableContent = tableMatch[1];
     const tableData: string[][] = [];
+    const firstRowSpans = new Map<number, number>();
 
     let rowMatch;
+    let rowIndex = 0;
     while ((rowMatch = rowRegex.exec(tableContent)) !== null) {
       const rowContent = rowMatch[1];
       const rowData: string[] = [];
+      let logicalColIndex = 0;
 
       // Parser les cellules manuellement pour gérer tous les cas
       let pos = 0;
@@ -103,8 +117,9 @@ function parseODTXml(xmlString: string): { tables: string[][][] } {
         }
 
         if (isCovered) {
-          // Cellule couverte = cellule vide
-          rowData.push('');
+          // Cellule couverte = placeholder pour maintenir l'alignement des colonnes
+          rowData.push('__COVERED__');
+          logicalColIndex++;
           // Avancer après la balise fermante
           const endTag = rowContent.indexOf('/>', nextPos);
           pos = endTag !== -1 ? endTag + 2 : nextPos + 30;
@@ -139,9 +154,19 @@ function parseODTXml(xmlString: string): { tables: string[][][] } {
           const repeatMatch = cellAttrs.match(/table:number-columns-repeated="(\d+)"/);
           const repeatCount = repeatMatch ? parseInt(repeatMatch[1], 10) : 1;
 
+          // Vérifier le colspan
+          const spanMatch = cellAttrs.match(/table:number-columns-spanned="(\d+)"/);
+          const colSpan = spanMatch ? parseInt(spanMatch[1], 10) : 1;
+
+          // Stocker le span pour la première ligne (en-têtes)
+          if (rowIndex === 0 && colSpan > 1) {
+            firstRowSpans.set(logicalColIndex, colSpan);
+          }
+
           // Ajouter la cellule (ou les cellules répétées)
           for (let i = 0; i < repeatCount; i++) {
             rowData.push(cellText);
+            logicalColIndex++;
           }
 
           pos = cellEnd + 19; // Longueur de '</table:table-cell>'
@@ -151,24 +176,35 @@ function parseODTXml(xmlString: string): { tables: string[][][] } {
       if (rowData.length > 0) {
         tableData.push(rowData);
       }
+      rowIndex++;
     }
 
     if (tableData.length > 0) {
       tables.push(tableData);
-      console.log('Parsed table with', tableData.length, 'rows and', tableData[0]?.length || 0, 'columns');
+      tableSpans.set(tableIndex, firstRowSpans);
+      console.log('Parsed table', tableIndex, 'with', tableData.length, 'rows');
       console.log('First row:', tableData[0]);
+      if (firstRowSpans.size > 0) {
+        console.log('Header spans:', Array.from(firstRowSpans.entries()));
+      }
     }
+    tableIndex++;
   }
 
-  return { tables };
+  return { tables, tableSpans };
+}
+
+interface HeaderInfo {
+  title: string;
+  colSpan: number;
 }
 
 /**
  * Detecte les en-tetes "Liste X", "Dictee X", ou "n°X" dans une ligne
  * Gère plusieurs formats: "Liste 7", "n°7", "N° 7", "Dictée 1", etc.
  */
-function detectListHeaders(row: string[]): Map<number, string> {
-  const headers = new Map<number, string>();
+function detectListHeaders(row: string[], spans?: Map<number, number>): Map<number, HeaderInfo> {
+  const headers = new Map<number, HeaderInfo>();
 
   // Patterns pour différents formats
   const patterns = [
@@ -179,9 +215,12 @@ function detectListHeaders(row: string[]): Map<number, string> {
   ];
 
   console.log('Checking row for headers:', row);
+  if (spans) {
+    console.log('With spans:', Array.from(spans.entries()));
+  }
 
   row.forEach((cell, index) => {
-    if (!cell || cell.trim() === '') return;
+    if (!cell || cell.trim() === '' || cell === '__COVERED__') return;
 
     const cleanCell = cell.trim();
 
@@ -191,8 +230,9 @@ function detectListHeaders(row: string[]): Map<number, string> {
         // Pour le pattern "n°X", le numéro est dans match[1], sinon match[2]
         const number = match[2] || match[1];
         const prefix = pattern.prefix(match);
-        headers.set(index, `${prefix} ${number}`);
-        console.log(`Found header at col ${index}: "${prefix} ${number}" (from: "${cleanCell}")`);
+        const colSpan = spans?.get(index) || 1;
+        headers.set(index, { title: `${prefix} ${number}`, colSpan });
+        console.log(`Found header at col ${index}: "${prefix} ${number}" (span: ${colSpan}, from: "${cleanCell}")`);
         break;
       }
     }
@@ -205,15 +245,17 @@ function detectListHeaders(row: string[]): Map<number, string> {
  * Extrait les listes depuis un tableau ODT
  * Detecte automatiquement la structure (colonnes avec en-tetes)
  */
-function extractListsFromTable(tableData: string[][]): DetectedSection[] {
+function extractListsFromTable(tableData: string[][], spans?: Map<number, number>): DetectedSection[] {
   if (tableData.length === 0) return [];
 
   // Chercher les en-têtes dans les premières lignes (parfois il y a une ligne de titre avant)
   let headerRow = -1;
-  let headers = new Map<number, string>();
+  let headers = new Map<number, HeaderInfo>();
 
   for (let rowIdx = 0; rowIdx < Math.min(3, tableData.length); rowIdx++) {
-    const candidateHeaders = detectListHeaders(tableData[rowIdx]);
+    // Utiliser les spans seulement pour la première ligne
+    const rowSpans = rowIdx === 0 ? spans : undefined;
+    const candidateHeaders = detectListHeaders(tableData[rowIdx], rowSpans);
     if (candidateHeaders.size >= 2) {
       headers = candidateHeaders;
       headerRow = rowIdx;
@@ -232,20 +274,16 @@ function extractListsFromTable(tableData: string[][]): DetectedSection[] {
   if (headers.size >= 1) {
     const sections: DetectedSection[] = [];
     const headerIndices = Array.from(headers.keys()).sort((a, b) => a - b);
-    const totalCols = Math.max(...tableData.map(row => row.length));
 
     headerIndices.forEach((startIndex, i) => {
-      const listTitle = headers.get(startIndex) || `Liste ${i + 1}`;
+      const headerInfo = headers.get(startIndex)!;
+      const listTitle = headerInfo.title;
       const words: string[] = [];
 
-      // Fin = debut de la liste suivante ou fin de ligne
-      const endIndex = i < headerIndices.length - 1
-        ? headerIndices[i + 1]
-        : totalCols;
+      // Utiliser le colSpan pour déterminer combien de colonnes appartiennent à cette liste
+      const numCols = headerInfo.colSpan;
 
-      const numCols = endIndex - startIndex;
-
-      console.log(`Processing ${listTitle}: cols ${startIndex} to ${endIndex - 1} (${numCols} cols)`);
+      console.log(`Processing ${listTitle}: cols ${startIndex} to ${startIndex + numCols - 1} (${numCols} cols, span=${headerInfo.colSpan})`);
 
       // Parcourir les lignes de donnees (apres l'en-tete)
       for (let rowIndex = headerRow + 1; rowIndex < tableData.length; rowIndex++) {
@@ -255,16 +293,17 @@ function extractListsFromTable(tableData: string[][]): DetectedSection[] {
           const colIndex = startIndex + colOffset;
           if (colIndex < row.length) {
             const cellText = row[colIndex];
-            if (cellText && cellText.trim()) {
-              // Ne pas inclure les cellules qui sont elles-mêmes des titres
-              if (detectListHeaders([cellText]).size > 0) continue;
+            // Ignorer les cellules vides, couvertes ou qui sont des titres
+            if (!cellText || cellText.trim() === '' || cellText === '__COVERED__') continue;
 
-              const cellWords = cellText
-                .split(/[,\n]+/)
-                .map(w => cleanWord(w))
-                .filter(isValidWord);
-              words.push(...cellWords);
-            }
+            // Ne pas inclure les cellules qui sont elles-mêmes des titres
+            if (detectListHeaders([cellText]).size > 0) continue;
+
+            const cellWords = cellText
+              .split(/[,\n]+/)
+              .map(w => cleanWord(w))
+              .filter(isValidWord);
+            words.push(...cellWords);
           }
         }
       }
@@ -289,7 +328,6 @@ function extractListsFromTable(tableData: string[][]): DetectedSection[] {
   }
 
   // Pas d'en-tetes - essayer de diviser le tableau en 2 moities
-  const firstRow = tableData[0];
   const totalColsFallback = Math.max(...tableData.map(row => row.length));
   if (totalColsFallback >= 4) {
     // Supposer que le tableau est divise en 2 listes (gauche et droite)
@@ -301,7 +339,7 @@ function extractListsFromTable(tableData: string[][]): DetectedSection[] {
     for (const row of tableData) {
       // Premiere moitie -> Liste 1
       for (let c = 0; c < midPoint; c++) {
-        if (row[c]) {
+        if (row[c] && row[c] !== '__COVERED__') {
           const cellWords = row[c]
             .split(/[,\n]+/)
             .map(w => cleanWord(w))
@@ -312,7 +350,7 @@ function extractListsFromTable(tableData: string[][]): DetectedSection[] {
 
       // Deuxieme moitie -> Liste 2
       for (let c = midPoint; c < row.length; c++) {
-        if (row[c]) {
+        if (row[c] && row[c] !== '__COVERED__') {
           const cellWords = row[c]
             .split(/[,\n]+/)
             .map(w => cleanWord(w))
@@ -347,7 +385,7 @@ function extractListsFromTable(tableData: string[][]): DetectedSection[] {
   const allWords: string[] = [];
   for (const row of tableData) {
     for (const cell of row) {
-      if (cell) {
+      if (cell && cell !== '__COVERED__') {
         const cellWords = cell
           .split(/[,\n]+/)
           .map(w => cleanWord(w))
@@ -483,8 +521,8 @@ export async function extractFromODT(file: File): Promise<{
     throw new Error('Fichier ODT invalide');
   }
 
-  // Parser les tableaux
-  const { tables } = parseODTXml(contentXml);
+  // Parser les tableaux avec leurs informations de spans
+  const { tables, tableSpans } = parseODTXml(contentXml);
 
   console.log(`Found ${tables.length} tables in ODT`);
 
@@ -494,18 +532,22 @@ export async function extractFromODT(file: File): Promise<{
 
   if (tables.length > 0) {
     // Chercher le tableau qui contient des en-tetes "Liste X"
-    for (const tableData of tables) {
+    for (let tableIndex = 0; tableIndex < tables.length; tableIndex++) {
+      const tableData = tables[tableIndex];
+      const spans = tableSpans.get(tableIndex);
+
       if (tableData.length > 0) {
         // Chercher les en-têtes dans les 3 premières lignes
         let maxHeaders = 0;
         for (let rowIdx = 0; rowIdx < Math.min(3, tableData.length); rowIdx++) {
-          const headers = detectListHeaders(tableData[rowIdx]);
+          const rowSpans = rowIdx === 0 ? spans : undefined;
+          const headers = detectListHeaders(tableData[rowIdx], rowSpans);
           maxHeaders = Math.max(maxHeaders, headers.size);
         }
 
         if (maxHeaders >= 2) {
-          // C'est le tableau principal avec Liste 7 et Liste 8
-          const tableSections = extractListsFromTable(tableData);
+          // C'est le tableau principal avec Liste 1 et Liste 2
+          const tableSections = extractListsFromTable(tableData, spans);
           if (tableSections.length >= 2) {
             allSections = tableSections;
             console.log('Found main table with lists:', tableSections.map(s => `${s.title} (${s.words.length} words)`));
@@ -517,8 +559,10 @@ export async function extractFromODT(file: File): Promise<{
 
     // Si pas trouve avec 2 listes, essayer avec 1 liste
     if (allSections.length === 0) {
-      for (const tableData of tables) {
-        const tableSections = extractListsFromTable(tableData);
+      for (let tableIndex = 0; tableIndex < tables.length; tableIndex++) {
+        const tableData = tables[tableIndex];
+        const spans = tableSpans.get(tableIndex);
+        const tableSections = extractListsFromTable(tableData, spans);
         if (tableSections.length >= 1 && tableSections[0].words.length > 0) {
           allSections = tableSections;
           console.log('Using table with sections:', tableSections.map(s => `${s.title} (${s.words.length} words)`));

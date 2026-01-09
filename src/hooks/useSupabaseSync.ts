@@ -74,13 +74,13 @@ export function useSupabaseSync() {
         const localList = toLocalWordList(dbList);
         const localWords = dbWords.map(toLocalWord);
         addDemoList(localList, localWords);
+        setIsSyncing(false);
         return { list: localList, words: localWords };
       }
     } catch (error) {
       console.error('Error creating list:', error);
-    } finally {
-      setIsSyncing(false);
     }
+    setIsSyncing(false);
     return null;
   };
 
@@ -91,13 +91,13 @@ export function useSupabaseSync() {
       const success = await deleteWordListDb(listId);
       if (success) {
         useAppStore.getState().deleteDemoList(listId);
+        setIsSyncing(false);
         return true;
       }
     } catch (error) {
       console.error('Error deleting list:', error);
-    } finally {
-      setIsSyncing(false);
     }
+    setIsSyncing(false);
     return false;
   };
 
@@ -134,6 +134,20 @@ export function useSupabaseSync() {
     chronoTimeSeconds?: number;
     answers: { word: string; userAnswer: string; isCorrect: boolean }[];
   }) => {
+    // TOUJOURS sauvegarder en local d'abord
+    useAppStore.getState().addSessionToHistory({
+      listId: session.listId,
+      listTitle: session.listTitle,
+      studentName: session.studentName,
+      percentage: session.percentage,
+      correctCount: session.correctWords,
+      totalWords: session.totalWords,
+      timeSpent: session.timeSpentSeconds,
+      chronoTime: session.chronoTimeSeconds,
+      answers: session.answers,
+    });
+
+    // Puis essayer de sauvegarder dans Supabase
     try {
       const dbSession = await createTrainingSession({
         listId: session.listId,
@@ -148,35 +162,10 @@ export function useSupabaseSync() {
 
       if (dbSession) {
         await createWordAttempts(dbSession.id, session.answers);
-        
-        // Aussi en local
-        useAppStore.getState().addSessionToHistory({
-          listId: session.listId,
-          listTitle: session.listTitle,
-          studentName: session.studentName,
-          percentage: session.percentage,
-          correctCount: session.correctWords,
-          totalWords: session.totalWords,
-          timeSpent: session.timeSpentSeconds,
-          chronoTime: session.chronoTimeSeconds,
-          answers: session.answers,
-        });
         return dbSession;
       }
     } catch (error) {
-      console.error('Error saving session:', error);
-      // Fallback local
-      useAppStore.getState().addSessionToHistory({
-        listId: session.listId,
-        listTitle: session.listTitle,
-        studentName: session.studentName,
-        percentage: session.percentage,
-        correctCount: session.correctWords,
-        totalWords: session.totalWords,
-        timeSpent: session.timeSpentSeconds,
-        chronoTime: session.chronoTimeSeconds,
-        answers: session.answers,
-      });
+      console.error('Error saving session to Supabase:', error);
     }
     return null;
   };

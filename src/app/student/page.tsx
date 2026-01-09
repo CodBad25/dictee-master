@@ -24,6 +24,7 @@ import TrainingMode from "@/components/training-mode";
 import FillBlanksMode from "@/components/fill-blanks-mode";
 import ComprehensiveTraining from "@/components/comprehensive-training";
 import SessionHistory from "@/components/session-history";
+import { VersionBadge } from "@/components/changelog-modal";
 
 export default function StudentPage() {
   const router = useRouter();
@@ -111,9 +112,12 @@ export default function StudentPage() {
       <header className="sticky top-0 z-10 bg-gradient-to-b from-white to-white/95 backdrop-blur-xl border-b shadow-lg shadow-purple-100/50">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="font-bold text-xl bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              DictéeMaster
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-bold text-xl bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                DictéeMaster
+              </h1>
+              <VersionBadge />
+            </div>
             <p className="text-xs text-gray-400 font-medium">Espace élève</p>
           </div>
           <div className="flex items-center gap-3">

@@ -17,6 +17,10 @@ import {
   Clock,
   MousePointerClick,
   User,
+  History,
+  TrendingUp,
+  TrendingDown,
+  Minus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,6 +48,7 @@ export default function TrainingMode() {
     addBadge,
     currentStudentName,
     setCurrentStudentName,
+    sessionHistory,
   } = useAppStore();
   const { saveSession } = useSupabaseSync();
 
@@ -448,9 +453,58 @@ export default function TrainingMode() {
               }`}>
                 {percentage}%
               </div>
-              <p className="text-gray-500 font-medium">
+              <p className="text-gray-500 font-medium text-lg">
                 {finalResult.correctCount} / {finalResult.totalWords} mots corrects
               </p>
+
+              {/* Détail des erreurs */}
+              {sessionAnswers.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  {(() => {
+                    const wrongAnswers = sessionAnswers.filter(a => !a.isCorrect);
+                    const correctAnswers = sessionAnswers.filter(a => a.isCorrect);
+
+                    return (
+                      <>
+                        {wrongAnswers.length > 0 && (
+                          <div className="mb-4">
+                            <p className="text-sm font-bold text-red-500 mb-2 flex items-center gap-1">
+                              <X className="w-4 h-4" />
+                              Mots à revoir ({wrongAnswers.length})
+                            </p>
+                            <div className="space-y-2 max-h-32 overflow-y-auto">
+                              {wrongAnswers.map((ans, idx) => (
+                                <div key={idx} className="p-2 bg-red-50 rounded-lg text-left">
+                                  <p className="font-bold text-red-700 text-lg">{ans.word}</p>
+                                  <p className="text-sm text-red-500">
+                                    Ta réponse: <span className="line-through">{ans.userAnswer || "(vide)"}</span>
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {correctAnswers.length > 0 && (
+                          <div>
+                            <p className="text-sm font-bold text-green-500 mb-2 flex items-center gap-1">
+                              <Check className="w-4 h-4" />
+                              Mots réussis ({correctAnswers.length})
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {correctAnswers.map((ans, idx) => (
+                                <span key={idx} className="px-2 py-1 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
+                                  {ans.word}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
 
               {/* Speed score when chrono was enabled */}
               {chronoEnabled && chronoTime > 0 && (
@@ -596,7 +650,7 @@ export default function TrainingMode() {
               className="w-full max-w-md"
             >
               {/* Welcome card */}
-              <div className="text-center mb-8">
+              <div className="text-center mb-6">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -605,11 +659,102 @@ export default function TrainingMode() {
                 >
                   <Rocket className="w-10 h-10 text-white" />
                 </motion.div>
-                <h1 className="text-2xl font-bold mb-2">Prêt à t'entraîner ?</h1>
-                <p className="text-gray-500">
+                <h1 className="text-3xl font-bold mb-2">Prêt à t'entraîner ?</h1>
+                <p className="text-gray-500 text-lg">
                   {currentWords.length} mots à mémoriser
                 </p>
               </div>
+
+              {/* Progression sur cette liste */}
+              {(() => {
+                const listSessions = sessionHistory
+                  .filter(s => s.listId === currentList.id)
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                if (listSessions.length === 0) return null;
+
+                const bestScore = Math.max(...listSessions.map(s => s.percentage));
+                const latestScore = listSessions[0].percentage;
+                const previousScore = listSessions.length > 1 ? listSessions[1].percentage : null;
+
+                let trend: 'up' | 'down' | 'stable' = 'stable';
+                if (previousScore !== null) {
+                  if (latestScore > previousScore) trend = 'up';
+                  else if (latestScore < previousScore) trend = 'down';
+                }
+
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12 }}
+                    className="bg-white rounded-2xl border-2 border-indigo-100 p-4 mb-4"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <History className="w-5 h-5 text-indigo-600" />
+                      <h3 className="font-bold text-gray-700">Ta progression</h3>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      <div className="p-2 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl text-center border border-amber-100">
+                        <Trophy className="w-4 h-4 text-amber-500 mx-auto mb-1" />
+                        <p className="text-xl font-bold text-amber-600">{bestScore}%</p>
+                        <p className="text-xs text-amber-500">Record</p>
+                      </div>
+
+                      <div className="p-2 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl text-center border border-indigo-100">
+                        <Check className="w-4 h-4 text-indigo-500 mx-auto mb-1" />
+                        <p className="text-xl font-bold text-indigo-600">{latestScore}%</p>
+                        <p className="text-xs text-indigo-500">Dernier</p>
+                      </div>
+
+                      <div className={`p-2 rounded-xl text-center border ${
+                        trend === 'up'
+                          ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-100'
+                          : trend === 'down'
+                          ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-100'
+                          : 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-100'
+                      }`}>
+                        {trend === 'up' ? (
+                          <TrendingUp className="w-4 h-4 text-green-500 mx-auto mb-1" />
+                        ) : trend === 'down' ? (
+                          <TrendingDown className="w-4 h-4 text-red-500 mx-auto mb-1" />
+                        ) : (
+                          <Minus className="w-4 h-4 text-gray-400 mx-auto mb-1" />
+                        )}
+                        <p className={`text-sm font-bold ${
+                          trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-500'
+                        }`}>
+                          {trend === 'up' ? 'Progresse' : trend === 'down' ? 'À revoir' : 'Stable'}
+                        </p>
+                        <p className="text-xs text-gray-400">{listSessions.length} essai{listSessions.length > 1 ? 's' : ''}</p>
+                      </div>
+                    </div>
+
+                    {/* Mini historique */}
+                    <div className="flex items-center gap-1 justify-center">
+                      {listSessions.slice(0, 5).reverse().map((session, idx) => (
+                        <div
+                          key={session.id}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
+                            session.percentage >= 80
+                              ? 'bg-green-100 text-green-600'
+                              : session.percentage >= 60
+                              ? 'bg-blue-100 text-blue-600'
+                              : 'bg-orange-100 text-orange-600'
+                          }`}
+                          title={`${session.percentage}%`}
+                        >
+                          {session.percentage}
+                        </div>
+                      ))}
+                      {listSessions.length > 5 && (
+                        <span className="text-xs text-gray-400 ml-1">+{listSessions.length - 5}</span>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })()}
 
               {/* Prénom de l'élève */}
               <motion.div
@@ -796,7 +941,7 @@ export default function TrainingMode() {
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ type: "spring", stiffness: 200 }}
-                        className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent"
+                        className="text-5xl sm:text-6xl md:text-7xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent"
                       >
                         {currentWord.word}
                       </motion.p>
@@ -850,11 +995,11 @@ export default function TrainingMode() {
               exit={{ opacity: 0, y: -20 }}
               className="w-full max-w-md text-center"
             >
-              <div className="flex items-center justify-center gap-2 mb-6">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <span className="text-lg">✍️</span>
+              <div className="flex items-center justify-center gap-3 mb-8">
+                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                  <span className="text-2xl">✍️</span>
                 </div>
-                <p className="text-gray-600 font-medium">
+                <p className="text-gray-600 font-semibold text-xl sm:text-2xl">
                   {currentMode === "audio"
                     ? "Écoute et écris le mot"
                     : "Écris le mot de mémoire"}
@@ -888,7 +1033,7 @@ export default function TrainingMode() {
                       }
                     }}
                     placeholder="Tape le mot ici..."
-                    className="text-center text-3xl h-16 font-bold border-2 border-gray-100 rounded-2xl focus:border-indigo-300 focus:ring-indigo-200 transition-all"
+                    className="text-center text-4xl sm:text-5xl md:text-6xl h-20 sm:h-24 md:h-28 font-bold border-2 border-gray-100 rounded-2xl focus:border-indigo-300 focus:ring-indigo-200 transition-all"
                     autoComplete="off"
                     autoCapitalize="none"
                     autoCorrect="off"
@@ -963,14 +1108,14 @@ export default function TrainingMode() {
                   isCorrect ? "bg-green-400" : "bg-orange-400"
                 }`} />
                 <div className="relative bg-white rounded-3xl border-2 border-gray-100 shadow-xl p-6">
-                  <p className="text-sm text-gray-400 mb-2">La bonne réponse :</p>
-                  <p className="text-4xl font-bold text-green-600 mb-2">
+                  <p className="text-base text-gray-400 mb-2">La bonne réponse :</p>
+                  <p className="text-4xl sm:text-5xl font-bold text-green-600 mb-2">
                     {currentWord.word}
                   </p>
                   {!isCorrect && (
                     <div className="mt-4 pt-4 border-t border-gray-100">
-                      <p className="text-sm text-gray-400 mb-1">Ta réponse :</p>
-                      <p className="text-2xl text-red-400 line-through">
+                      <p className="text-base text-gray-400 mb-1">Ta réponse :</p>
+                      <p className="text-2xl sm:text-3xl text-red-400 line-through">
                         {answer || "(vide)"}
                       </p>
                     </div>

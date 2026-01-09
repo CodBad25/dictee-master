@@ -19,12 +19,16 @@ import {
   Headphones,
   PenTool,
   FileText,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { useAppStore } from "@/lib/store";
+import { useAppStore, SessionHistoryEntry } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import { generateTextWithBlanks, generateTextWithAI, GeneratedText } from "@/lib/text-generator";
 import { generateSpellingChoice, SpellingChoice, generateWordVariants } from "@/lib/spelling-errors";
@@ -52,6 +56,7 @@ export default function ComprehensiveTraining() {
     setCurrentStudentName,
     apiConfig,
     addSessionToHistory,
+    sessionHistory,
   } = useAppStore();
   const { saveSession } = useSupabaseSync();
 
@@ -456,6 +461,66 @@ export default function ComprehensiveTraining() {
                 <span className="text-lg font-bold text-purple-600">{fillBlankScore}/{generatedText?.blanks.length || 0}</span>
               </div>
             </div>
+
+            {/* Detail des erreurs */}
+            {(() => {
+              const wordsWithErrors = wordProgress.filter(
+                w => !w.flashcardCorrect || !w.audioCorrect || !w.spellingCorrect || !w.fillBlankCorrect
+              );
+              const perfectWords = wordProgress.filter(
+                w => w.flashcardCorrect && w.audioCorrect && w.spellingCorrect && w.fillBlankCorrect
+              );
+
+              return (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  {wordsWithErrors.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-xs font-bold text-red-500 mb-2 flex items-center gap-1">
+                        <X className="w-3 h-3" />
+                        Mots a revoir ({wordsWithErrors.length})
+                      </p>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {wordsWithErrors.map((wp, idx) => (
+                          <div key={idx} className="p-2 bg-red-50 rounded-lg">
+                            <p className="font-bold text-red-700 text-base">{wp.word}</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {!wp.flashcardCorrect && (
+                                <span className="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded-full">Flashcard</span>
+                              )}
+                              {!wp.audioCorrect && (
+                                <span className="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded-full">Audio</span>
+                              )}
+                              {!wp.spellingCorrect && (
+                                <span className="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded-full">Orthographe</span>
+                              )}
+                              {!wp.fillBlankCorrect && (
+                                <span className="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded-full">Dictee</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {perfectWords.length > 0 && (
+                    <div>
+                      <p className="text-xs font-bold text-green-500 mb-2 flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        Mots parfaits ({perfectWords.length})
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {perfectWords.map((wp, idx) => (
+                          <span key={idx} className="px-2 py-1 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
+                            {wp.word}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="flex gap-3">
@@ -572,6 +637,96 @@ export default function ComprehensiveTraining() {
                   </div>
                 </div>
               </div>
+
+              {/* Progression sur cette liste */}
+              {(() => {
+                const listSessions = sessionHistory
+                  .filter(s => s.listId === currentList.id)
+                  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                if (listSessions.length === 0) return null;
+
+                const bestScore = Math.max(...listSessions.map(s => s.percentage));
+                const latestScore = listSessions[0].percentage;
+                const previousScore = listSessions.length > 1 ? listSessions[1].percentage : null;
+
+                // Calculer la tendance
+                let trend: 'up' | 'down' | 'stable' = 'stable';
+                if (previousScore !== null) {
+                  if (latestScore > previousScore) trend = 'up';
+                  else if (latestScore < previousScore) trend = 'down';
+                }
+
+                return (
+                  <div className="bg-white rounded-2xl border-2 border-indigo-100 p-4 mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <History className="w-5 h-5 text-indigo-600" />
+                      <h3 className="font-bold text-gray-700">Ta progression</h3>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 mb-3">
+                      {/* Meilleur score */}
+                      <div className="p-3 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-xl text-center border border-amber-100">
+                        <Trophy className="w-5 h-5 text-amber-500 mx-auto mb-1" />
+                        <p className="text-xl font-bold text-amber-600">{bestScore}%</p>
+                        <p className="text-xs text-amber-500">Record</p>
+                      </div>
+
+                      {/* Dernier score */}
+                      <div className="p-3 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl text-center border border-indigo-100">
+                        <Check className="w-5 h-5 text-indigo-500 mx-auto mb-1" />
+                        <p className="text-xl font-bold text-indigo-600">{latestScore}%</p>
+                        <p className="text-xs text-indigo-500">Dernier</p>
+                      </div>
+
+                      {/* Tendance */}
+                      <div className={`p-3 rounded-xl text-center border ${
+                        trend === 'up'
+                          ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-100'
+                          : trend === 'down'
+                          ? 'bg-gradient-to-br from-red-50 to-rose-50 border-red-100'
+                          : 'bg-gradient-to-br from-gray-50 to-slate-50 border-gray-100'
+                      }`}>
+                        {trend === 'up' ? (
+                          <TrendingUp className="w-5 h-5 text-green-500 mx-auto mb-1" />
+                        ) : trend === 'down' ? (
+                          <TrendingDown className="w-5 h-5 text-red-500 mx-auto mb-1" />
+                        ) : (
+                          <Minus className="w-5 h-5 text-gray-400 mx-auto mb-1" />
+                        )}
+                        <p className={`text-sm font-bold ${
+                          trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-500'
+                        }`}>
+                          {trend === 'up' ? 'Progresse' : trend === 'down' ? 'A revoir' : 'Stable'}
+                        </p>
+                        <p className="text-xs text-gray-400">{listSessions.length} essai{listSessions.length > 1 ? 's' : ''}</p>
+                      </div>
+                    </div>
+
+                    {/* Mini historique */}
+                    <div className="flex items-center gap-1 justify-center">
+                      {listSessions.slice(0, 5).reverse().map((session, idx) => (
+                        <div
+                          key={session.id}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
+                            session.percentage >= 80
+                              ? 'bg-green-100 text-green-600'
+                              : session.percentage >= 60
+                              ? 'bg-blue-100 text-blue-600'
+                              : 'bg-orange-100 text-orange-600'
+                          }`}
+                          title={`${session.percentage}% - ${new Date(session.date).toLocaleDateString('fr-FR')}`}
+                        >
+                          {session.percentage}
+                        </div>
+                      ))}
+                      {listSessions.length > 5 && (
+                        <span className="text-xs text-gray-400 ml-1">+{listSessions.length - 5}</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Prenom */}
               <div className="mb-4 p-4 rounded-2xl border-2 border-gray-100 bg-white">
