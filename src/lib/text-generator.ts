@@ -19,46 +19,57 @@ export interface GeneratedText {
   }[];
 }
 
-// Templates de phrases avec contexte - utilisant {word} comme placeholder
-// Les mots peuvent etre accordes selon le contexte
-const SENTENCE_TEMPLATES = [
-  // Narration simple
-  "{word} etait vraiment important pour lui.",
-  "Elle regardait {word} avec attention.",
-  "Nous avons decouvert {word} ce matin.",
-  "Il pensait souvent a {word}.",
-  "{word} brillait sous le soleil.",
-
-  // Descriptions
-  "{word} semblait mysterieux.",
-  "C'etait {word} magnifique.",
-  "{word} paraissait immense.",
-
-  // Actions
-  "Il a trouve {word} dans le jardin.",
-  "Elle a observe {word} pendant longtemps.",
-  "Nous avons apercu {word} au loin.",
-  "Papa a repare {word} hier.",
-  "Maman a achete {word} au marche.",
-
-  // Contexte scolaire
-  "A l'ecole, nous avons etudie {word}.",
-  "La maitresse a explique {word}.",
-  "Les eleves ont appris {word}.",
-
-  // Contexte quotidien
-  "Dans la maison, il y avait {word}.",
-  "Sur la table, on voyait {word}.",
-  "Pres de la fenetre, {word} attendait.",
+// Templates de récits cohérents pour dictées niveau 6ème
+// Chaque template est une histoire complète avec des placeholders {word1}, {word2}, etc.
+const STORY_TEMPLATES = [
+  // Histoire d'aventure
+  {
+    intro: "Ce matin-là, Lucas découvrit {word1} dans le grenier de sa grand-mère.",
+    middle: [
+      "Il observa {word2} avec curiosité.",
+      "Cela lui rappelait {word3} qu'il avait vu dans un livre.",
+      "{word4} semblait venir d'une époque lointaine.",
+    ],
+    end: "Le garçon décida de garder ce trésor précieux."
+  },
+  // Histoire de nature
+  {
+    intro: "Pendant les vacances, Marie se promenait près de {word1}.",
+    middle: [
+      "Elle aperçut soudain {word2} entre les arbres.",
+      "Plus loin, {word3} attirait son attention.",
+      "La jeune fille photographia {word4} pour s'en souvenir.",
+    ],
+    end: "Cette journée resterait gravée dans sa mémoire."
+  },
+  // Histoire quotidienne
+  {
+    intro: "À la maison, toute la famille préparait {word1} pour la fête.",
+    middle: [
+      "Papa s'occupait de {word2} dans le salon.",
+      "Maman avait installé {word3} sur la grande table.",
+      "Les enfants admiraient {word4} avec émerveillement.",
+    ],
+    end: "La soirée promettait d'être inoubliable."
+  },
+  // Histoire d'école
+  {
+    intro: "Au collège, le professeur présenta {word1} à toute la classe.",
+    middle: [
+      "Les élèves découvrirent {word2} pour la première fois.",
+      "Certains comparaient cela à {word3} qu'ils connaissaient déjà.",
+      "{word4} suscitait beaucoup de questions.",
+    ],
+    end: "Ce cours passionnant se termina trop vite."
+  },
 ];
 
-// Templates pour 2 mots
-const DOUBLE_TEMPLATES = [
-  "{word1} et {word2} etaient ensemble.",
-  "Entre {word1} et {word2}, il hesitait.",
-  "Il a vu {word1} puis {word2}.",
-  "{word1} ressemblait a {word2}.",
-  "Avec {word1} et {word2}, tout etait possible.",
+// Templates simples pour compléter si besoin
+const FILLER_TEMPLATES = [
+  "On pouvait également observer {word}.",
+  "{word} complétait parfaitement le tableau.",
+  "Sans oublier {word} qui jouait un rôle important.",
+  "Il y avait aussi {word} non loin de là.",
 ];
 
 /**
@@ -83,12 +94,10 @@ function chooseWordVariant(word: string, context: 'masculine' | 'feminine' | 'pl
 
 /**
  * Genere un texte a trous a partir d'une liste de mots
- * Utilise des templates simples
+ * Utilise des templates de récits cohérents niveau 6ème
  */
 export function generateTextWithBlanks(words: string[]): GeneratedText {
-  const sentences: string[] = [];
   const blanks: GeneratedText['blanks'] = [];
-  let currentPosition = 0;
 
   // Melanger les mots
   const shuffledWords = [...words].sort(() => Math.random() - 0.5);
@@ -96,48 +105,59 @@ export function generateTextWithBlanks(words: string[]): GeneratedText {
   // Limiter a 10 mots max pour ne pas avoir un texte trop long
   const wordsToUse = shuffledWords.slice(0, Math.min(10, shuffledWords.length));
 
-  let i = 0;
-  while (i < wordsToUse.length) {
-    // 20% de chance d'utiliser un template double si possible
-    if (i + 1 < wordsToUse.length && Math.random() < 0.2) {
-      const template = DOUBLE_TEMPLATES[Math.floor(Math.random() * DOUBLE_TEMPLATES.length)];
-      const originalWord1 = wordsToUse[i];
-      const originalWord2 = wordsToUse[i + 1];
-      const word1 = chooseWordVariant(originalWord1);
-      const word2 = chooseWordVariant(originalWord2);
+  // Choisir un template d'histoire au hasard
+  const storyTemplate = STORY_TEMPLATES[Math.floor(Math.random() * STORY_TEMPLATES.length)];
 
-      const sentence = template
-        .replace('{word1}', word1)
-        .replace('{word2}', word2);
+  // Construire le texte
+  const sentences: string[] = [];
+  let wordIndex = 0;
 
-      sentences.push(sentence);
+  // Phrase d'introduction avec le premier mot
+  if (wordIndex < wordsToUse.length) {
+    const originalWord = wordsToUse[wordIndex];
+    const word = chooseWordVariant(originalWord);
+    sentences.push(storyTemplate.intro.replace('{word1}', word));
+    wordIndex++;
+  }
 
-      // Calculer les positions
-      const pos1 = currentPosition + sentence.indexOf(word1);
-      const pos2 = currentPosition + sentence.lastIndexOf(word2);
-
-      blanks.push({ word: word1, originalWord: originalWord1, position: pos1 });
-      blanks.push({ word: word2, originalWord: originalWord2, position: pos2 });
-
-      currentPosition += sentence.length + 1;
-      i += 2;
-    } else {
-      const template = SENTENCE_TEMPLATES[Math.floor(Math.random() * SENTENCE_TEMPLATES.length)];
-      const originalWord = wordsToUse[i];
+  // Phrases du milieu avec les mots suivants
+  for (const middleTemplate of storyTemplate.middle) {
+    if (wordIndex < wordsToUse.length) {
+      const originalWord = wordsToUse[wordIndex];
       const word = chooseWordVariant(originalWord);
-
-      const sentence = template.replace('{word}', word);
-      sentences.push(sentence);
-
-      const pos = currentPosition + sentence.indexOf(word);
-      blanks.push({ word, originalWord: originalWord, position: pos });
-
-      currentPosition += sentence.length + 1;
-      i += 1;
+      const placeholder = `{word${wordIndex + 1}}`;
+      sentences.push(middleTemplate.replace(placeholder, word));
+      wordIndex++;
     }
   }
 
+  // Si on a encore des mots, utiliser les templates de remplissage
+  while (wordIndex < wordsToUse.length) {
+    const originalWord = wordsToUse[wordIndex];
+    const word = chooseWordVariant(originalWord);
+    const fillerTemplate = FILLER_TEMPLATES[wordIndex % FILLER_TEMPLATES.length];
+    sentences.push(fillerTemplate.replace('{word}', word));
+    wordIndex++;
+  }
+
+  // Phrase de fin
+  sentences.push(storyTemplate.end);
+
   const fullText = sentences.join(' ');
+
+  // Trouver les positions des mots dans le texte final
+  let searchStart = 0;
+  for (let i = 0; i < wordsToUse.length; i++) {
+    const originalWord = wordsToUse[i];
+    const word = chooseWordVariant(originalWord);
+
+    // Chercher le mot dans le texte à partir de la dernière position trouvée
+    const pos = fullText.indexOf(word, searchStart);
+    if (pos !== -1) {
+      blanks.push({ word, originalWord, position: pos });
+      searchStart = pos + word.length;
+    }
+  }
 
   // Creer le texte avec les trous
   let displayText = fullText;
@@ -187,21 +207,31 @@ export async function generateTextWithAI(
         messages: [
           {
             role: 'system',
-            content: `Tu es un professeur de francais qui cree des textes de dictee pour des collegiens (11-15 ans).
-Genere un court texte (4-6 phrases) qui utilise TOUS les mots fournis de maniere naturelle.
-Le texte doit:
-- Etre coherent et raconter une petite histoire
-- Utiliser les mots dans leur forme appropriee (accorde si necessaire)
-- Etre simple mais pas enfantin
-- Ne pas repeter les mots`,
+            content: `Tu es un professeur de français en classe de 6ème (collège français, élèves de 11-12 ans).
+
+Tu dois créer un texte de dictée d'ENTRAÎNEMENT. Ce texte servira aux élèves pour s'exercer sur des mots de vocabulaire avant une vraie dictée en classe.
+
+CONSIGNES STRICTES :
+1. Écris un texte NARRATIF cohérent de 4 à 6 phrases qui raconte une petite histoire ou décrit une scène
+2. Utilise TOUS les mots fournis de manière NATURELLE (pas forcée)
+3. Accorde les mots correctement selon le contexte (masculin/féminin, singulier/pluriel)
+4. Style adapté au niveau 6ème : phrases claires, vocabulaire accessible, mais pas enfantin
+5. Le texte doit pouvoir être dicté à voix haute (phrases bien ponctuées)
+6. N'utilise chaque mot qu'UNE SEULE fois
+7. Évite les phrases trop courtes ou les énumérations
+
+EXEMPLE de bon texte de dictée niveau 6ème :
+"Ce matin-là, le héros de notre histoire traversait la jungle amazonienne. Il cherchait un trésor caché depuis des siècles. Son canif à la main, il écartait les branches qui lui barraient le passage. Soudain, il aperçut une statue imposante au milieu d'une clairière. Son cœur battait fort car il savait que son but était proche."
+
+Réponds UNIQUEMENT avec le texte de la dictée, sans commentaire ni explication.`,
           },
           {
             role: 'user',
-            content: `Cree un texte utilisant ces mots: ${wordsWithVariants.join(', ')}`,
+            content: `Crée un texte de dictée utilisant ces mots de vocabulaire : ${wordsWithVariants.join(', ')}`,
           },
         ],
-        max_tokens: 400,
-        temperature: 0.7,
+        max_tokens: 500,
+        temperature: 0.8,
       }),
     });
 

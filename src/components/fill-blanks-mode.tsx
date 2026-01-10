@@ -48,6 +48,43 @@ export default function FillBlanksMode() {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [frenchVoice, setFrenchVoice] = useState<SpeechSynthesisVoice | null>(null);
+
+  // Charger les voix disponibles et trouver la meilleure voix française
+  useEffect(() => {
+    const loadVoices = () => {
+      const voices = speechSynthesis.getVoices();
+      if (voices.length === 0) return;
+
+      // Chercher les voix françaises par ordre de préférence
+      const frenchVoices = voices.filter(v => v.lang.startsWith('fr'));
+
+      if (frenchVoices.length > 0) {
+        // Préférer les voix natives/premium (souvent marquées comme "local" ou avec des noms spécifiques)
+        const preferredVoice = frenchVoices.find(v =>
+          v.name.includes('Thomas') || // Voix française de qualité sur macOS
+          v.name.includes('Amélie') ||
+          v.name.includes('Audrey') ||
+          v.name.includes('Aurélie') ||
+          v.name.includes('Google français') ||
+          v.name.includes('Microsoft Paul') ||
+          v.name.includes('Microsoft Julie') ||
+          v.localService === true // Préférer les voix locales (souvent meilleures)
+        ) || frenchVoices.find(v => v.lang === 'fr-FR') || frenchVoices[0];
+
+        setFrenchVoice(preferredVoice);
+        console.log('Voix française sélectionnée:', preferredVoice.name, preferredVoice.lang);
+      }
+    };
+
+    loadVoices();
+    // Les voix peuvent ne pas être chargées immédiatement
+    speechSynthesis.onvoiceschanged = loadVoices;
+
+    return () => {
+      speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
 
   // Générer le texte au démarrage
   const generateText = useCallback(async () => {
@@ -74,7 +111,7 @@ export default function FillBlanksMode() {
     }
   }, [currentWords, apiConfig]);
 
-  // Synthèse vocale
+  // Synthèse vocale avec voix française de qualité
   const speakText = useCallback(() => {
     if (!generatedText) return;
 
@@ -83,8 +120,13 @@ export default function FillBlanksMode() {
 
     const utterance = new SpeechSynthesisUtterance(generatedText.fullText);
     utterance.lang = "fr-FR";
-    utterance.rate = 0.85;
+    utterance.rate = 0.8; // Un peu plus lent pour une dictée
     utterance.pitch = 1;
+
+    // Utiliser la voix française sélectionnée si disponible
+    if (frenchVoice) {
+      utterance.voice = frenchVoice;
+    }
 
     utterance.onstart = () => setIsPlaying(true);
     utterance.onend = () => setIsPlaying(false);
@@ -92,7 +134,7 @@ export default function FillBlanksMode() {
 
     speechRef.current = utterance;
     speechSynthesis.speak(utterance);
-  }, [generatedText]);
+  }, [generatedText, frenchVoice]);
 
   const stopSpeaking = () => {
     speechSynthesis.cancel();

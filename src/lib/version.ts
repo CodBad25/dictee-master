@@ -2,7 +2,7 @@
  * Version de l'application et changelog
  */
 
-export const APP_VERSION = "1.2.9";
+export const APP_VERSION = "1.3.0";
 
 export interface ChangelogEntry {
   version: string;
@@ -11,6 +11,17 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.3.0",
+    date: "2026-01-10",
+    changes: [
+      "Dictee a trous : textes generes beaucoup plus coherents (niveau 6eme)",
+      "Dictee a trous : meilleure voix francaise pour la synthese vocale",
+      "Choix orthographique : erreurs plus realistes (infirmier -> infirmie)",
+      "Erreurs priorisees : terminaisons, accents, homophones en premier",
+      "Prompt IA ameliore pour des dictees plus naturelles",
+    ],
+  },
   {
     version: "1.2.9",
     date: "2026-01-09",

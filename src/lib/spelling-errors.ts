@@ -84,19 +84,38 @@ const HOMOPHONES: Record<string, string[]> = {
   'plutôt': ['plus tôt'],
 };
 
-// Terminaisons verbales confondues
-const VERB_ENDINGS: Record<string, string[]> = {
-  'er': ['é', 'ez', 'ée', 'és', 'ées'],
-  'é': ['er', 'ez', 'ée'],
+// Terminaisons verbales et nominales confondues (erreurs très fréquentes chez les élèves)
+const ENDING_CONFUSIONS: Record<string, string[]> = {
+  // Confusion -er/-é/-ée/-ez (la plus fréquente!)
+  'er': ['é', 'ée', 'ez'],
+  'é': ['er', 'ée', 'ez'],
   'ez': ['er', 'é'],
   'ée': ['é', 'er'],
-  'és': ['é', 'ées', 'er'],
-  'ées': ['és', 'é', 'er'],
-  'ais': ['ai', 'ait', 'aient'],
-  'ait': ['ai', 'ais', 'aient'],
-  'aient': ['ais', 'ait'],
+  'és': ['ées', 'er', 'é'],
+  'ées': ['és', 'er', 'é'],
+  // Confusion -ier/-ié (très fréquent: infirmier -> infirmié)
+  'ier': ['ié', 'iez', 'iers'],
+  'ière': ['iere', 'iaire', 'ier'],
+  // Imparfait
+  'ais': ['ai', 'ait', 'és'],
+  'ait': ['ai', 'ais', 'é'],
+  'aient': ['ais', 'ait', 'é'],
+  // Autres
   'ons': ['ont'],
   'ont': ['ons'],
+  // Noms en -tion/-sion
+  'tion': ['ssion', 'sion', 'cions'],
+  'sion': ['tion', 'ssion'],
+  // Noms en -ment
+  'ment': ['man', 'mant', 'ments'],
+  // Adjectifs en -eux/-euse
+  'eux': ['eu', 'euse', 'eus'],
+  'euse': ['euxe', 'euze'],
+  // Noms en -eur
+  'eur': ['eure', 'eurs', 'eurt'],
+  // Pluriels irréguliers
+  'aux': ['als', 'aus'],
+  'eaux': ['os', 'aus', 'eau'],
 };
 
 // Erreurs d'accord frequentes
@@ -132,77 +151,43 @@ const COMMON_MISSPELLINGS: Record<string, string[]> = {
 
 /**
  * Genere des variantes erronees d'un mot
+ * Priorise les erreurs les plus realistes (celles que font vraiment les eleves)
  */
 export function generateSpellingErrors(word: string, count: number = 3): string[] {
-  const errors: Set<string> = new Set();
+  // Erreurs haute priorité (très réalistes)
+  const highPriority: string[] = [];
+  // Erreurs moyenne priorité
+  const mediumPriority: string[] = [];
+  // Erreurs basse priorité (fallback)
+  const lowPriority: string[] = [];
+
   const lowerWord = word.toLowerCase();
 
-  // 1. Verifier si c'est un homophone connu
-  if (HOMOPHONES[lowerWord]) {
-    HOMOPHONES[lowerWord].forEach(h => errors.add(h));
-  }
-
-  // 2. Verifier si c'est un mot souvent mal orthographie
-  if (COMMON_MISSPELLINGS[lowerWord]) {
-    COMMON_MISSPELLINGS[lowerWord].forEach(m => errors.add(m));
-  }
-
-  // 3. Appliquer des confusions phonetiques
-  for (const [sound, confusions] of Object.entries(PHONETIC_CONFUSIONS)) {
-    if (lowerWord.includes(sound)) {
-      confusions.forEach(confusion => {
-        const errorWord = lowerWord.replace(sound, confusion);
-        if (errorWord !== lowerWord) {
-          errors.add(errorWord);
-        }
-      });
-    }
-  }
-
-  // 4. Erreurs de terminaisons verbales
-  for (const [ending, wrongEndings] of Object.entries(VERB_ENDINGS)) {
+  // 1. HAUTE PRIORITÉ: Erreurs de terminaisons (infirmier -> infirmié)
+  for (const [ending, wrongEndings] of Object.entries(ENDING_CONFUSIONS)) {
     if (lowerWord.endsWith(ending)) {
       wrongEndings.forEach(wrongEnding => {
         const errorWord = lowerWord.slice(0, -ending.length) + wrongEnding;
         if (errorWord !== lowerWord && errorWord.length > 1) {
-          errors.add(errorWord);
+          highPriority.push(errorWord);
         }
       });
+      break; // Une seule terminaison par mot
     }
   }
 
-  // 5. Erreurs d'accord (ajout/suppression de s, e, x)
-  if (lowerWord.endsWith('s')) {
-    errors.add(lowerWord.slice(0, -1)); // oubli du s
-  } else if (!lowerWord.endsWith('s') && !lowerWord.endsWith('x')) {
-    errors.add(lowerWord + 's'); // ajout errone du s
+  // 2. HAUTE PRIORITÉ: Homophones connus
+  if (HOMOPHONES[lowerWord]) {
+    highPriority.push(...HOMOPHONES[lowerWord]);
   }
 
-  if (lowerWord.endsWith('e')) {
-    errors.add(lowerWord.slice(0, -1)); // oubli du e feminin
+  // 3. HAUTE PRIORITÉ: Mots souvent mal orthographiés
+  if (COMMON_MISSPELLINGS[lowerWord]) {
+    highPriority.push(...COMMON_MISSPELLINGS[lowerWord]);
   }
 
-  // 6. Doublement/dedoublement de consonnes
-  const doubleConsonants = ['ll', 'mm', 'nn', 'pp', 'rr', 'ss', 'tt', 'ff'];
-  doubleConsonants.forEach(dc => {
-    if (lowerWord.includes(dc)) {
-      errors.add(lowerWord.replace(dc, dc[0])); // dedoubler
-    }
-    const single = dc[0];
-    const regex = new RegExp(`([^${single}])${single}([^${single}])`, 'g');
-    const doubled = lowerWord.replace(regex, `$1${dc}$2`);
-    if (doubled !== lowerWord) {
-      errors.add(doubled); // doubler
-    }
-  });
-
-  // 7. Erreurs de lettres muettes
-  if (lowerWord.endsWith('t') || lowerWord.endsWith('d') || lowerWord.endsWith('s')) {
-    errors.add(lowerWord.slice(0, -1)); // oubli lettre muette finale
-  }
-
-  // 8. Confusion accents
-  const accentConfusions: Record<string, string> = {
+  // 4. HAUTE PRIORITÉ: Oubli d'accent (école -> ecole)
+  const accentToPlain: Record<string, string> = {
     'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
     'à': 'a', 'â': 'a',
     'ù': 'u', 'û': 'u',
@@ -211,20 +196,55 @@ export function generateSpellingErrors(word: string, count: number = 3): string[
     'ç': 'c',
   };
   let noAccent = lowerWord;
-  for (const [accent, plain] of Object.entries(accentConfusions)) {
+  for (const [accent, plain] of Object.entries(accentToPlain)) {
     noAccent = noAccent.replace(new RegExp(accent, 'g'), plain);
   }
   if (noAccent !== lowerWord) {
-    errors.add(noAccent);
+    highPriority.push(noAccent);
   }
 
-  // Filtrer les erreurs valides et limiter au nombre demande
-  const validErrors = Array.from(errors)
-    .filter(e => e !== lowerWord && e.length > 1)
-    .slice(0, count * 2); // Prendre plus pour avoir du choix
+  // 5. MOYENNE PRIORITÉ: Confusions phonétiques
+  for (const [sound, confusions] of Object.entries(PHONETIC_CONFUSIONS)) {
+    if (lowerWord.includes(sound)) {
+      confusions.slice(0, 2).forEach(confusion => {
+        const errorWord = lowerWord.replace(sound, confusion);
+        if (errorWord !== lowerWord) {
+          mediumPriority.push(errorWord);
+        }
+      });
+    }
+  }
 
-  // Melanger et retourner
-  return shuffleArray(validErrors).slice(0, count);
+  // 6. MOYENNE PRIORITÉ: Lettres muettes finales
+  if (lowerWord.endsWith('t') && lowerWord.length > 3) {
+    mediumPriority.push(lowerWord.slice(0, -1)); // oubli du t (chat -> cha)
+  }
+  if (lowerWord.endsWith('d') && lowerWord.length > 3) {
+    mediumPriority.push(lowerWord.slice(0, -1)); // oubli du d
+  }
+  if (lowerWord.endsWith('s') && lowerWord.length > 3 && !lowerWord.endsWith('ous') && !lowerWord.endsWith('ais')) {
+    mediumPriority.push(lowerWord.slice(0, -1)); // oubli du s
+  }
+
+  // 7. BASSE PRIORITÉ: Doublement/dédoublement de consonnes
+  const doubleConsonants = ['ll', 'mm', 'nn', 'pp', 'rr', 'ss', 'tt', 'ff'];
+  doubleConsonants.forEach(dc => {
+    if (lowerWord.includes(dc)) {
+      lowPriority.push(lowerWord.replace(dc, dc[0]));
+    }
+  });
+
+  // 8. BASSE PRIORITÉ: Erreurs d'accord
+  if (!lowerWord.endsWith('s') && !lowerWord.endsWith('x') && lowerWord.length > 2) {
+    lowPriority.push(lowerWord + 's');
+  }
+
+  // Combiner par priorité et dédupliquer
+  const allErrors = [...new Set([...highPriority, ...mediumPriority, ...lowPriority])]
+    .filter(e => e !== lowerWord && e.length > 1);
+
+  // Retourner les erreurs par ordre de priorité (pas de mélange aléatoire!)
+  return allErrors.slice(0, count);
 }
 
 /**
