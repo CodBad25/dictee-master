@@ -25,7 +25,8 @@ const DEFAULT_ACTIVITY_ORDER = [
   "spelling_choice",
   "definitions",
   "fill_blanks",
-  "audio",
+  "audio_word",
+  "audio_dictation",
 ];
 
 interface SelectedDictee {
@@ -106,10 +107,11 @@ export default function StudentPage() {
     const modeMap: Record<string, string> = {
       flashcard: "flashcard",
       genre: "genre",
-      audio: "audio",
       spelling_choice: "spelling-choice",
       definitions: "definition",
       fill_blanks: "fill-blanks",
+      audio_word: "audio",
+      audio_dictation: "audio-dictation",
     };
 
     const v1Mode = modeMap[mode] || "flashcard";

@@ -25,10 +25,12 @@ interface DicteeDetailProps {
 
 const ACTIVITY_LABELS: Record<string, { label: string; icon: string; desc: string }> = {
   flashcard: { label: "Flashcard", icon: "🃏", desc: "Mémorise l'orthographe de chaque mot" },
+  genre: { label: "Genre", icon: "🏷️", desc: "Choisis le bon article pour chaque mot" },
   spelling_choice: { label: "Choix orthographique", icon: "✏️", desc: "Trouve la bonne orthographe parmi les propositions" },
   definitions: { label: "Définitions", icon: "📖", desc: "Associe chaque mot à sa définition" },
   fill_blanks: { label: "Texte à trous", icon: "📝", desc: "Complète le texte avec les bons mots" },
-  audio: { label: "Dictée audio", icon: "🎧", desc: "Écoute et écris le mot correctement" },
+  audio_word: { label: "Audio mot", icon: "🎧", desc: "Écoute et écris le mot correctement" },
+  audio_dictation: { label: "Dictée audio", icon: "🎙️", desc: "Écoute le texte et complète les trous" },
 };
 
 export default function DicteeDetail({

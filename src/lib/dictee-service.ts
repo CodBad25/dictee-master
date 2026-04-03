@@ -187,7 +187,7 @@ export async function createClass(teacherId: string, name: string) {
       teacher_id: teacherId,
       name,
       unlocked_dictees: [1],
-      default_activity_order: ["flashcard", "spelling_choice", "definitions", "fill_blanks", "audio"],
+      default_activity_order: ["flashcard", "genre", "spelling_choice", "definitions", "fill_blanks", "audio_word", "audio_dictation"],
     })
     .select()
     .single();
