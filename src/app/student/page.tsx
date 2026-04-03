@@ -14,12 +14,14 @@ import FillBlanksMode from "@/components/fill-blanks-mode";
 import WordDefinitionMode from "@/components/word-definition-mode";
 import ComprehensiveTraining from "@/components/comprehensive-training";
 import SpellingChoiceMode from "@/components/spelling-choice-mode";
+import GenreMode from "@/components/genre-mode";
 import type { WordList, Word } from "@/types/database";
 import { saveResult } from "@/lib/dictee-service";
 import { pingPresence } from "@/lib/presence";
 
 const DEFAULT_ACTIVITY_ORDER = [
   "flashcard",
+  "genre",
   "spelling_choice",
   "definitions",
   "fill_blanks",
@@ -103,6 +105,7 @@ export default function StudentPage() {
     // Mapper le mode vers le format V1
     const modeMap: Record<string, string> = {
       flashcard: "flashcard",
+      genre: "genre",
       audio: "audio",
       spelling_choice: "spelling-choice",
       definitions: "definition",
@@ -136,6 +139,9 @@ export default function StudentPage() {
 
   // Si un entraînement est en cours, afficher le composant correspondant
   if (currentList && currentWords.length > 0) {
+    if (currentList.mode === "genre") {
+      return <GenreMode />;
+    }
     if (currentList.mode === "spelling-choice") {
       return <SpellingChoiceMode />;
     }

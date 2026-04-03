@@ -230,6 +230,11 @@ export default function TrainingMode() {
       .replace(/[\u2018\u2019\u02BC]/g, "'");
   };
 
+  const splitArticle = (word: string) => {
+    const match = word.match(/^(le |la |l'|un |une |les |des |du )(.*)/i);
+    return match ? { article: match[1], base: match[2] } : { article: "", base: word };
+  };
+
   const compareWords = (userAnswer: string, correctWord: string): boolean => {
     const normalizedUser = normalizeWord(userAnswer);
     const normalizedCorrect = normalizeWord(correctWord);
@@ -237,9 +242,15 @@ export default function TrainingMode() {
     // Comparaison stricte : accents, casse et tout
     if (normalizedUser === normalizedCorrect) return true;
 
+    // Accepter aussi juste le mot sans article
+    const { base: correctBase } = splitArticle(correctWord);
+    const normalizedCorrectBase = normalizeWord(correctBase);
+    if (normalizedUser === normalizedCorrectBase) return true;
+
     // Tolérance : casse seulement si le mot correct n'a pas de majuscule (pas un nom propre)
     const isProperNoun = /^[A-ZÀ-Ÿ]/.test(correctWord.trim());
     if (!isProperNoun && normalizedUser.toLowerCase() === normalizedCorrect.toLowerCase()) return true;
+    if (!isProperNoun && normalizedUser.toLowerCase() === normalizedCorrectBase.toLowerCase()) return true;
 
     // Tolérance article : "l'épaule" vs "l' épaule" (espace après apostrophe)
     const cleanUser = normalizedUser.replace(/'\s*/g, "'").toLowerCase();
@@ -837,9 +848,19 @@ export default function TrainingMode() {
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ type: "spring", stiffness: 200 }}
-                        className="text-5xl sm:text-6xl md:text-7xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent"
+                        className="text-5xl sm:text-6xl md:text-7xl font-bold"
                       >
-                        {currentWord.word}
+                        {(() => {
+                          const { article, base } = splitArticle(currentWord.word);
+                          return (
+                            <>
+                              <span className="text-gray-300 font-normal">{article}</span>
+                              <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                                {base}
+                              </span>
+                            </>
+                          );
+                        })()}
                       </motion.p>
                     </div>
                     {/* Hint to click */}
