@@ -259,17 +259,19 @@ export default function TeacherPage() {
     const maxDictees = dictees.length;
     const rows: StudentRow[] = [];
 
-    // Filter students based on class
-    const studentsToShow = Object.entries(hubStudents);
+    // Hub students + demo students from results (for 6T)
+    const allStudents: Record<string, { id: string; name: string }> = { ...hubStudents };
 
-    studentsToShow.forEach(([studentId, student]) => {
-      // Skip demo students if not 6T
-      if (
-        studentId.startsWith("6t-") &&
-        selectedClasseName !== "6T"
-      ) {
-        return;
-      }
+    // Ajouter les élèves démo issus des résultats pour 6T
+    if (selectedClasseName === "6T") {
+      Object.values(results).forEach((r: any) => {
+        if (r.student_id?.startsWith("6t-") && !allStudents[r.student_id]) {
+          allStudents[r.student_id] = { id: r.student_id, name: r.student_name || "Élève" };
+        }
+      });
+    }
+
+    Object.entries(allStudents).forEach(([studentId, student]) => {
 
       const studentResults = Object.values(results).filter(
         (r: any) => r.student_id === studentId
