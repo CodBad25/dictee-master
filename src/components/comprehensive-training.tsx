@@ -563,7 +563,7 @@ export default function ComprehensiveTraining() {
                   {phase === "flashcard" && "Flashcard"}
                   {phase === "audio" && "Audio"}
                   {phase === "spelling-choice" && "Choix orthographique"}
-                  {phase === "fill-blanks" && "Dictee a trous"}
+                  {phase === "fill-blanks" && "Dictée à trous"}
                 </span>
               </div>
               <Button

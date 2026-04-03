@@ -220,21 +220,40 @@ export default function TrainingMode() {
     }, 300);
   };
 
+  // Comparaison STRICTE : accents, majuscules sur noms propres, orthographe exacte
   const normalizeWord = (word: string): string => {
     return word
-      .toLowerCase()
       .trim()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
+      // Normaliser les espaces multiples
+      .replace(/\s+/g, " ")
+      // Normaliser les apostrophes (typographiques → droites)
+      .replace(/[\u2018\u2019\u02BC]/g, "'");
+  };
+
+  const compareWords = (userAnswer: string, correctWord: string): boolean => {
+    const normalizedUser = normalizeWord(userAnswer);
+    const normalizedCorrect = normalizeWord(correctWord);
+
+    // Comparaison stricte : accents, casse et tout
+    if (normalizedUser === normalizedCorrect) return true;
+
+    // Tolérance : casse seulement si le mot correct n'a pas de majuscule (pas un nom propre)
+    const isProperNoun = /^[A-ZÀ-Ÿ]/.test(correctWord.trim());
+    if (!isProperNoun && normalizedUser.toLowerCase() === normalizedCorrect.toLowerCase()) return true;
+
+    // Tolérance article : "l'épaule" vs "l' épaule" (espace après apostrophe)
+    const cleanUser = normalizedUser.replace(/'\s*/g, "'").toLowerCase();
+    const cleanCorrect = normalizedCorrect.replace(/'\s*/g, "'").toLowerCase();
+    if (!isProperNoun && cleanUser === cleanCorrect) return true;
+
+    return false;
   };
 
   const handleSubmitAnswer = () => {
     if (!currentWord) return;
 
     const userAnswer = answer.trim();
-    const normalizedAnswer = normalizeWord(userAnswer);
-    const normalizedCorrect = normalizeWord(currentWord.word);
-    const correct = normalizedAnswer === normalizedCorrect;
+    const correct = compareWords(userAnswer, currentWord.word);
 
     setIsCorrect(correct);
     submitAnswer(currentWord.id, userAnswer, correct);
