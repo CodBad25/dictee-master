@@ -389,23 +389,25 @@ export default function FillBlanksMode() {
               </div>
 
               {/* Prénom */}
-              <div className="mb-4 p-4 rounded-2xl border-2 border-gray-200 bg-white">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-                    <User className="w-5 h-5 text-indigo-600" />
+              {!currentStudentName && (
+                <div className="mb-4 p-4 rounded-2xl border-2 border-gray-200 bg-white">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+                      <User className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-800">Ton prénom</div>
+                      <div className="text-xs text-gray-500">Pour suivre ta progression</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-bold text-gray-800">Ton prénom</div>
-                    <div className="text-xs text-gray-500">Pour suivre ta progression</div>
-                  </div>
+                  <Input
+                    value={currentStudentName}
+                    onChange={(e) => setCurrentStudentName(e.target.value)}
+                    placeholder="Entre ton prénom..."
+                    className="h-12 text-lg font-medium border-2 border-gray-100 rounded-xl"
+                  />
                 </div>
-                <Input
-                  value={currentStudentName}
-                  onChange={(e) => setCurrentStudentName(e.target.value)}
-                  placeholder="Entre ton prénom..."
-                  className="h-12 text-lg font-medium border-2 border-gray-100 rounded-xl"
-                />
-              </div>
+              )}
 
               <Button
                 size="lg"

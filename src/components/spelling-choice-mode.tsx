@@ -48,13 +48,27 @@ export default function SpellingChoiceMode() {
     const w = wordList[index];
     if (!w) return;
 
-    // Get 1-2 wrong choices from pre-validated spelling_errors
-    const errors = w.spelling_errors || [];
-    const numWrong = errors.length >= 2 ? (Math.random() > 0.5 ? 2 : 1) : Math.min(errors.length, 1);
+    let errors = (w.spelling_errors || []).filter(e => e && e.trim() !== w.word);
+
+    // Fallback: if no errors, generate a simple one
+    if (errors.length === 0) {
+      const base = w.word.replace(/^(le |la |l'|un |une |les |des |du )/i, "");
+      // Simple accent removal as fallback
+      const fallback = w.word.replace(/[éèê]/g, "e").replace(/[àâ]/g, "a").replace(/[ùû]/g, "u").replace(/ç/g, "c").replace(/[ôö]/g, "o").replace(/[îï]/g, "i");
+      if (fallback !== w.word) {
+        errors = [fallback];
+      } else {
+        // Double a consonant or remove last letter
+        errors = [w.word + w.word[w.word.length - 2]];
+      }
+    }
+
+    // Take 1-2 wrong choices
     const shuffledErrors = [...errors].sort(() => Math.random() - 0.5);
+    const numWrong = shuffledErrors.length >= 2 ? (Math.random() > 0.5 ? 2 : 1) : 1;
     const wrongChoices = shuffledErrors.slice(0, numWrong);
 
-    // Mix correct + wrong, shuffle
+    // ALWAYS at least 2 choices (1 correct + 1 wrong minimum)
     const allChoices = [w.word, ...wrongChoices].sort(() => Math.random() - 0.5);
     setChoices(allChoices);
     setSelected(null);

@@ -19,7 +19,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
-import { generateDefinitions, shuffleArray, WordDefinition } from "@/lib/definition-generator";
+import { createClient } from "@/lib/supabase/client";
+import { shuffleArray } from "@/lib/definition-generator";
+
+type WordDefinition = { word: string; definition: string };
 import confetti from "canvas-confetti";
 
 type Phase = "setup" | "exercise" | "result";
@@ -58,27 +61,37 @@ export default function WordDefinitionMode() {
   // Options de nombre de mots disponibles
   const wordCountOptions = [3, 5, 7, 10].filter(n => n <= currentWords.length);
 
-  // Charger les définitions
+  // Charger les définitions depuis Supabase (pas d'API IA)
   const loadDefinitions = useCallback(async () => {
-    if (!currentWords.length) return;
-
-    console.log('[WordDefinitionMode] apiConfig from store:', apiConfig);
-    console.log('[WordDefinitionMode] apiKey value:', apiConfig?.apiKey);
+    if (!currentWords.length || !currentList) return;
 
     setIsLoading(true);
     try {
-      const words = currentWords.slice(0, wordCount).map(w => w.word);
-      const defs = await generateDefinitions(words, apiConfig?.apiKey || '');
-      setDefinitions(defs);
-      setShuffledDefinitions(shuffleArray(defs.map(d => d.definition)));
-      setMatches({});
+      const sb = createClient();
+      const { data } = await sb.from("dictee_words")
+        .select("word, definition")
+        .eq("dictee_id", currentList.id)
+        .order("position")
+        .limit(wordCount);
+
+      if (data && data.length > 0) {
+        const defs = data.filter(d => d.definition && d.definition.length > 5).map(d => ({
+          word: d.word,
+          definition: d.definition,
+        }));
+        setDefinitions(defs);
+        setShuffledDefinitions(shuffleArray(defs.map(d => d.definition)));
+        setMatches({});
+      } else {
+        toast.error("Aucune définition trouvée");
+      }
     } catch (error) {
       console.error("Error loading definitions:", error);
       toast.error("Erreur lors du chargement des définitions");
     } finally {
       setIsLoading(false);
     }
-  }, [currentWords, apiConfig, wordCount]);
+  }, [currentWords, currentList, wordCount]);
 
   const handleStartExercise = async () => {
     await loadDefinitions();
@@ -224,20 +237,22 @@ export default function WordDefinitionMode() {
             </div>
 
             {/* Prénom */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ton prénom
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <Input
-                  value={currentStudentName || ""}
-                  onChange={(e) => setCurrentStudentName(e.target.value)}
-                  placeholder="Entre ton prénom..."
-                  className="pl-10 h-12 text-lg rounded-xl"
-                />
+            {!currentStudentName && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ton prénom
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Input
+                    value={currentStudentName || ""}
+                    onChange={(e) => setCurrentStudentName(e.target.value)}
+                    placeholder="Entre ton prénom..."
+                    className="pl-10 h-12 text-lg rounded-xl"
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Sélecteur nombre de mots */}
             <div className="mb-6">
