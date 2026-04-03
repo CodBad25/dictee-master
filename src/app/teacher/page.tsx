@@ -54,6 +54,7 @@ interface CommonError {
 
 // Helper functions
 function getLastName(fullName: string): string {
+  if (!fullName) return "";
   const parts = fullName.trim().split(/\s+/);
   return parts.length > 1 ? parts[parts.length - 1] : fullName;
 }
@@ -477,7 +478,7 @@ export default function TeacherPage() {
                             <span>{dn(row.name)}</span>
                           ) : (
                             <span>
-                              {row.name.split(" ")[0]} {row.lastName[0]}.
+                              {(row.name || "").split(" ")[0]} {row.lastName?.[0] || ""}.
                             </span>
                           )}
                         </div>
