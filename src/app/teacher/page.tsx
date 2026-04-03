@@ -444,25 +444,22 @@ export default function TeacherPage() {
           <>
             {/* Table */}
             <div
-              className={`${selectedStudent ? "h-[55%]" : "h-full"} overflow-y-auto border-b`}
+              className={`${selectedStudent ? "h-[55%]" : "h-full"} overflow-auto border-b`}
             >
-              <table className="w-full border-collapse">
-                <thead className="sticky top-0 bg-purple-600 text-white">
+              <table className="w-full border-collapse text-[11px]">
+                <thead className="sticky top-0 z-20 bg-purple-600 text-white">
                   <tr>
-                    <th className="px-4 py-2 text-left font-bold">Élève ▲</th>
+                    <th className="p-1 px-2 text-left font-semibold sticky left-0 bg-purple-600 z-30 min-w-[100px]">Élève ▲</th>
                     {dictees.map((d) => (
-                      <th
-                        key={d.id}
-                        className="px-2 py-2 text-center font-bold text-xs"
-                      >
-                        D{d.position}
+                      <th key={d.id} className="p-1 text-center font-semibold min-w-[32px]" title={d.title}>
+                        {d.position}
                       </th>
                     ))}
-                    <th className="px-2 py-2 text-center font-bold">⭐</th>
-                    <th className="px-2 py-2 text-center font-bold">XP</th>
-                    <th className="px-2 py-2 text-center font-bold">Niv</th>
-                    <th className="px-2 py-2 text-center font-bold">Note</th>
-                    <th className="px-2 py-2 text-center font-bold">Ess</th>
+                    <th className="p-1 text-center font-semibold">⭐</th>
+                    <th className="p-1 text-center font-semibold">XP</th>
+                    <th className="p-1 text-center font-semibold">Niv</th>
+                    <th className="p-1 text-center font-semibold min-w-[40px]">Note</th>
+                    <th className="p-1 text-center font-semibold">Ess</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -494,23 +491,26 @@ export default function TeacherPage() {
                       </td>
                       {dictees.map((d) => {
                         const r = row.results[d.id];
-                        const color =
-                          r.bestPct >= 80
-                            ? "bg-green-100 text-green-700"
-                            : r.bestPct >= 50
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-red-100 text-red-700";
+                        const pct = r?.bestPct || 0;
+                        const color = pct >= 80
+                          ? "bg-green-100 text-green-700"
+                          : pct >= 50
+                            ? "bg-amber-100 text-amber-700"
+                            : pct > 0
+                              ? "bg-red-100 text-red-700"
+                              : "";
                         return (
                           <td
                             key={d.id}
-                            className={`px-2 py-2 text-center text-sm ${color}`}
+                            className={`p-0.5 text-center font-bold ${color}`}
                           >
-                            {r.bestPct > 0 ? (
+                            {pct > 0 ? (
                               <>
-                                {r.bestPct}%{r.attempts > 1 && <sub>×{r.attempts}</sub>}
+                                {Math.round(pct * 15 / 100)}
+                                {r?.attempts > 1 && <sub className="text-[8px] opacity-50">×{r.attempts}</sub>}
                               </>
                             ) : (
-                              "-"
+                              <span className="text-gray-300">-</span>
                             )}
                           </td>
                         );
