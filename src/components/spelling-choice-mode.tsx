@@ -83,6 +83,25 @@ export default function SpellingChoiceMode() {
         prepareChoices(words, nextIndex);
       } else {
         setPhase("done");
+        // Sauvegarder le résultat dans dm_results
+        if (connectedEleve && currentList) {
+          const finalScore = score + (correct ? 1 : 0);
+          const pct = Math.round((finalScore / words.length) * 100);
+          const sb = createClient();
+          sb.from("dm_results").insert({
+            class_id: '3a2441f8-fd51-46de-8d7c-b58a2b8f6f50',
+            student_id: connectedEleve.eleveId,
+            student_name: `${connectedEleve.prenom} ${connectedEleve.nom}`,
+            dictee_id: currentList.id,
+            activity_mode: "spelling_choice",
+            score: finalScore,
+            total: words.length,
+            percentage: pct,
+            time_spent: 0,
+          }).then(({ error }) => {
+            if (error) console.error("Erreur sauvegarde spelling:", error.message);
+          });
+        }
       }
     }, 1200);
   };

@@ -72,7 +72,7 @@ export async function saveResult(params: {
   const { data: result, error } = await sb
     .from("dm_results")
     .insert({
-      class_id: null, // Sera lié à une classe quand le dashboard enseignant sera prêt
+      class_id: '3a2441f8-fd51-46de-8d7c-b58a2b8f6f50', // Sera lié à une classe quand le dashboard enseignant sera prêt
       student_id: params.studentId,
       student_name: params.studentName,
       dictee_id: params.dicteeId,

@@ -7,7 +7,7 @@ import { ArrowLeft, Check, X } from "lucide-react";
 import DicteeResults from "@/components/dictee-results";
 
 export default function GenreMode() {
-  const { currentList, currentWords, clearCurrentTraining } = useAppStore();
+  const { currentList, currentWords, clearCurrentTraining, connectedEleve } = useAppStore();
   const [words, setWords] = useState<{ word: string; definition: string }[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -63,6 +63,24 @@ export default function GenreMode() {
         setIsCorrect(null);
       } else {
         setPhase("done");
+        // Sauvegarder le résultat dans dm_results
+        if (connectedEleve && currentList) {
+          const pct = Math.round(((score + (correct ? 1 : 0)) / words.length) * 100);
+          const sb = createClient();
+          sb.from("dm_results").insert({
+            class_id: '3a2441f8-fd51-46de-8d7c-b58a2b8f6f50',
+            student_id: connectedEleve.eleveId,
+            student_name: `${connectedEleve.prenom} ${connectedEleve.nom}`,
+            dictee_id: currentList.id,
+            activity_mode: "genre",
+            score: score + (correct ? 1 : 0),
+            total: words.length,
+            percentage: pct,
+            time_spent: 0,
+          }).then(({ error }) => {
+            if (error) console.error("Erreur sauvegarde genre:", error.message);
+          });
+        }
       }
     }, 1000);
   };
