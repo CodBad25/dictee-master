@@ -98,7 +98,7 @@ export default function TeacherPage() {
 
   // Lock state
   const [unlockedPos, setUnlockedPos] = useState<number[]>([]);
-  const [dmClassId, setDmClassId] = useState<string>("");
+  const [dmClassId, setDmClassId] = useState<string | null>("");
 
   // UI state
   const [loading, setLoading] = useState(true);
@@ -172,7 +172,7 @@ export default function TeacherPage() {
       const students = await getEleves(classId);
       const studentsMap: Record<string, { id: string; name: string }> = {};
       students.forEach((s: any) => {
-        studentsMap[s.id] = { id: s.id, name: s.name };
+        studentsMap[s.id] = { id: s.id, name: `${s.prenom} ${s.nom}` };
       });
       setHubStudents(studentsMap);
 
@@ -180,13 +180,16 @@ export default function TeacherPage() {
       const { data: dmClassData } = await supabase
         .from("dm_classes")
         .select("*")
-        .eq("class_id", classId)
-        .single();
+        .eq("name", className)
+        .eq("teacher_id", "teacher")
+        .maybeSingle();
 
       if (dmClassData) {
         setDmClassId(dmClassData.id);
-        const unlocked = dmClassData.unlocked_positions || [];
-        setUnlockedPos(unlocked);
+        setUnlockedPos(dmClassData.unlocked_dictees || [1]);
+      } else {
+        setDmClassId(null);
+        setUnlockedPos([1]);
       }
     } catch (error) {
       console.error("Error picking class:", error);
@@ -215,11 +218,15 @@ export default function TeacherPage() {
     }
   };
 
-  // Refresh presence every 15s
+  // Refresh presence every 15s — silencieux si la table n'existe pas
   useEffect(() => {
     const refreshPresence = async () => {
-      const online = await loadOnlineStudents();
-      setOnlineStudents(online);
+      try {
+        const online = await loadOnlineStudents();
+        setOnlineStudents(online);
+      } catch {
+        // Silencieux — dm_presence peut ne pas exister encore
+      }
     };
 
     refreshPresence();
