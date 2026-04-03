@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { BookOpen, GraduationCap, Sparkles } from "lucide-react";
@@ -13,8 +13,23 @@ import type { ConnectedEleve } from "@/lib/hub";
 export default function HomePage() {
   const router = useRouter();
   const { setUser, setConnectedEleve } = useAppStore();
+  const connectedEleve = useAppStore((s) => s.connectedEleve);
   const [showLogin, setShowLogin] = useState(false);
   const [showTeacherLogin, setShowTeacherLogin] = useState(false);
+
+  useEffect(() => {
+    if (connectedEleve) {
+      router.push("/student");
+    }
+  }, [connectedEleve, router]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (localStorage.getItem("dictee_master_teacher") === "true") {
+        router.push("/teacher");
+      }
+    }
+  }, [router]);
 
   const handleTeacherLogin = () => {
     setUser({

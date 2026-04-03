@@ -13,6 +13,7 @@ import TrainingMode from "@/components/training-mode";
 import FillBlanksMode from "@/components/fill-blanks-mode";
 import WordDefinitionMode from "@/components/word-definition-mode";
 import ComprehensiveTraining from "@/components/comprehensive-training";
+import SpellingChoiceMode from "@/components/spelling-choice-mode";
 import type { WordList, Word } from "@/types/database";
 import { saveResult } from "@/lib/dictee-service";
 import { pingPresence } from "@/lib/presence";
@@ -103,7 +104,7 @@ export default function StudentPage() {
     const modeMap: Record<string, string> = {
       flashcard: "flashcard",
       audio: "audio",
-      spelling_choice: "progression",
+      spelling_choice: "spelling-choice",
       definitions: "definition",
       fill_blanks: "fill-blanks",
     };
@@ -135,6 +136,9 @@ export default function StudentPage() {
 
   // Si un entraînement est en cours, afficher le composant correspondant
   if (currentList && currentWords.length > 0) {
+    if (currentList.mode === "spelling-choice") {
+      return <SpellingChoiceMode />;
+    }
     if (currentList.mode === "progression") {
       return <ComprehensiveTraining />;
     }

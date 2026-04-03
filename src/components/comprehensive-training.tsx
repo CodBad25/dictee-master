@@ -600,25 +600,25 @@ export default function ComprehensiveTraining() {
                   <BookOpen className="w-10 h-10 text-white" />
                 </div>
                 <h1 className="text-2xl font-bold mb-2">{currentList.title}</h1>
-                <p className="text-gray-500">{currentWords.length} mots a apprendre</p>
+                <p className="text-gray-500">{currentWords.length} mots à apprendre</p>
               </div>
 
               {/* Workflow */}
               <div className="bg-white rounded-2xl border-2 border-gray-100 p-4 mb-6">
-                <h3 className="font-bold text-gray-700 mb-3">Parcours d'entrainement</h3>
+                <h3 className="font-bold text-gray-700 mb-3">Parcours d'entraînement</h3>
                 <div className="space-y-2">
                   <div className="flex items-center gap-3 p-2 rounded-xl bg-blue-50">
                     <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">1</div>
                     <div>
                       <span className="font-medium text-blue-700">Flashcard</span>
-                      <span className="text-xs text-blue-500 block">Voir et ecrire</span>
+                      <span className="text-xs text-blue-500 block">Voir et écrire</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-2 rounded-xl bg-green-50">
                     <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold">2</div>
                     <div>
                       <span className="font-medium text-green-700">Audio</span>
-                      <span className="text-xs text-green-500 block">Ecouter et ecrire</span>
+                      <span className="text-xs text-green-500 block">Écouter et écrire</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-2 rounded-xl bg-orange-50">
@@ -631,8 +631,8 @@ export default function ComprehensiveTraining() {
                   <div className="flex items-center gap-3 p-2 rounded-xl bg-purple-50">
                     <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center text-white font-bold">4</div>
                     <div>
-                      <span className="font-medium text-purple-700">Dictee a trous</span>
-                      <span className="text-xs text-purple-500 block">Completer le texte</span>
+                      <span className="font-medium text-purple-700">Dictée à trous</span>
+                      <span className="text-xs text-purple-500 block">Compléter le texte</span>
                     </div>
                   </div>
                 </div>
@@ -697,7 +697,7 @@ export default function ComprehensiveTraining() {
                         <p className={`text-sm font-bold ${
                           trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-500'
                         }`}>
-                          {trend === 'up' ? 'Progresse' : trend === 'down' ? 'A revoir' : 'Stable'}
+                          {trend === 'up' ? 'Progresse' : trend === 'down' ? 'À revoir' : 'Stable'}
                         </p>
                         <p className="text-xs text-gray-400">{listSessions.length} essai{listSessions.length > 1 ? 's' : ''}</p>
                       </div>
@@ -732,12 +732,12 @@ export default function ComprehensiveTraining() {
               <div className="mb-4 p-4 rounded-2xl border-2 border-gray-100 bg-white">
                 <div className="flex items-center gap-3 mb-3">
                   <User className="w-5 h-5 text-indigo-600" />
-                  <span className="font-bold text-gray-800">Ton prenom</span>
+                  <span className="font-bold text-gray-800">Ton prénom</span>
                 </div>
                 <Input
                   value={currentStudentName}
                   onChange={(e) => setCurrentStudentName(e.target.value)}
-                  placeholder="Entre ton prenom..."
+                  placeholder="Entre ton prénom..."
                   className="h-12 text-lg border-2 border-gray-100 rounded-xl"
                 />
               </div>
@@ -781,7 +781,7 @@ export default function ComprehensiveTraining() {
                       className="gap-2 h-12 text-lg"
                     >
                       <EyeOff className="w-5 h-5" />
-                      Je l'ai memorise
+                      Je l'ai mémorisé
                     </Button>
                   </>
                 ) : showResult ? (
@@ -792,7 +792,7 @@ export default function ComprehensiveTraining() {
                       {wordProgress[currentWordIndex]?.flashcardCorrect ? "Correct !" : "Incorrect"}
                     </p>
                     <p className="text-2xl text-gray-600">
-                      Reponse: <span className="font-bold">{currentWords[currentWordIndex]?.word}</span>
+                      Réponse : <span className="font-bold">{currentWords[currentWordIndex]?.word}</span>
                     </p>
                   </div>
                 ) : (
@@ -801,7 +801,7 @@ export default function ComprehensiveTraining() {
                       value={userInput}
                       onChange={(e) => setUserInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && checkFlashcardAnswer()}
-                      placeholder="Ecris le mot..."
+                      placeholder="Écris le mot..."
                       className="text-center text-3xl h-16 border-2 border-gray-200 rounded-xl mb-4 w-full max-w-sm"
                       autoFocus
                     />
@@ -812,7 +812,7 @@ export default function ComprehensiveTraining() {
                       </Button>
                       <Button onClick={checkFlashcardAnswer} className="bg-blue-500 hover:bg-blue-600 gap-2 h-12 text-lg">
                         <Check className="w-5 h-5" />
-                        Verifier
+                        Vérifier
                       </Button>
                     </div>
                   </>
@@ -863,13 +863,13 @@ export default function ComprehensiveTraining() {
                       value={userInput}
                       onChange={(e) => setUserInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && checkAudioAnswer()}
-                      placeholder="Ecris ce que tu entends..."
+                      placeholder="Écris ce que tu entends..."
                       className="text-center text-2xl sm:text-3xl h-16 border-2 border-gray-200 rounded-xl mb-4 w-full max-w-sm"
                       autoFocus
                     />
                     <Button onClick={checkAudioAnswer} className="bg-green-500 hover:bg-green-600 gap-2 h-12 text-lg">
                       <Check className="w-5 h-5" />
-                      Verifier
+                      Vérifier
                     </Button>
                   </>
                 ) : (
@@ -880,7 +880,7 @@ export default function ComprehensiveTraining() {
                       {wordProgress[currentWordIndex]?.audioCorrect ? "Correct !" : "Incorrect"}
                     </p>
                     <p className="text-2xl text-gray-600">
-                      Reponse: <span className="font-bold">{currentWords[currentWordIndex]?.word}</span>
+                      Réponse : <span className="font-bold">{currentWords[currentWordIndex]?.word}</span>
                     </p>
                   </div>
                 )}
@@ -974,7 +974,7 @@ export default function ComprehensiveTraining() {
                   }`}
                 >
                   {isPlaying ? <Pause className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
-                  {isPlaying ? "Pause" : "Ecouter la dictee"}
+                  {isPlaying ? "Pause" : "Écouter la dictée"}
                 </Button>
               </div>
 
@@ -990,7 +990,7 @@ export default function ComprehensiveTraining() {
                   className="w-full h-14 text-lg font-bold bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl gap-2"
                 >
                   <Check className="w-5 h-5" />
-                  Valider mes reponses
+                  Valider mes réponses
                 </Button>
               )}
             </motion.div>
@@ -1000,7 +1000,7 @@ export default function ComprehensiveTraining() {
     </main>
   );
 
-  // Fonction pour rendre le texte avec les champs a remplir
+  // Fonction pour rendre le texte avec les champs à remplir
   function renderTextWithBlanks() {
     if (!generatedText) return null;
 

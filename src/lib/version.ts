@@ -32,7 +32,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: "2026-01-10",
     changes: [
       "Nouveau mode : Definitions (associer mot et definition)",
-      "Definitions generees par IA adaptees au niveau 6eme",
+      "Définitions générées par IA adaptees au niveau 6eme",
       "Interface clic-pour-associer intuitive",
     ],
   },
@@ -40,11 +40,11 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "1.3.0",
     date: "2026-01-10",
     changes: [
-      "Dictee a trous : textes generes beaucoup plus coherents (niveau 6eme)",
-      "Dictee a trous : meilleure voix francaise pour la synthese vocale",
-      "Choix orthographique : erreurs plus realistes (infirmier -> infirmie)",
-      "Erreurs priorisees : terminaisons, accents, homophones en premier",
-      "Prompt IA ameliore pour des dictees plus naturelles",
+      "Dictée à trous : textes generes beaucoup plus coherents (niveau 6eme)",
+      "Dictée à trous : meilleure voix française pour la synthese vocale",
+      "Choix orthographique : erreurs plus réalistes (infirmier -> infirmie)",
+      "Erreurs priorisées : terminaisons, accents, homophones en premier",
+      "Prompt IA amélioré pour des dictées plus naturelles",
     ],
   },
   {
@@ -52,17 +52,17 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: "2026-01-09",
     changes: [
       "Bouton Sync : synchronise les sessions locales vers Supabase",
-      "Les sessions faites hors-ligne sont maintenant recuperables",
+      "Les sessions faites hors-ligne sont maintenant récupérables",
     ],
   },
   {
     version: "1.2.8",
     date: "2026-01-09",
     changes: [
-      "Dashboard enseignant : interface compacte et reorganisee",
+      "Dashboard enseignant : interface compacte et réorganisée",
       "Stats en 4 colonnes au lieu de 2x2",
       "Stats par liste avec mots rates combines",
-      "Classement et sessions recentes cote a cote",
+      "Classement et sessions recentes côte à côte",
       "Section 'Toutes les sessions' repliable",
     ],
   },
@@ -70,18 +70,18 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "1.2.7",
     date: "2026-01-09",
     changes: [
-      "Historique eleve reorganise : resultats groupes par liste",
+      "Historique eleve reorganise : resultats groupés par liste",
       "Affiche le record et le nombre d'essais par liste",
       "Cliquer sur une liste pour voir toutes les tentatives",
-      "Badge 'Maitrise' pour les listes a 100%",
+      "Badge 'Maîtrise' pour les listes a 100%",
     ],
   },
   {
     version: "1.2.6",
     date: "2026-01-09",
     changes: [
-      "Correction bug : les sessions sont maintenant toujours sauvegardees localement",
-      "L'historique s'affiche meme si Supabase echoue",
+      "Correction bug : les sessions sont maintenant toujours sauvegardées localement",
+      "L'historique s'affiche meme si Supabase échoue",
     ],
   },
   {
@@ -108,22 +108,22 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Ecran resultat eleve : affiche les mots a revoir avec la bonne reponse",
       "Ecran resultat eleve : affiche les mots reussis",
       "Ecran setup : affiche la progression (record, dernier score, tendance)",
-      "Interface eleve : polices agrandies pour meilleure lisibilite",
+      "Interface eleve : polices agrandies pour meilleure lisibilité",
     ],
   },
   {
     version: "1.2.2",
     date: "2026-01-09",
     changes: [
-      "Import ODT : correction du parsing des colonnes fusionnees (colspan)",
-      "Import ODT : detection correcte des listes n°1 et n°2 avec leurs mots",
+      "Import ODT : correction du parsing des colonnes fusionnées (colspan)",
+      "Import ODT : détection correcte des listes n°1 et n°2 avec leurs mots",
     ],
   },
   {
     version: "1.2.1",
     date: "2026-01-09",
     changes: [
-      "Mode local : creation de listes fonctionne meme sans connexion Supabase",
+      "Mode local : creation de listes fonctionne même sans connexion Supabase",
       "Badge version cliquable pour voir les nouveautes",
     ],
   },
@@ -131,7 +131,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "1.2.0",
     date: "2026-01-09",
     changes: [
-      "Ecran resultat eleve : affiche les mots a revoir avec les phases echouees",
+      "Ecran resultat eleve : affiche les mots a revoir avec les phases échouees",
       "Ecran resultat eleve : affiche les mots parfaits (reussis partout)",
       "Ecran setup : affiche la progression sur la liste (record, dernier score, tendance)",
       "Dashboard prof : toujours visible au demarrage avec les sessions recentes",
@@ -142,10 +142,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "1.1.0",
     date: "2026-01-08",
     changes: [
-      "Import ODT : support des formats n°1, n°2 pour les en-tetes",
+      "Import ODT : support des formats n°1, n°2 pour les en-têtes",
       "Import ODT : correction du parsing des cellules de tableau",
-      "Nettoyage des articles : correction du bug 'e pensee' -> 'pensee'",
-      "Interface eleve : police agrandie pour meilleure lisibilite",
+      "Nettoyage des articles : correction du bug 'é pensée' -> 'pensee'",
+      "Interface eleve : police agrandie pour meilleure lisibilité",
     ],
   },
   {
@@ -153,7 +153,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     date: "2026-01-07",
     changes: [
       "Version initiale",
-      "Mode flashcard, audio, choix orthographique, dictee a trous",
+      "Mode flashcard, audio, choix orthographique, dictée à trous",
       "Import de listes depuis fichiers ODT/PDF",
       "Sauvegarde des sessions dans Supabase",
       "Gamification : streak et badges",

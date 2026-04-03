@@ -292,7 +292,7 @@ export default function FillBlanksMode() {
           </motion.div>
 
           <h1 className="text-3xl font-bold mb-2">
-            {isPerfect ? "Parfait ! " : isGood ? "Bien joue !" : "Continue !"}
+            {isPerfect ? "Parfait ! " : isGood ? "Bien joué !" : "Continue !"}
           </h1>
 
           <div className="bg-white rounded-3xl border-2 border-purple-100 shadow-xl p-6 my-6">
@@ -382,9 +382,9 @@ export default function FillBlanksMode() {
                 <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center shadow-xl shadow-orange-200">
                   <Volume2 className="w-10 h-10 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold mb-2">Dictee a trous</h1>
+                <h1 className="text-2xl font-bold mb-2">Dictée à trous</h1>
                 <p className="text-gray-500">
-                  Ecoute la dictee et complete les trous
+                  Écoute la dictée et complète les trous
                 </p>
               </div>
 
@@ -395,14 +395,14 @@ export default function FillBlanksMode() {
                     <User className="w-5 h-5 text-indigo-600" />
                   </div>
                   <div>
-                    <div className="font-bold text-gray-800">Ton prenom</div>
+                    <div className="font-bold text-gray-800">Ton prénom</div>
                     <div className="text-xs text-gray-500">Pour suivre ta progression</div>
                   </div>
                 </div>
                 <Input
                   value={currentStudentName}
                   onChange={(e) => setCurrentStudentName(e.target.value)}
-                  placeholder="Entre ton prenom..."
+                  placeholder="Entre ton prénom..."
                   className="h-12 text-lg font-medium border-2 border-gray-100 rounded-xl"
                 />
               </div>
@@ -455,7 +455,7 @@ export default function FillBlanksMode() {
                   ) : (
                     <>
                       <Volume2 className="w-6 h-6" />
-                      Ecouter la dictee
+                      Écouter la dictée
                     </>
                   )}
                 </Button>
@@ -475,7 +475,7 @@ export default function FillBlanksMode() {
                 className="w-full h-14 text-lg font-bold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-xl shadow-green-200 rounded-2xl gap-2"
               >
                 <Check className="w-5 h-5" />
-                Valider mes reponses
+                Valider mes réponses
               </Button>
             </motion.div>
           )}
