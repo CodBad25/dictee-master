@@ -565,30 +565,30 @@ export default function TeacherPage() {
                   </div>
                 </div>
 
-                {/* Section B: Dictées travaillées */}
+                {/* Section B: Dictées programmées (déverrouillées uniquement) */}
                 <div className="mb-4">
-                  <h4 className="font-bold mb-2">Dictées travaillées</h4>
+                  <h4 className="font-bold mb-2">Dictées programmées ({unlockedPos.length})</h4>
                   <div className="grid grid-cols-4 gap-2">
-                    {dictees.map((d) => {
+                    {dictees.filter(d => unlockedPos.includes(d.position)).map((d) => {
                       const r = selectedStudent.results[d.id];
+                      const pct = r?.bestPct || 0;
                       const color =
-                        r.bestPct >= 80
+                        pct >= 80
                           ? "bg-green-100 text-green-700"
-                          : r.bestPct >= 50
+                          : pct >= 50
                             ? "bg-amber-100 text-amber-700"
-                            : "bg-red-100 text-red-700";
+                            : pct > 0
+                              ? "bg-red-100 text-red-700"
+                              : "bg-gray-100 text-gray-400";
                       return (
                         <div
                           key={d.id}
-                          className={`p-2 rounded text-center text-xs font-bold ${
-                            r.bestPct > 0
-                              ? color
-                              : "bg-gray-100 text-gray-400"
-                          }`}
+                          className={`p-2 rounded text-center text-xs font-bold ${color}`}
                         >
-                          <div>{r.bestPct}%</div>
+                          <div className="text-[9px] text-purple-600 mb-0.5">D{d.position}</div>
+                          <div>{pct > 0 ? `${Math.round(pct * 15 / 100)}/15` : "—"}</div>
                           <div>
-                            {getStars(r.bestPct)} ⭐
+                            {pct > 0 ? "⭐".repeat(getStars(pct)) : ""}
                           </div>
                           {r.attempts > 1 && <div>×{r.attempts}</div>}
                         </div>
