@@ -112,7 +112,7 @@ export default function TeacherPage() {
   const loadData = async () => {
     try {
       const { data: dicteesData } = await supabase
-        .from("dm_dictees")
+        .from("dictees")
         .select("*")
         .order("position", { ascending: true });
 
