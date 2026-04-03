@@ -43,8 +43,9 @@ export default function DicteeDetail({
   const [words, setWords] = useState<DicteeWord[]>([]);
   const [loading, setLoading] = useState(true);
   const [completedActivities, setCompletedActivities] = useState<number>(0);
-  const [lastResult, setLastResult] = useState<any>(null);
-  const [lastAttempts, setLastAttempts] = useState<any[]>([]);
+  const [allSessions, setAllSessions] = useState<any[]>([]);
+  const [sessionAttempts, setSessionAttempts] = useState<Record<string, any[]>>({});
+  const [persistentErrors, setPersistentErrors] = useState<{ word: string; count: number; lastAnswer: string }[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -83,29 +84,51 @@ export default function DicteeDetail({
     checkCompletion();
   }, [dicteeId, connectedEleve, activityOrder]);
 
+  // Charger TOUTES les sessions pour cette dictée
   useEffect(() => {
     const loadHistory = async () => {
-      const connectedEleveState = useAppStore.getState().connectedEleve;
-      if (!connectedEleveState) return;
+      if (!connectedEleve) return;
       const sb = createClient();
 
+      // Toutes les sessions
       const { data: results } = await sb.from("dm_results")
         .select("*")
-        .eq("student_id", connectedEleveState.eleveId)
+        .eq("student_id", connectedEleve.eleveId)
         .eq("dictee_id", dicteeId)
-        .order("created_at", { ascending: false })
-        .limit(1);
+        .order("created_at", { ascending: true });
 
-      if (results && results.length > 0) {
-        setLastResult(results[0]);
-        const { data: attempts } = await sb.from("dm_word_attempts")
+      if (!results || results.length === 0) return;
+      setAllSessions(results);
+
+      // Charger les tentatives pour chaque session
+      const attemptsMap: Record<string, any[]> = {};
+      const errorCount: Record<string, { count: number; lastAnswer: string }> = {};
+
+      for (const r of results) {
+        const { data: att } = await sb.from("dm_word_attempts")
           .select("*")
-          .eq("result_id", results[0].id);
-        if (attempts) setLastAttempts(attempts);
+          .eq("result_id", r.id);
+        if (att) {
+          attemptsMap[r.id] = att;
+          // Compter les erreurs persistantes
+          att.filter((a: any) => !a.is_correct).forEach((a: any) => {
+            if (!errorCount[a.word]) errorCount[a.word] = { count: 0, lastAnswer: "" };
+            errorCount[a.word].count++;
+            errorCount[a.word].lastAnswer = a.user_answer;
+          });
+        }
       }
+      setSessionAttempts(attemptsMap);
+
+      // Mots avec erreurs dans 2+ sessions
+      const persistent = Object.entries(errorCount)
+        .filter(([_, v]) => v.count >= 2)
+        .map(([word, v]) => ({ word, count: v.count, lastAnswer: v.lastAnswer }))
+        .sort((a, b) => b.count - a.count);
+      setPersistentErrors(persistent);
     };
     loadHistory();
-  }, [dicteeId]);
+  }, [dicteeId, connectedEleve]);
 
   if (loading) {
     return (
@@ -217,55 +240,119 @@ export default function DicteeDetail({
           </div>
         </div>
 
-        {/* Dernière tentative */}
-        {lastResult && lastAttempts.length > 0 && (
-          <div className="space-y-3">
+        {/* HISTORIQUE COMPLET */}
+        {allSessions.length > 0 && (
+          <div className="space-y-4">
             <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wide">
-              Dernière tentative — {lastResult.percentage}% · {new Date(lastResult.created_at).toLocaleDateString("fr-FR")}
+              📊 Historique — {allSessions.length} session{allSessions.length > 1 ? "s" : ""}
             </h2>
 
-            {/* Error category badges */}
-            <div className="flex flex-wrap gap-1.5">
-              {summarizeErrors(lastAttempts.filter(a => !a.is_correct).map(a => ({
-                word: a.word, userAnswer: a.user_answer, isCorrect: a.is_correct
-              }))).map(s => (
-                <span key={s.category} className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-bold ${s.color}`}>
-                  {s.icon} {s.category} ×{s.count}
-                </span>
-              ))}
+            {/* Courbe de progression */}
+            <div className="bg-white rounded-xl border p-3">
+              <div className="text-xs font-bold text-gray-500 mb-2">Progression</div>
+              <div className="flex items-end gap-1 h-16">
+                {allSessions.map((s, i) => {
+                  const pct = s.percentage;
+                  const color = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-400" : "bg-red-400";
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                      <span className="text-[9px] font-bold text-gray-600">{pct}%</span>
+                      <div className={`w-full rounded-t ${color}`} style={{ height: `${Math.max(pct * 0.6, 4)}px` }} />
+                      <span className="text-[8px] text-gray-400">#{i + 1}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {allSessions.length >= 2 && (() => {
+                const first = allSessions[0].percentage;
+                const last = allSessions[allSessions.length - 1].percentage;
+                const diff = last - first;
+                return diff > 0 ? (
+                  <div className="text-[10px] text-emerald-600 font-bold mt-1">📈 +{diff} points de progression</div>
+                ) : diff < 0 ? (
+                  <div className="text-[10px] text-red-500 font-bold mt-1">📉 {diff} points</div>
+                ) : null;
+              })()}
             </div>
 
-            {/* Errors with mnemonics */}
-            <div className="grid gap-2 grid-cols-2">
-              {lastAttempts.filter(a => !a.is_correct).map((a, i) => {
-                const mnemonic = findMnemonicForError(a.word, a.user_answer);
-                return (
-                  <div key={i} className="bg-white rounded-lg border border-red-100 p-2">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="text-xs text-red-400 line-through">{a.user_answer}</div>
-                        <div className="text-xs font-bold text-emerald-700">{a.word}</div>
+            {/* Mots persistants (erreurs récurrentes) */}
+            {persistentErrors.length > 0 && (
+              <div className="bg-red-50 rounded-xl border border-red-200 p-3">
+                <div className="text-xs font-bold text-red-700 mb-2">⚠️ Mots à retravailler en priorité</div>
+                <div className="grid gap-2 grid-cols-2">
+                  {persistentErrors.map((e, i) => {
+                    const mnemonic = findMnemonicForError(e.word, e.lastAnswer);
+                    return (
+                      <div key={i} className="bg-white rounded-lg border border-red-100 p-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-gray-800">{e.word}</span>
+                          <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">{e.count}× raté</span>
+                        </div>
+                        {mnemonic && (
+                          <div className={`mt-1 px-2 py-1 rounded text-[10px] border ${mnemonic.color}`}>
+                            {mnemonic.icon} {mnemonic.tip}
+                          </div>
+                        )}
                       </div>
-                      {mnemonic && <span className="text-sm">{mnemonic.icon}</span>}
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Détail de chaque session */}
+            {allSessions.map((session, idx) => {
+              const att = sessionAttempts[session.id] || [];
+              const errors = att.filter((a: any) => !a.is_correct);
+              const correct = att.filter((a: any) => a.is_correct);
+              const categories = summarizeErrors(errors.map((a: any) => ({ word: a.word, userAnswer: a.user_answer, isCorrect: false })));
+
+              return (
+                <details key={session.id} className="bg-white rounded-xl border overflow-hidden" open={idx === allSessions.length - 1}>
+                  <summary className="px-3 py-2 cursor-pointer hover:bg-purple-50 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded ${session.percentage >= 80 ? "bg-emerald-100 text-emerald-700" : session.percentage >= 50 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                        {session.percentage}%
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Essai #{idx + 1} — {new Date(session.created_at).toLocaleDateString("fr-FR")} — {errors.length} erreur{errors.length > 1 ? "s" : ""}
+                      </span>
                     </div>
-                    {mnemonic && (
-                      <div className={`mt-1 px-2 py-1 rounded text-[10px] border ${mnemonic.color}`}>
-                        {mnemonic.icon} {mnemonic.tip}
+                    {categories.length > 0 && (
+                      <div className="flex gap-1">
+                        {categories.map(c => <span key={c.category} className="text-xs">{c.icon}</span>)}
+                      </div>
+                    )}
+                  </summary>
+                  <div className="px-3 pb-3 space-y-2">
+                    {errors.length > 0 && (
+                      <div className="grid gap-1.5 grid-cols-2">
+                        {errors.map((a: any, i: number) => {
+                          const mnemonic = findMnemonicForError(a.word, a.user_answer);
+                          return (
+                            <div key={i} className="bg-gray-50 rounded p-1.5">
+                              <div className="flex items-center gap-1">
+                                {mnemonic && <span className="text-xs">{mnemonic.icon}</span>}
+                                <span className="text-[10px] text-red-400 line-through">{a.user_answer}</span>
+                                <span className="text-[10px]">→</span>
+                                <span className="text-[10px] font-bold text-emerald-700">{a.word}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {correct.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {correct.map((a: any, i: number) => (
+                          <span key={i} className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] rounded">{a.word}</span>
+                        ))}
                       </div>
                     )}
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Words réussis */}
-            {lastAttempts.filter(a => a.is_correct).length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {lastAttempts.filter(a => a.is_correct).map((a, i) => (
-                  <span key={i} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[11px] rounded-md">{a.word}</span>
-                ))}
-              </div>
-            )}
+                </details>
+              );
+            })}
           </div>
         )}
       </div>
