@@ -2,7 +2,7 @@
  * Version de l'application et changelog
  */
 
-export const APP_VERSION = "1.4.0";
+export const APP_VERSION = "2.0.0";
 
 export interface ChangelogEntry {
   version: string;
@@ -11,6 +11,22 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "2.0.0",
+    date: "2026-04-03",
+    changes: [
+      "Grille de 26 dictées avec verrouillage progressif",
+      "Parcours imposé : flashcard → choix ortho → définitions → texte à trous → audio",
+      "Catégories d'erreurs visuelles (🎯🔄🏷️👯🤫💧✏️🐍🔀📍)",
+      "Mnémotechniques validés par les enseignants",
+      "Historique complet avec progression + mots persistants",
+      "Dashboard enseignant façon MathExpress",
+      "XP + Niveaux + Étoiles + Badges + Certificats",
+      "Anonymisation avec écrivain(e)s célèbres",
+      "Bilan de classe interactif + PDF + Pronote + Excel",
+      "Auth Hub + PIN (élève) + mot de passe serveur (enseignant)",
+    ],
+  },
   {
     version: "1.4.0",
     date: "2026-01-10",
