@@ -144,35 +144,38 @@ export default function DicteeDetail({
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-        {/* Retour */}
-        <Button variant="ghost" size="sm" onClick={onBack} className="text-gray-500">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Retour aux dictées
-        </Button>
-
-        {/* Titre */}
-        <div className="text-center">
-          <div className="text-xs text-purple-600 font-bold uppercase tracking-wide">
-            Dictée N°{dicteePosition}
+      <div className="max-w-6xl mx-auto px-4 py-4">
+        {/* Retour + Titre — compact en ligne */}
+        <div className="flex items-center gap-4 mb-4">
+          <Button variant="ghost" size="sm" onClick={onBack} className="text-gray-500 shrink-0">
+            <ArrowLeft className="w-4 h-4 mr-1" /> Retour
+          </Button>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-purple-600 font-bold uppercase">N°{dicteePosition}</span>
+              <h1 className="text-xl font-bold text-gray-800">{dicteeTitle}</h1>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                dicteePosition <= 8 ? "bg-emerald-100 text-emerald-700" :
+                dicteePosition <= 16 ? "bg-amber-100 text-amber-700" :
+                "bg-purple-100 text-purple-700"
+              }`}>
+                {dicteePosition <= 8 ? "🟢 Découverte" :
+                 dicteePosition <= 16 ? "🟡 Consolidation" :
+                 "🟣 Maîtrise"}
+              </span>
+              <span className="text-xs text-gray-400">{words.length} mots</span>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mt-1">{dicteeTitle}</h1>
-          <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold mt-2 ${
-            dicteePosition <= 8 ? "bg-emerald-100 text-emerald-700" :
-            dicteePosition <= 16 ? "bg-amber-100 text-amber-700" :
-            "bg-purple-100 text-purple-700"
-          }`}>
-            {dicteePosition <= 8 ? "🟢 Niveau 1 — Découverte" :
-             dicteePosition <= 16 ? "🟡 Niveau 2 — Consolidation" :
-             "🟣 Niveau 3 — Maîtrise"}
-          </div>
-          <p className="text-sm text-gray-400 mt-1">{words.length} mots à travailler</p>
         </div>
 
-        {/* Parcours d'activités */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wide">
-            Parcours
-          </h2>
+        {/* Layout 2 colonnes sur desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+          {/* Colonne gauche : Parcours */}
+          <div className="space-y-2">
+            <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wide">
+              Parcours
+            </h2>
           {activityOrder.map((mode, index) => {
             const info = ACTIVITY_LABELS[mode] || { label: mode, icon: "📋", desc: "" };
             const isDone = index < completedActivities;
@@ -223,13 +226,13 @@ export default function DicteeDetail({
               </button>
             );
           })}
-        </div>
+          </div>
 
-        {/* Aperçu des mots */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wide">
-            Mots de cette dictée
-          </h2>
+          {/* Colonne droite : Mots */}
+          <div className="space-y-3">
+            <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wide">
+              Mots de cette dictée
+            </h2>
           <div className="flex flex-wrap gap-2">
             {words.map((w) => (
               <span
@@ -241,6 +244,8 @@ export default function DicteeDetail({
             ))}
           </div>
         </div>
+
+        </div>{/* Fin grid 2 colonnes */}
 
         {/* HISTORIQUE COMPLET */}
         {allSessions.length > 0 && (
