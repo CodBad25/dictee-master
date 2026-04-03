@@ -18,11 +18,14 @@ import {
   BookOpen,
   ChevronRight,
   CloudUpload,
+  Eye,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useAppStore, SessionHistoryEntry } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
+import { loadOnlineStudents, type OnlineStudent } from "@/lib/presence";
 
 export default function TeacherDashboard() {
   const { sessionHistory: localHistory } = useAppStore();
@@ -33,6 +36,8 @@ export default function TeacherDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [selectedSession, setSelectedSession] = useState<SessionHistoryEntry | null>(null);
+  const [onlineStudents, setOnlineStudents] = useState<Map<string, OnlineStudent>>(new Map());
+  const [isLoadingOnline, setIsLoadingOnline] = useState(false);
 
   // Charger les sessions Supabase
   const fetchSessions = async () => {
@@ -65,9 +70,25 @@ export default function TeacherDashboard() {
     }
   };
 
-  // Charger automatiquement au mount
+  // Charger les élèves connectés
+  const fetchOnlineStudents = async () => {
+    setIsLoadingOnline(true);
+    try {
+      const students = await loadOnlineStudents();
+      setOnlineStudents(students);
+    } catch (error) {
+      console.error("Error loading online students:", error);
+    } finally {
+      setIsLoadingOnline(false);
+    }
+  };
+
+  // Charger automatiquement au mount et mettre à jour toutes les 10s
   useEffect(() => {
     fetchSessions();
+    fetchOnlineStudents();
+    const interval = setInterval(fetchOnlineStudents, 10_000);
+    return () => clearInterval(interval);
   }, []);
 
   // Combiner sessions locales et Supabase (dédupliquer par id)
@@ -230,6 +251,60 @@ export default function TeacherDashboard() {
 
   return (
     <div className="space-y-4">
+      {/* Online students monitor */}
+      {onlineStudents.size > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-2xl border-2 border-cyan-200 shadow-lg shadow-cyan-100"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center animate-pulse">
+              <Eye className="w-4 h-4 text-white" />
+            </div>
+            <h3 className="font-bold text-cyan-900">{onlineStudents.size} élève{onlineStudents.size > 1 ? "s" : ""} connecté{onlineStudents.size > 1 ? "s" : ""}</h3>
+          </div>
+          <div className="space-y-2">
+            {Array.from(onlineStudents.values()).map((student) => (
+              <div
+                key={student.student_id}
+                className="flex items-center gap-3 p-2 bg-white rounded-lg"
+              >
+                {/* Status dot */}
+                <div className="flex items-center gap-2">
+                  {student.current_status === "working" ? (
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" title="Travaillant" />
+                  ) : student.current_status === "completed" ? (
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full" title="Complété" />
+                  ) : (
+                    <div className="w-3 h-3 bg-green-500 rounded-full" title="Connecté" />
+                  )}
+                </div>
+
+                {/* Student info */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-800 text-sm truncate">{student.student_name}</p>
+                  {student.current_mode && (
+                    <p className="text-xs text-gray-500 truncate">
+                      {student.current_mode}
+                      {student.current_dictee && ` · D${student.current_dictee.split("-").pop()}`}
+                    </p>
+                  )}
+                </div>
+
+                {/* Activity badge */}
+                {student.current_status === "working" && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full">
+                    <Zap className="w-3 h-3 text-green-600" />
+                    <span className="text-xs font-semibold text-green-700">Actif</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       {/* Header with toggle */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}

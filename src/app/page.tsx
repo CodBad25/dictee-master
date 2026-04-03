@@ -1,23 +1,57 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { BookOpen, GraduationCap, Sparkles } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useAppStore } from "@/lib/store";
+import LoginEleve from "@/components/login-eleve";
+import LoginTeacher from "@/components/login-teacher";
+import type { ConnectedEleve } from "@/lib/hub";
 
 export default function HomePage() {
   const router = useRouter();
-  const setUser = useAppStore((state) => state.setUser);
+  const { setUser, setConnectedEleve } = useAppStore();
+  const [showLogin, setShowLogin] = useState(false);
+  const [showTeacherLogin, setShowTeacherLogin] = useState(false);
 
-  const handleSelectRole = (role: "teacher" | "student") => {
+  const handleTeacherLogin = () => {
     setUser({
-      id: `demo-${role}-${Date.now()}`,
-      name: role === "teacher" ? "Enseignant(e)" : "Élève",
-      role,
+      id: "teacher",
+      name: "Enseignant(e)",
+      role: "teacher",
     });
-    router.push(role === "teacher" ? "/teacher" : "/student");
+    router.push("/teacher");
   };
+
+  const handleStudentLogin = (eleve: ConnectedEleve) => {
+    setUser({
+      id: eleve.eleveId,
+      name: `${eleve.prenom} ${eleve.nom}`,
+      role: "student",
+    });
+    setConnectedEleve(eleve);
+    router.push("/student");
+  };
+
+  if (showTeacherLogin) {
+    return (
+      <LoginTeacher
+        onLogin={handleTeacherLogin}
+        onClose={() => setShowTeacherLogin(false)}
+      />
+    );
+  }
+
+  if (showLogin) {
+    return (
+      <LoginEleve
+        onLogin={handleStudentLogin}
+        onClose={() => setShowLogin(false)}
+      />
+    );
+  }
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-purple-50 via-white to-indigo-50">
@@ -62,7 +96,7 @@ export default function HomePage() {
         {/* Bouton Enseignant */}
         <Card
           className="p-6 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-2 hover:border-purple-300"
-          onClick={() => handleSelectRole("teacher")}
+          onClick={() => setShowTeacherLogin(true)}
         >
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
@@ -80,7 +114,7 @@ export default function HomePage() {
         {/* Bouton Élève */}
         <Card
           className="p-6 cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-2 hover:border-indigo-300"
-          onClick={() => handleSelectRole("student")}
+          onClick={() => setShowLogin(true)}
         >
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-200 flex items-center justify-center">

@@ -15,7 +15,8 @@ import {
   DbWordList,
   DbWord,
 } from '@/lib/supabase/queries';
-import type { WordList, Word } from '@/types/database';
+import { saveResult as saveResultV2 } from '@/lib/dictee-service';
+import type { WordList, Word, TrainingMode } from '@/types/database';
 
 // Convertir DbWordList vers WordList local
 function toLocalWordList(db: DbWordList): WordList {
@@ -62,7 +63,7 @@ export function useSupabaseSync() {
   // Créer une liste dans Supabase
   const createList = async (
     title: string,
-    mode: 'flashcard' | 'audio' | 'progression' | 'fill-blanks',
+    mode: TrainingMode,
     words: string[],
     teacherId?: string
   ) => {
@@ -147,7 +148,27 @@ export function useSupabaseSync() {
       answers: session.answers,
     });
 
-    // Puis essayer de sauvegarder dans Supabase
+    // Sauvegarder dans les nouvelles tables V2 (dm_results)
+    try {
+      const connectedEleve = useAppStore.getState().connectedEleve;
+      if (connectedEleve) {
+        await saveResultV2({
+          studentId: connectedEleve.eleveId,
+          studentName: `${connectedEleve.prenom} ${connectedEleve.nom}`,
+          dicteeId: session.listId,
+          activityMode: session.modeUsed,
+          score: session.correctWords,
+          total: session.totalWords,
+          percentage: session.percentage,
+          timeSpent: session.timeSpentSeconds,
+          answers: session.answers,
+        });
+      }
+    } catch (error) {
+      console.error('Error saving to dm_results:', error);
+    }
+
+    // Essayer aussi l'ancien format (rétrocompatibilité)
     try {
       const dbSession = await createTrainingSession({
         listId: session.listId,
@@ -165,7 +186,7 @@ export function useSupabaseSync() {
         return dbSession;
       }
     } catch (error) {
-      console.error('Error saving session to Supabase:', error);
+      // Silencieux — les anciennes tables n'existent peut-être plus
     }
     return null;
   };
@@ -232,7 +253,7 @@ export function useSupabaseSync() {
         const newList = await createWordList(
           localList.teacher_id || null,
           localList.title,
-          localList.mode as 'flashcard' | 'audio' | 'progression' | 'fill-blanks',
+          localList.mode,
           localList.description
         );
 

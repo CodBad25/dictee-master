@@ -2,37 +2,41 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  BookOpen,
-  LogOut,
-  Trophy,
-  Flame,
-  Play,
-  Search,
-  Star,
-} from "lucide-react";
+import { LogOut, Flame, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
-import { useSupabaseSync } from "@/hooks/useSupabaseSync";
+import { createClient } from "@/lib/supabase/client";
+import { VersionBadge } from "@/components/changelog-modal";
+import DicteeGrid from "@/components/dictee-grid";
+import DicteeDetail from "@/components/dictee-detail";
 import TrainingMode from "@/components/training-mode";
 import FillBlanksMode from "@/components/fill-blanks-mode";
+import WordDefinitionMode from "@/components/word-definition-mode";
 import ComprehensiveTraining from "@/components/comprehensive-training";
-import SessionHistory from "@/components/session-history";
-import { VersionBadge } from "@/components/changelog-modal";
+import type { WordList, Word } from "@/types/database";
+import { saveResult } from "@/lib/dictee-service";
+import { pingPresence } from "@/lib/presence";
+
+const DEFAULT_ACTIVITY_ORDER = [
+  "flashcard",
+  "spelling_choice",
+  "definitions",
+  "fill_blanks",
+  "audio",
+];
+
+interface SelectedDictee {
+  id: string;
+  title: string;
+  position: number;
+}
 
 export default function StudentPage() {
   const router = useRouter();
   const {
-    user,
+    connectedEleve,
+    setConnectedEleve,
     setUser,
-    demoLists,
-    demoWords,
     streak,
     badges,
     currentList,
@@ -40,246 +44,163 @@ export default function StudentPage() {
     setCurrentTraining,
     clearCurrentTraining,
   } = useAppStore();
-  const { findListByCode, isSyncing } = useSupabaseSync();
 
-  const [searchCode, setSearchCode] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
+  const [selectedDictee, setSelectedDictee] = useState<SelectedDictee | null>(null);
+  const [unlockedPositions, setUnlockedPositions] = useState<number[]>([1]);
+
+  // Charger les positions déverrouillées au montage
+  useEffect(() => {
+    const loadUnlockedPositions = async () => {
+      const sb = createClient();
+      const { data: classes } = await sb.from("dm_classes").select("unlocked_dictees");
+      if (classes && classes.length > 0) {
+        const allUnlocked = new Set<number>();
+        for (const c of classes) {
+          for (const pos of c.unlocked_dictees || []) {
+            allUnlocked.add(pos);
+          }
+        }
+        if (allUnlocked.size > 0) {
+          setUnlockedPositions(Array.from(allUnlocked).sort((a, b) => a - b));
+        }
+      }
+    };
+    loadUnlockedPositions();
+  }, []);
+
+  // Ping de présence toutes les 30s
+  useEffect(() => {
+    if (!connectedEleve) return;
+    const ping = () => {
+      const activity = selectedDictee
+        ? { dicteeId: selectedDictee.id, mode: "viewing", status: "working" as const }
+        : currentList
+        ? { dicteeId: currentList.id, mode: currentList.mode, status: "working" as const }
+        : undefined;
+      pingPresence(connectedEleve.eleveId, `${connectedEleve.prenom} ${connectedEleve.nom}`, activity);
+    };
+    ping();
+    const interval = setInterval(ping, 30_000);
+    return () => clearInterval(interval);
+  }, [connectedEleve, selectedDictee, currentList]);
 
   const handleLogout = () => {
     setUser(null);
+    setConnectedEleve(null);
     clearCurrentTraining();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("dictee_master_eleve");
+    }
     router.push("/");
   };
 
-  const handleSearchList = async () => {
-    if (!searchCode.trim()) {
-      toast.error("Veuillez entrer un code");
-      return;
-    }
-
-    setIsSearching(true);
-
-    // D'abord chercher en local
-    const localList = demoLists.find(
-      (l) => l.share_code.toUpperCase() === searchCode.toUpperCase()
-    );
-
-    if (localList) {
-      const words = demoWords[localList.id] || [];
-      setCurrentTraining(localList, words);
-      toast.success(`Liste "${localList.title}" trouvée !`);
-      setSearchCode("");
-      setIsSearching(false);
-      return;
-    }
-
-    // Sinon chercher dans Supabase
-    const result = await findListByCode(searchCode);
-
-    if (result) {
-      setCurrentTraining(result.list, result.words);
-      toast.success(`Liste "${result.list.title}" trouvée !`);
-      setSearchCode("");
-    } else {
-      toast.error("Code introuvable");
-    }
-    setIsSearching(false);
+  const handleCardClick = (dictee: SelectedDictee) => {
+    setSelectedDictee(dictee);
   };
 
-  const handleStartTraining = (list: typeof demoLists[0]) => {
-    const words = demoWords[list.id] || [];
-    if (words.length === 0) {
-      toast.error("Cette liste est vide");
-      return;
-    }
-    setCurrentTraining(list, words);
+  const handleStartActivity = (mode: string, words: { word: string; definition: string; spelling_errors: string[]; position: number }[]) => {
+    // Mapper le mode vers le format V1
+    const modeMap: Record<string, string> = {
+      flashcard: "flashcard",
+      audio: "audio",
+      spelling_choice: "progression",
+      definitions: "definition",
+      fill_blanks: "fill-blanks",
+    };
+
+    const v1Mode = modeMap[mode] || "flashcard";
+
+    // Convertir les mots au format V1
+    const v1Words: Word[] = words.map((w, i) => ({
+      id: `word-${i}`,
+      list_id: selectedDictee?.id || "dictee",
+      word: w.word,
+      hint: w.definition,
+      order: w.position,
+    }));
+
+    // Créer une liste fictive pour les composants V1
+    const v1List: WordList = {
+      id: selectedDictee?.id || "dictee",
+      teacher_id: "system",
+      title: selectedDictee?.title || "Dictée",
+      mode: v1Mode as any,
+      share_code: "",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    setCurrentTraining(v1List, v1Words);
   };
 
-  // If in training mode, show the appropriate training interface
+  // Si un entraînement est en cours, afficher le composant correspondant
   if (currentList && currentWords.length > 0) {
+    if (currentList.mode === "progression") {
+      return <ComprehensiveTraining />;
+    }
     if (currentList.mode === "fill-blanks") {
       return <FillBlanksMode />;
     }
-    if (currentList.mode === "progression") {
-      return <ComprehensiveTraining />;
+    if (currentList.mode === "definition") {
+      return <WordDefinitionMode />;
     }
     return <TrainingMode />;
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-50 pb-safe">
-      {/* Header avec profondeur */}
-      <header className="sticky top-0 z-10 bg-gradient-to-b from-white to-white/95 backdrop-blur-xl border-b shadow-lg shadow-purple-100/50">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-bold text-xl bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                DictéeMaster
-              </h1>
-              <VersionBadge />
-            </div>
-            <p className="text-xs text-gray-400 font-medium">Espace élève</p>
+    <main className="min-h-dvh bg-[#f5f3ff] flex flex-col">
+      {/* Header compact */}
+      <header className="bg-white border-b-2 border-purple-100 px-4 py-2 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-base font-extrabold text-purple-600">
+              DictéeMaster
+            </span>
+            <VersionBadge />
           </div>
-          <div className="flex items-center gap-3">
-            {/* Streak avec effet 3D */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full shadow-lg shadow-orange-200">
-              <Flame className="w-4 h-4 text-white animate-streak-flame" />
-              <span className="text-sm font-bold text-white">{streak}</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-              className="hover:bg-red-50 hover:text-red-500 transition-colors"
-            >
-              <LogOut className="w-5 h-5" />
-            </Button>
+          <span className="text-xs text-gray-500">
+            <strong className="text-gray-800">
+              {connectedEleve
+                ? `${connectedEleve.prenom} ${connectedEleve.nom}`
+                : "Élève"}
+            </strong>
+            {connectedEleve && ` — ${connectedEleve.classe}`}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 text-[13px] font-bold text-amber-500">
+            <Flame className="w-4 h-4" /> {streak}
           </div>
+          <div className="flex items-center gap-1 text-[13px] font-bold text-purple-600">
+            <Star className="w-4 h-4" /> {badges.length}
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            className="hover:bg-red-50 hover:text-red-500 h-8 w-8"
+          >
+            <LogOut className="w-4 h-4" />
+          </Button>
         </div>
       </header>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Stats avec effet 3D */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-orange-500 rounded-2xl transform rotate-2 opacity-50" />
-            <Card className="relative bg-gradient-to-br from-orange-400 to-orange-500 text-white border-0 rounded-2xl shadow-xl shadow-orange-200">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Flame className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold">{streak}</p>
-                    <p className="text-xs opacity-80">Jours de suite</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-2xl transform -rotate-2 opacity-50" />
-            <Card className="relative bg-gradient-to-br from-yellow-400 to-amber-500 text-white border-0 rounded-2xl shadow-xl shadow-amber-200">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Trophy className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold">{badges.length}</p>
-                    <p className="text-xs opacity-80">Badges gagnés</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Recherche par code */}
-        <Card className="rounded-2xl border-2 border-purple-100 shadow-lg shadow-purple-50">
-          <CardContent className="p-5">
-            <h2 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <Search className="w-5 h-5 text-purple-500" />
-              Rejoindre une liste
-            </h2>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Entrer le code..."
-                value={searchCode}
-                onChange={(e) => setSearchCode(e.target.value.toUpperCase())}
-                className="font-mono uppercase text-lg h-12 rounded-xl border-2 border-gray-100 focus:border-purple-300"
-                maxLength={8}
-                onKeyDown={(e) => e.key === "Enter" && handleSearchList()}
-              />
-              <Button
-                onClick={handleSearchList}
-                disabled={isSearching}
-                className="h-12 px-5 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-xl shadow-lg shadow-purple-200"
-              >
-                {isSearching ? "..." : "Go !"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Listes disponibles */}
-        <div className="space-y-4">
-          <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-indigo-500" />
-            Listes disponibles
-          </h2>
-          <AnimatePresence mode="popLayout">
-            {demoLists.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-12"
-              >
-                <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
-                  <BookOpen className="w-10 h-10 text-gray-300" />
-                </div>
-                <p className="font-medium text-gray-600">Aucune liste disponible</p>
-                <p className="text-sm text-gray-400">Demande le code à ton enseignant !</p>
-              </motion.div>
-            ) : (
-              demoLists.map((list, index) => {
-                const words = demoWords[list.id] || [];
-                return (
-                  <motion.div
-                    key={list.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <button
-                      onClick={() => handleStartTraining(list)}
-                      className="w-full p-4 bg-white rounded-2xl border-2 border-gray-100 shadow-lg shadow-gray-100 hover:shadow-xl hover:border-purple-200 transition-all hover:scale-[1.02] text-left flex items-center gap-4"
-                    >
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center">
-                        <BookOpen className="w-6 h-6 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-gray-800">{list.title}</h3>
-                        <p className="text-sm text-gray-400">{words.length} mots à apprendre</p>
-                      </div>
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-200">
-                        <Play className="w-6 h-6 text-white" />
-                      </div>
-                    </button>
-                  </motion.div>
-                );
-              })
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Badges */}
-        {badges.length > 0 && (
-          <div className="space-y-3">
-            <h2 className="font-semibold text-lg flex items-center gap-2">
-              <Star className="w-5 h-5 text-yellow-500" />
-              Mes badges
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {badges.map((badge, index) => (
-                <motion.div
-                  key={badge}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="p-3 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-xl shadow-md"
-                >
-                  <span className="text-2xl">{badge}</span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Historique des sessions */}
-        <SessionHistory />
-      </div>
+      {/* Contenu : grille (avec sa propre progress bar) ou détail */}
+      {selectedDictee ? (
+        <DicteeDetail
+          dicteeId={selectedDictee.id}
+          dicteeTitle={selectedDictee.title}
+          dicteePosition={selectedDictee.position}
+          activityOrder={DEFAULT_ACTIVITY_ORDER}
+          onBack={() => setSelectedDictee(null)}
+          onStartActivity={handleStartActivity}
+        />
+      ) : (
+        <DicteeGrid
+          unlockedPositions={unlockedPositions}
+          onCardClick={handleCardClick}
+        />
+      )}
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User, WordList, Word, TrainingSession, Badge, Streak } from '@/types/database';
+import type { ConnectedEleve } from '@/lib/hub';
 
 // Demo user for development without Supabase
 interface DemoUser {
@@ -35,6 +36,10 @@ export interface ApiConfig {
 }
 
 interface AppState {
+  // Hydration status
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
+
   // User
   user: DemoUser | null;
   setUser: (user: DemoUser | null) => void;
@@ -42,6 +47,10 @@ interface AppState {
   // API Configuration
   apiConfig: ApiConfig | null;
   setApiConfig: (config: ApiConfig | null) => void;
+
+  // Connected student (Hub)
+  connectedEleve: ConnectedEleve | null;
+  setConnectedEleve: (eleve: ConnectedEleve | null) => void;
 
   // Student name for session tracking
   currentStudentName: string;
@@ -87,6 +96,10 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
+      // Hydration status
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
+
       // User
       user: null,
       setUser: (user) => set({ user }),
@@ -94,6 +107,13 @@ export const useAppStore = create<AppState>()(
       // API Configuration
       apiConfig: null,
       setApiConfig: (config) => set({ apiConfig: config }),
+
+      // Connected student (Hub)
+      connectedEleve: null,
+      setConnectedEleve: (eleve) => set({
+        connectedEleve: eleve,
+        currentStudentName: eleve ? eleve.prenom : '',
+      }),
 
       // Student name
       currentStudentName: '',
@@ -190,6 +210,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         user: state.user,
         apiConfig: state.apiConfig,
+        connectedEleve: state.connectedEleve,
         currentStudentName: state.currentStudentName,
         streak: state.streak,
         badges: state.badges,
@@ -199,7 +220,9 @@ export const useAppStore = create<AppState>()(
       }),
       skipHydration: false,
       onRehydrateStorage: () => (state) => {
-        console.log('Store hydrated:', state ? 'success' : 'failed');
+        if (state) {
+          state.setHasHydrated(true);
+        }
       },
     }
   )

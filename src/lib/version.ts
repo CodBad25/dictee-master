@@ -2,7 +2,7 @@
  * Version de l'application et changelog
  */
 
-export const APP_VERSION = "1.3.0";
+export const APP_VERSION = "1.4.0";
 
 export interface ChangelogEntry {
   version: string;
@@ -11,6 +11,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.4.0",
+    date: "2026-01-10",
+    changes: [
+      "Nouveau mode : Definitions (associer mot et definition)",
+      "Definitions generees par IA adaptees au niveau 6eme",
+      "Interface clic-pour-associer intuitive",
+    ],
+  },
   {
     version: "1.3.0",
     date: "2026-01-10",

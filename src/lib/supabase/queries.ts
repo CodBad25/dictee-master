@@ -1,4 +1,5 @@
 import { createClient } from './client';
+import type { TrainingMode } from '@/types/database';
 
 // ============================================
 // TYPES
@@ -9,7 +10,7 @@ export interface DbWordList {
   teacher_id: string | null;
   title: string;
   description: string | null;
-  mode: 'flashcard' | 'audio' | 'progression';
+  mode: TrainingMode;
   share_code: string;
   created_at: string;
   updated_at: string;
@@ -101,7 +102,7 @@ export async function getWordListsByTeacher(teacherId: string) {
 export async function createWordList(
   teacherId: string | null,
   title: string,
-  mode: 'flashcard' | 'audio' | 'progression' | 'fill-blanks',
+  mode: TrainingMode,
   description?: string
 ) {
   const supabase = createClient();

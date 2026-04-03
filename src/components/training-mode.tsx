@@ -29,6 +29,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
+import DicteeResults from "@/components/dictee-results";
 import confetti from "canvas-confetti";
 
 type Phase = "setup" | "memorize" | "write" | "result";
@@ -48,6 +49,7 @@ export default function TrainingMode() {
     addBadge,
     currentStudentName,
     setCurrentStudentName,
+    setCurrentTraining,
     sessionHistory,
   } = useAppStore();
   const { saveSession } = useSupabaseSync();
@@ -343,26 +345,60 @@ export default function TrainingMode() {
     clearCurrentTraining();
   };
 
-  const handleRetry = () => {
+  // Recommencer toute la série (compteur +1)
+  const handleRetryAll = () => {
     setSessionComplete(false);
     setFinalResult(null);
     setPhase("memorize");
     setShowWord(true);
     setAnswer("");
     setIsCorrect(null);
-    setSessionAnswers([]); // Reset answers for new session
-    // Reset chrono for new attempt
+    setSessionAnswers([]);
     if (chronoEnabled) {
       setChronoTime(0);
       setChronoRunning(false);
     }
-    // Reset progression state
     if (isProgressionMode) {
       setProgressionState({
         consecutiveCorrect: 0,
         currentMode: "flashcard",
         hasUnlockedAudio: false,
       });
+    }
+    startSession(currentMode);
+  };
+
+  // Retravailler uniquement les mots ratés (mode révision)
+  const handleRetryErrors = () => {
+    const wrongWords = sessionAnswers
+      .filter((a) => !a.isCorrect)
+      .map((a) => a.word);
+
+    if (wrongWords.length === 0) return;
+
+    // Filtrer les mots actuels pour ne garder que les erreurs
+    const errorWords = currentWords.filter((w) =>
+      wrongWords.includes(w.word)
+    );
+
+    if (errorWords.length > 0 && currentList) {
+      // Mettre à jour le training avec seulement les mots ratés
+      setCurrentTraining(
+        { ...currentList, title: `${currentList.title} — Révision` },
+        errorWords
+      );
+    }
+
+    setSessionComplete(false);
+    setFinalResult(null);
+    setPhase("memorize");
+    setShowWord(true);
+    setAnswer("");
+    setIsCorrect(null);
+    setSessionAnswers([]);
+    if (chronoEnabled) {
+      setChronoTime(0);
+      setChronoRunning(false);
     }
     startSession(currentMode);
   };
@@ -377,179 +413,17 @@ export default function TrainingMode() {
     return null;
   }
 
-  // Session complete screen
+  // Session complete screen — nouveau composant compact avec mnémotechniques
   if (sessionComplete && finalResult) {
-    const percentage = Math.round(
-      (finalResult.correctCount / finalResult.totalWords) * 100
-    );
-    const isPerfect = percentage === 100;
-    const isGood = percentage >= 80;
-    const avgTimePerWord = chronoEnabled && chronoTime > 0
-      ? (chronoTime / finalResult.totalWords).toFixed(1)
-      : null;
-
     return (
-      <main className="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 flex flex-col items-center justify-center p-6">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", duration: 0.6 }}
-          className="text-center w-full max-w-md"
-        >
-          {/* Trophy/Badge */}
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", delay: 0.2, duration: 0.8 }}
-            className="relative mx-auto mb-6"
-          >
-            <div className={`w-28 h-28 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-3 ${
-              isPerfect
-                ? "bg-gradient-to-br from-yellow-400 to-amber-500 shadow-amber-200"
-                : isGood
-                ? "bg-gradient-to-br from-purple-400 to-indigo-500 shadow-purple-200"
-                : "bg-gradient-to-br from-blue-400 to-cyan-500 shadow-blue-200"
-            }`}>
-              {isPerfect ? (
-                <Trophy className="w-14 h-14 text-white" />
-              ) : (
-                <Sparkles className="w-14 h-14 text-white" />
-              )}
-            </div>
-            {isPerfect && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5 }}
-                className="absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-br from-pink-400 to-rose-500 rounded-full flex items-center justify-center text-white text-xl shadow-lg"
-              >
-                🌟
-              </motion.div>
-            )}
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-3xl font-bold mb-2"
-          >
-            {isPerfect ? "Parfait ! 🎉" : isGood ? "Bien joué ! 👏" : "Continue comme ça ! 💪"}
-          </motion.h1>
-
-          {/* Score card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="relative my-6"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-3xl transform rotate-2 opacity-20" />
-            <div className="relative bg-white rounded-3xl border-2 border-purple-100 shadow-xl p-6">
-              <div className={`text-7xl font-bold bg-clip-text text-transparent mb-2 ${
-                isPerfect
-                  ? "bg-gradient-to-r from-yellow-500 to-amber-500"
-                  : "bg-gradient-to-r from-purple-600 to-indigo-600"
-              }`}>
-                {percentage}%
-              </div>
-              <p className="text-gray-500 font-medium text-lg">
-                {finalResult.correctCount} / {finalResult.totalWords} mots corrects
-              </p>
-
-              {/* Détail des erreurs */}
-              {sessionAnswers.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  {(() => {
-                    const wrongAnswers = sessionAnswers.filter(a => !a.isCorrect);
-                    const correctAnswers = sessionAnswers.filter(a => a.isCorrect);
-
-                    return (
-                      <>
-                        {wrongAnswers.length > 0 && (
-                          <div className="mb-4">
-                            <p className="text-sm font-bold text-red-500 mb-2 flex items-center gap-1">
-                              <X className="w-4 h-4" />
-                              Mots à revoir ({wrongAnswers.length})
-                            </p>
-                            <div className="space-y-2 max-h-32 overflow-y-auto">
-                              {wrongAnswers.map((ans, idx) => (
-                                <div key={idx} className="p-2 bg-red-50 rounded-lg text-left">
-                                  <p className="font-bold text-red-700 text-lg">{ans.word}</p>
-                                  <p className="text-sm text-red-500">
-                                    Ta réponse: <span className="line-through">{ans.userAnswer || "(vide)"}</span>
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {correctAnswers.length > 0 && (
-                          <div>
-                            <p className="text-sm font-bold text-green-500 mb-2 flex items-center gap-1">
-                              <Check className="w-4 h-4" />
-                              Mots réussis ({correctAnswers.length})
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {correctAnswers.map((ans, idx) => (
-                                <span key={idx} className="px-2 py-1 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
-                                  {ans.word}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-              )}
-
-              {/* Speed score when chrono was enabled */}
-              {chronoEnabled && chronoTime > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.6 }}
-                  className="mt-4 pt-4 border-t border-gray-100"
-                >
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-400 to-amber-400 text-white rounded-full font-bold shadow-lg shadow-orange-200">
-                    <Zap className="w-5 h-5" />
-                    {formatTime(chronoTime)}
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2">
-                    ~{avgTimePerWord}s par mot • Bats ton record !
-                  </p>
-                </motion.div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Action buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex gap-3"
-          >
-            <Button
-              variant="outline"
-              onClick={handleRetry}
-              className="flex-1 h-14 text-lg font-bold rounded-2xl gap-2 border-2 hover:bg-purple-50"
-            >
-              <RotateCcw className="w-5 h-5" />
-              Rejouer
-            </Button>
-            <Button
-              onClick={handleQuit}
-              className="flex-1 h-14 text-lg font-bold bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 shadow-xl shadow-purple-200 rounded-2xl"
-            >
-              Terminer
-            </Button>
-          </motion.div>
-        </motion.div>
-      </main>
+      <DicteeResults
+        title={currentList.title}
+        answers={sessionAnswers}
+        timeSpent={finalResult.timeSpent}
+        onRetryErrors={handleRetryErrors}
+        onRetryAll={handleRetryAll}
+        onNext={handleQuit}
+      />
     );
   }
 
@@ -757,6 +631,8 @@ export default function TrainingMode() {
               })()}
 
               {/* Prénom de l'élève */}
+              {/* Prénom : masqué si connecté via Hub */}
+              {!currentStudentName && (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -782,6 +658,7 @@ export default function TrainingMode() {
                   />
                 </div>
               </motion.div>
+              )}
 
               {/* Mode défi */}
               <motion.div

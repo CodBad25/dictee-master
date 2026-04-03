@@ -1,663 +1,712 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Plus,
-  List,
-  BarChart3,
-  LogOut,
-  Trash2,
-  Copy,
-  Check,
-  BookOpen,
-  Volume2,
-  Layers,
-  Upload,
-  FileText,
-  Loader2,
-  ChevronRight,
-  Eye,
-  Settings,
-  Key,
-  PenTool,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
-import { useSupabaseSync } from "@/hooks/useSupabaseSync";
-import { parseWordsFromText, extractWordsFromFile, DetectedSection } from "@/lib/file-parser";
-import ListDetail from "@/components/list-detail";
-import TeacherDashboard from "@/components/teacher-dashboard";
-import { VersionBadge } from "@/components/changelog-modal";
-import type { WordList, Word, TrainingMode } from "@/types/database";
+import { createClient } from "@/lib/supabase/client";
+import { getClasses, getEleves, type HubClasse } from "@/lib/hub";
+import { useAnonymize, useDisplayName } from "@/lib/anonymize";
+import { loadOnlineStudents } from "@/lib/presence";
+import {
+  generateClassPDF,
+  exportPronote,
+  exportExcel,
+} from "@/lib/pdf-export";
+import {
+  BADGES,
+  getMasteryLevel,
+  getPerseveranceLevel,
+  generateAppreciation,
+  getLevel,
+  computeXPFromStats,
+  getCertificateLevel,
+} from "@/lib/gamification";
+import BilanPreview from "@/components/bilan-preview";
+import type { DicteeResult } from "@/lib/dictee-service";
 
-const modeLabels: Record<TrainingMode, { label: string; icon: React.ReactNode; color: string; description?: string }> = {
-  flashcard: { label: "Flashcard", icon: <BookOpen className="w-4 h-4" />, color: "bg-blue-100 text-blue-700" },
-  audio: { label: "Audio", icon: <Volume2 className="w-4 h-4" />, color: "bg-green-100 text-green-700" },
-  progression: { label: "Progression", icon: <Layers className="w-4 h-4" />, color: "bg-purple-100 text-purple-700" },
-  "fill-blanks": { label: "Dictée à trous", icon: <PenTool className="w-4 h-4" />, color: "bg-orange-100 text-orange-700", description: "Texte avec trous + audio" },
-};
+// Interfaces
+interface Dictee {
+  id: string;
+  title: string;
+  position: number;
+}
+
+interface StudentRow {
+  id: string;
+  name: string;
+  lastName: string;
+  results: Record<string, { bestPct: number; attempts: number }>;
+  totalAttempts: number;
+  totalStars: number;
+  note20: number;
+  xp: number;
+  level: { name: string; emoji: string };
+}
+
+interface CommonError {
+  word: string;
+  dicteeTitle: string;
+  count: number;
+  wrongAnswers: string[];
+}
+
+// Helper functions
+function getLastName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/);
+  return parts.length > 1 ? parts[parts.length - 1] : fullName;
+}
+
+function getStars(pct: number): number {
+  if (pct >= 90) return 3;
+  if (pct >= 70) return 2;
+  if (pct >= 40) return 1;
+  return 0;
+}
+
+function note20(res: Record<string, { bestPct: number }>, maxD: number): number {
+  if (maxD === 0) return 0;
+  const stars = Object.values(res).reduce((a, r) => a + getStars(r.bestPct), 0);
+  const maxStars = maxD * 3;
+  return maxStars > 0 ? Math.round((stars / maxStars) * 20) : 0;
+}
 
 export default function TeacherPage() {
   const router = useRouter();
-  const { user, setUser, demoLists, demoWords, apiConfig, setApiConfig } = useAppStore();
-  const { createList, deleteList, isSyncing } = useSupabaseSync();
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [isProcessingFile, setIsProcessingFile] = useState(false);
-  const [selectedList, setSelectedList] = useState<WordList | null>(null);
+  const { user } = useAppStore();
+  const supabase = createClient();
+  const anon = useAnonymize();
+  const dn = useDisplayName();
 
-  // Configuration API
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [tempApiKey, setTempApiKey] = useState(apiConfig?.apiKey || "");
+  // Data state
+  const [dictees, setDictees] = useState<Dictee[]>([]);
+  const [results, setResults] = useState<Record<string, DicteeResult>>({});
+  const [wordAttempts, setWordAttempts] = useState<Record<string, any>>({});
 
-  // Sections détectées dans un fichier
-  const [detectedSections, setDetectedSections] = useState<DetectedSection[]>([]);
-  const [showSectionPicker, setShowSectionPicker] = useState(false);
+  // Hub & class state
+  const [hubClasses, setHubClasses] = useState<HubClasse[]>([]);
+  const [hubStudents, setHubStudents] = useState<
+    Record<string, { id: string; name: string }>
+  >({});
+  const [selectedClasse, setSelectedClasse] = useState<string>("");
+  const [selectedClasseName, setSelectedClasseName] = useState<string>("");
 
-  // Refs for autofocus
-  const titleInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Presence state
+  const [onlineStudents, setOnlineStudents] = useState<Map<string, any>>(new Map());
 
-  // Form state
-  const [title, setTitle] = useState("");
-  const [mode, setMode] = useState<TrainingMode>("progression");
-  const [wordsText, setWordsText] = useState("");
+  // Lock state
+  const [unlockedPos, setUnlockedPos] = useState<number[]>([]);
+  const [dmClassId, setDmClassId] = useState<string>("");
 
-  // Autofocus on title when dialog opens
-  useEffect(() => {
-    if (isCreateOpen && titleInputRef.current && !showSectionPicker) {
-      setTimeout(() => titleInputRef.current?.focus(), 100);
-    }
-  }, [isCreateOpen, showSectionPicker]);
+  // UI state
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"tableau" | "erreurs">("tableau");
+  const [showBilan, setShowBilan] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
+    null
+  );
 
-  // Parse words from text
-  const getParsedWords = () => {
-    return parseWordsFromText(wordsText);
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    router.push("/");
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsProcessingFile(true);
+  // Load data from Supabase
+  const loadData = async () => {
     try {
-      const result = await extractWordsFromFile(file);
+      const { data: dicteesData } = await supabase
+        .from("dm_dictees")
+        .select("*")
+        .order("position", { ascending: true });
 
-      if (result.hasMultipleSections && result.sections.length > 1) {
-        // Plusieurs dictées détectées - afficher le sélecteur
-        setDetectedSections(result.sections);
-        setShowSectionPicker(true);
-        toast.success(`${result.sections.length} dictées détectées dans le fichier !`);
-      } else if (result.words.length > 0) {
-        // Une seule dictée ou pas de sections - importer directement
-        addWordsToList(result.words);
+      if (dicteesData) {
+        setDictees(dicteesData);
+      }
 
-        // Auto-fill title if empty
-        if (!title.trim()) {
-          const fileName = file.name.replace(/\.[^/.]+$/, "");
-          setTitle(fileName);
-        }
-      } else {
-        toast.error("Aucun mot détecté dans le fichier");
+      const { data: resultsData } = await supabase
+        .from("dm_results")
+        .select("*");
+
+      if (resultsData) {
+        const resultsMap: Record<string, DicteeResult> = {};
+        resultsData.forEach((r: any) => {
+          resultsMap[r.id] = r;
+        });
+        setResults(resultsMap);
+      }
+
+      const { data: wordsData } = await supabase
+        .from("dm_word_attempts")
+        .select("*");
+
+      if (wordsData) {
+        const wordsMap: Record<string, any> = {};
+        wordsData.forEach((w: any) => {
+          wordsMap[w.id] = w;
+        });
+        setWordAttempts(wordsMap);
       }
     } catch (error) {
-      console.error("Erreur lors de l'extraction:", error);
-      toast.error(error instanceof Error ? error.message : "Erreur lors de la lecture du fichier");
-    } finally {
-      setIsProcessingFile(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      console.error("Error loading data:", error);
+      toast.error("Erreur lors du chargement des données");
+    }
+  };
+
+  // Load Hub classes
+  const loadHub = async () => {
+    try {
+      const classes = await getClasses();
+      setHubClasses(classes);
+      if (classes.length > 0) {
+        pickClass(classes[0].id, classes[0].nom);
+      }
+    } catch (error) {
+      console.error("Error loading Hub classes:", error);
+      toast.error("Erreur lors du chargement des classes");
+    }
+  };
+
+  // Pick a class and load its students
+  const pickClass = async (classId: string, className: string) => {
+    try {
+      setSelectedClasse(classId);
+      setSelectedClasseName(className);
+
+      const students = await getEleves(classId);
+      const studentsMap: Record<string, { id: string; name: string }> = {};
+      students.forEach((s: any) => {
+        studentsMap[s.id] = { id: s.id, name: s.name };
+      });
+      setHubStudents(studentsMap);
+
+      // Load dm_class for lock state
+      const { data: dmClassData } = await supabase
+        .from("dm_classes")
+        .select("*")
+        .eq("class_id", classId)
+        .single();
+
+      if (dmClassData) {
+        setDmClassId(dmClassData.id);
+        const unlocked = dmClassData.unlocked_positions || [];
+        setUnlockedPos(unlocked);
+      }
+    } catch (error) {
+      console.error("Error picking class:", error);
+      toast.error("Erreur lors du chargement de la classe");
+    }
+  };
+
+  // Toggle lock/unlock
+  const toggleLock = async (position: number) => {
+    const newUnlocked = unlockedPos.includes(position)
+      ? unlockedPos.filter((p) => p !== position)
+      : [...unlockedPos, position];
+
+    setUnlockedPos(newUnlocked);
+
+    if (dmClassId) {
+      try {
+        await supabase
+          .from("dm_classes")
+          .update({ unlocked_positions: newUnlocked })
+          .eq("id", dmClassId);
+      } catch (error) {
+        console.error("Error updating lock state:", error);
+        toast.error("Erreur lors de la mise à jour");
       }
     }
   };
 
-  const addWordsToList = (words: string[]) => {
-    const existingWords = getParsedWords();
-    const newWords = words.filter(w => !existingWords.some(ew => ew.toLowerCase() === w.toLowerCase()));
+  // Refresh presence every 15s
+  useEffect(() => {
+    const refreshPresence = async () => {
+      const online = await loadOnlineStudents();
+      setOnlineStudents(online);
+    };
 
-    if (newWords.length > 0) {
-      setWordsText(prev => {
-        const current = prev.trim();
-        return current ? `${current}\n${newWords.join('\n')}` : newWords.join('\n');
+    refreshPresence();
+    const interval = setInterval(refreshPresence, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Initial load
+  useEffect(() => {
+    const init = async () => {
+      setLoading(true);
+      await loadData();
+      await loadHub();
+      setLoading(false);
+    };
+
+    init();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="h-dvh flex items-center justify-center bg-gray-50">
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+      </div>
+    );
+  }
+
+  // Build student rows
+  const getStudentRows = (): StudentRow[] => {
+    const maxDictees = dictees.length;
+    const rows: StudentRow[] = [];
+
+    // Filter students based on class
+    const studentsToShow = Object.entries(hubStudents);
+
+    studentsToShow.forEach(([studentId, student]) => {
+      // Skip demo students if not 6T
+      if (
+        studentId.startsWith("6t-") &&
+        selectedClasseName !== "6T"
+      ) {
+        return;
+      }
+
+      const studentResults = Object.values(results).filter(
+        (r: any) => r.student_id === studentId
+      );
+
+      let totalStars = 0;
+      let totalAttempts = 0;
+      const resultsByDictee: Record<string, { bestPct: number; attempts: number }> =
+        {};
+
+      dictees.forEach((d) => {
+        const dResults = studentResults.filter((r: any) => r.dictee_id === d.id);
+        if (dResults.length > 0) {
+          const bestPct = Math.max(...dResults.map((r: any) => r.percentage));
+          const stars = getStars(bestPct);
+          totalStars += stars;
+          totalAttempts += dResults.length;
+          resultsByDictee[d.id] = { bestPct, attempts: dResults.length };
+        } else {
+          resultsByDictee[d.id] = { bestPct: 0, attempts: 0 };
+        }
       });
-      toast.success(`${newWords.length} mots ajoutés !`);
-    } else {
-      toast.info("Tous les mots sont déjà dans la liste");
-    }
+
+      const n20 = note20(resultsByDictee, maxDictees);
+      const perfectCount = Object.values(resultsByDictee).filter(r => r.bestPct >= 95).length;
+      const totalCorrect = Object.values(resultsByDictee).reduce((a, r) => a + Math.round(r.bestPct * 15 / 100), 0);
+      const xp = computeXPFromStats(totalCorrect, totalAttempts, perfectCount);
+      const level = getLevel(xp);
+      const lastName = getLastName(student.name);
+
+      rows.push({
+        id: studentId,
+        name: student.name,
+        lastName,
+        results: resultsByDictee,
+        totalAttempts,
+        totalStars,
+        note20: n20,
+        xp,
+        level,
+      });
+    });
+
+    return rows.sort((a, b) => a.lastName.localeCompare(b.lastName));
   };
 
-  const handleSelectSection = (section: DetectedSection) => {
-    setTitle(section.title);
-    setWordsText(section.words.join('\n'));
-    setShowSectionPicker(false);
-    setDetectedSections([]);
-    toast.success(`"${section.title}" sélectionnée avec ${section.words.length} mots`);
+  const studentRows = getStudentRows();
+  const maxDictees = dictees.length;
+
+  // Calculate common errors
+  const getCommonErrors = (): CommonError[] => {
+    const errorMap: Record<string, CommonError> = {};
+
+    Object.values(wordAttempts).forEach((wa: any) => {
+      const word = wa.word || "?";
+      const dictee = dictees.find((d) => d.id === wa.dictee_id);
+      const key = `${word}-${wa.dictee_id}`;
+
+      if (!errorMap[key]) {
+        errorMap[key] = {
+          word,
+          dicteeTitle: dictee?.title || "Dictée ?",
+          count: 0,
+          wrongAnswers: [],
+        };
+      }
+
+      errorMap[key].count += wa.error_count || 0;
+      if (wa.wrong_answers && !errorMap[key].wrongAnswers.includes(wa.wrong_answers)) {
+        errorMap[key].wrongAnswers.push(wa.wrong_answers);
+      }
+    });
+
+    return Object.values(errorMap).sort((a, b) => b.count - a.count);
   };
 
-  const handleCreateList = async () => {
-    if (!title.trim()) {
-      toast.error("Veuillez entrer un titre");
-      titleInputRef.current?.focus();
-      return;
-    }
-
-    const wordsList = getParsedWords();
-
-    if (wordsList.length === 0) {
-      toast.error("Veuillez entrer au moins un mot");
-      return;
-    }
-
-    // Créer dans Supabase (passer undefined si c'est un ID démo, pas un vrai UUID)
-    const teacherId = user?.id?.startsWith('demo-') ? undefined : user?.id;
-    const result = await createList(title.trim(), mode, wordsList, teacherId);
-
-    if (result) {
-      toast.success(`Liste "${title}" créée avec ${wordsList.length} mots !`);
-      // Reset form
-      setTitle("");
-      setMode("progression");
-      setWordsText("");
-      setIsCreateOpen(false);
-    } else {
-      toast.error("Erreur lors de la création de la liste");
-    }
-  };
-
-  const handleCopyCode = (code: string, listId: string) => {
-    navigator.clipboard.writeText(code);
-    setCopiedId(listId);
-    toast.success("Code copié !");
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handleDeleteList = async (listId: string, listTitle: string) => {
-    const success = await deleteList(listId);
-    if (success) {
-      toast.success(`Liste "${listTitle}" supprimée`);
-    } else {
-      toast.error("Erreur lors de la suppression");
-    }
-  };
-
-  const parsedWordsCount = getParsedWords().length;
+  const commonErrors = getCommonErrors();
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-purple-100 via-indigo-50 to-blue-50 pb-safe">
-      {/* Header avec profondeur */}
-      <header className="sticky top-0 z-10 bg-gradient-to-b from-white to-white/95 backdrop-blur-xl border-b shadow-lg shadow-purple-100/50">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-bold text-xl bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                DictéeMaster
-              </h1>
-              <VersionBadge />
-            </div>
-            <p className="text-xs text-gray-400 font-medium">Espace enseignant</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setTempApiKey(apiConfig?.apiKey || "");
-                setIsSettingsOpen(true);
-              }}
-              className="hover:bg-purple-50 hover:text-purple-500 transition-colors"
+    <main className="h-dvh flex flex-col overflow-hidden bg-gray-50">
+      {/* Header - Purple bar */}
+      <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-3 flex items-center justify-between z-20">
+        <div className="flex items-center gap-3">
+          {hubClasses.map((hc) => (
+            <button
+              key={hc.id}
+              onClick={() => pickClass(hc.id, hc.nom)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                selectedClasse === hc.id
+                  ? "bg-white text-purple-600"
+                  : "bg-white/20 hover:bg-white/30"
+              }`}
             >
-              <Settings className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-              className="hover:bg-red-50 hover:text-red-500 transition-colors"
-            >
-              <LogOut className="w-5 h-5" />
-            </Button>
-          </div>
+              {hc.nom}
+            </button>
+          ))}
         </div>
-      </header>
-
-      {/* Modal Configuration API */}
-      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Key className="w-5 h-5 text-purple-500" />
-              Configuration IA
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-bold text-gray-700">Cle API</Label>
-              <Input
-                type="password"
-                value={tempApiKey}
-                onChange={(e) => setTempApiKey(e.target.value)}
-                placeholder="Coller votre cle API..."
-                className="font-mono"
-              />
-              <p className="text-xs text-gray-400">
-                La cle est stockee localement. Sans cle, des templates simples seront utilises.
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  setApiConfig(null);
-                  setTempApiKey("");
-                  toast.success("Configuration supprimee");
-                  setIsSettingsOpen(false);
-                }}
-              >
-                Supprimer
-              </Button>
-              <Button
-                className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-600"
-                onClick={() => {
-                  if (tempApiKey.trim()) {
-                    setApiConfig({ apiKey: tempApiKey.trim() });
-                    toast.success("Configuration sauvegardee");
-                  } else {
-                    setApiConfig(null);
-                  }
-                  setIsSettingsOpen(false);
-                }}
-              >
-                Sauvegarder
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Stats avec effet 3D */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl transform rotate-2 opacity-50" />
-            <Card className="relative bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 rounded-2xl shadow-xl shadow-purple-200">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <List className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold">{demoLists.length}</p>
-                    <p className="text-xs opacity-80">Listes créées</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl transform -rotate-2 opacity-50" />
-            <Card className="relative bg-gradient-to-br from-indigo-500 to-indigo-600 text-white border-0 rounded-2xl shadow-xl shadow-indigo-200">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <BarChart3 className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold">
-                      {Object.values(demoWords).reduce((acc, words) => acc + words.length, 0)}
-                    </p>
-                    <p className="text-xs opacity-80">Mots au total</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Dashboard statistiques */}
-        <TeacherDashboard />
-
-        {/* Bouton créer avec gradient */}
-        <Dialog open={isCreateOpen} onOpenChange={(open) => {
-          setIsCreateOpen(open);
-          if (!open) {
-            setShowSectionPicker(false);
-            setDetectedSections([]);
-          }
-        }}>
-          <DialogTrigger asChild>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full h-16 text-lg font-bold bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-2xl shadow-xl shadow-purple-200 flex items-center justify-center gap-3 transition-all"
-            >
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <Plus className="w-6 h-6" />
-              </div>
-              Créer une nouvelle liste
-            </motion.button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md mx-4 max-h-[90vh] overflow-y-auto rounded-3xl border-0 shadow-2xl">
-            <DialogHeader className="pb-2">
-              <DialogTitle className="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                {showSectionPicker ? "Choisir une dictée" : "Nouvelle liste de mots"}
-              </DialogTitle>
-            </DialogHeader>
-
-            {/* Sélecteur de section */}
-            {showSectionPicker ? (
-              <div className="space-y-4 py-4">
-                <p className="text-sm text-gray-500">
-                  {detectedSections.length} dictées trouvées. Laquelle importer ?
-                </p>
-                <div className="space-y-2 max-h-[50vh] overflow-y-auto">
-                  {detectedSections.map((section, index) => (
-                    <motion.button
-                      key={section.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={() => handleSelectSection(section)}
-                      className="w-full p-4 rounded-2xl border-2 border-gray-100 bg-white hover:border-purple-300 hover:shadow-lg hover:shadow-purple-100 transition-all text-left flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center">
-                          <BookOpen className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-800">{section.title}</p>
-                          <p className="text-xs text-gray-400">
-                            {section.words.length} mots : {section.words.slice(0, 3).join(", ")}
-                            {section.words.length > 3 && "..."}
-                          </p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-purple-500 transition-colors" />
-                    </motion.button>
-                  ))}
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full h-12 rounded-xl border-2"
-                  onClick={() => {
-                    setShowSectionPicker(false);
-                    setDetectedSections([]);
-                  }}
-                >
-                  Annuler
-                </Button>
-              </div>
-            ) : (
-              /* Formulaire de création */
-              <div className="space-y-5 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title" className="text-sm font-bold text-gray-700">Titre de la liste</Label>
-                  <Input
-                    ref={titleInputRef}
-                    id="title"
-                    placeholder="Ex: Dictée semaine 12"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="h-12 rounded-xl border-2 border-gray-100 focus:border-purple-300 text-base"
-                    autoFocus
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-sm font-bold text-gray-700">Mode d&apos;entraînement</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(Object.keys(modeLabels) as TrainingMode[]).map((m) => (
-                      <button
-                        key={m}
-                        onClick={() => setMode(m)}
-                        className={`p-3 rounded-xl border-2 transition-all ${
-                          mode === m
-                            ? "border-purple-400 bg-purple-50 shadow-md shadow-purple-100"
-                            : "border-gray-100 bg-gray-50 hover:border-purple-200"
-                        }`}
-                      >
-                        <div className="flex flex-col items-center gap-2">
-                          <div className={`p-2 rounded-lg ${mode === m ? "bg-purple-500 text-white" : "bg-white text-gray-500"}`}>
-                            {modeLabels[m].icon}
-                          </div>
-                          <span className={`text-xs font-bold ${mode === m ? "text-purple-600" : "text-gray-500"}`}>
-                            {modeLabels[m].label}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-400 text-center">
-                    {mode === "flashcard" && "L'élève voit le mot puis l'écrit"}
-                    {mode === "audio" && "L'élève entend le mot et l'écrit"}
-                    {mode === "progression" && "Flashcard puis audio quand maîtrisé"}
-                    {mode === "fill-blanks" && "Texte à trous avec dictée audio"}
-                  </p>
-                </div>
-
-                {/* Import fichier */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-bold text-gray-700">Importer un fichier</Label>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.docx,.doc,.odt,.txt"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    id="file-upload"
-                  />
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isProcessingFile}
-                    className="w-full p-4 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 hover:border-purple-300 hover:bg-purple-50 transition-all flex items-center justify-center gap-3"
-                  >
-                    {isProcessingFile ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin text-purple-500" />
-                        <span className="font-medium text-purple-600">Analyse en cours...</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center">
-                          <Upload className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div className="text-left">
-                          <p className="font-medium text-gray-700">Glisser ou cliquer</p>
-                          <p className="text-xs text-gray-400">PDF, Word, ODT ou TXT</p>
-                        </div>
-                      </>
-                    )}
-                  </motion.button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="words" className="text-sm font-bold text-gray-700">
-                    Mots
-                    <span className="text-gray-400 font-normal ml-1">
-                      (collez votre liste)
-                    </span>
-                  </Label>
-                  <textarea
-                    id="words"
-                    className="w-full h-36 p-4 border-2 border-gray-100 rounded-xl resize-none focus:outline-none focus:border-purple-300 text-base transition-colors"
-                    placeholder={"enfin - voiture - mer\nou un mot par ligne..."}
-                    value={wordsText}
-                    onChange={(e) => setWordsText(e.target.value)}
-                  />
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm">
-                      <span className="font-bold text-purple-600">{parsedWordsCount}</span>
-                      <span className="text-gray-400"> mot{parsedWordsCount > 1 ? 's' : ''} détecté{parsedWordsCount > 1 ? 's' : ''}</span>
-                    </p>
-                    {parsedWordsCount > 0 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs h-7 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                        onClick={() => {
-                          const words = getParsedWords();
-                          setWordsText(words.join('\n'));
-                          toast.success("Mots formatés !");
-                        }}
-                      >
-                        <FileText className="w-3 h-3 mr-1" />
-                        Formater
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                <Button
-                  onClick={handleCreateList}
-                  className="w-full h-14 text-lg font-bold bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 rounded-xl shadow-lg shadow-purple-200"
-                >
-                  Créer la liste
-                </Button>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Liste des listes */}
-        <div className="space-y-4">
-          <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-            <List className="w-5 h-5 text-purple-500" />
-            Mes listes
-          </h2>
-          <AnimatePresence mode="popLayout">
-            {demoLists.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-12"
-              >
-                <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
-                  <List className="w-10 h-10 text-gray-300" />
-                </div>
-                <p className="font-medium text-gray-600">Aucune liste créée</p>
-                <p className="text-sm text-gray-400">Créez votre première liste !</p>
-              </motion.div>
-            ) : (
-              demoLists.map((list, index) => (
-                <motion.div
-                  key={list.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl transform rotate-1 opacity-10" />
-                    <div className="relative bg-white rounded-2xl border-2 border-gray-100 shadow-lg shadow-gray-100 overflow-hidden hover:shadow-xl hover:border-purple-200 transition-all">
-                      <div className="p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center">
-                              <BookOpen className="w-6 h-6 text-purple-600" />
-                            </div>
-                            <div>
-                              <h3 className="font-bold text-gray-800">{list.title}</h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${modeLabels[list.mode].color}`}>
-                                  {modeLabels[list.mode].label}
-                                </span>
-                                <span className="text-xs text-gray-400">
-                                  {demoWords[list.id]?.length || 0} mots
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 rounded-xl hover:bg-purple-50"
-                              onClick={() => setSelectedList(list)}
-                            >
-                              <Eye className="w-4 h-4 text-gray-400" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 rounded-xl hover:bg-green-50"
-                              onClick={() => handleCopyCode(list.share_code, list.id)}
-                            >
-                              {copiedId === list.id ? (
-                                <Check className="w-4 h-4 text-green-600" />
-                              ) : (
-                                <Copy className="w-4 h-4 text-gray-400" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 rounded-xl hover:bg-red-50 hover:text-red-500"
-                              onClick={() => handleDeleteList(list.id, list.title)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      {/* Code section */}
-                      <div className="px-4 py-3 bg-gradient-to-r from-purple-50 to-indigo-50 border-t border-purple-100 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">Code élève :</span>
-                          <code className="font-mono font-bold text-lg text-purple-600 tracking-wider">
-                            {list.share_code}
-                          </code>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-100"
-                          onClick={() => handleCopyCode(list.share_code, list.id)}
-                        >
-                          {copiedId === list.id ? "Copié !" : "Copier"}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))
-            )}
-          </AnimatePresence>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTab("erreurs")}
+            className={`px-3 py-1 rounded text-sm ${
+              tab === "erreurs"
+                ? "bg-white/20"
+                : "hover:bg-white/10"
+            }`}
+          >
+            ⚠️ Erreurs
+          </button>
+          <button
+            onClick={() => anon.toggle(studentRows.map(s => s.name))}
+            className="px-3 py-1 rounded text-sm hover:bg-white/10"
+          >
+            {anon.active ? "🔓 Démasquer" : "🎭 Anonymiser"}
+          </button>
+          <button
+            onClick={() => router.push("/")}
+            className="px-3 py-1 rounded text-sm bg-red-500 hover:bg-red-600"
+          >
+            Quitter
+          </button>
         </div>
       </div>
 
-      {/* List Detail Modal */}
-      <AnimatePresence>
-        {selectedList && (
-          <ListDetail
-            list={selectedList}
-            onClose={() => setSelectedList(null)}
-          />
+      {/* Lock bar */}
+      <div className="bg-gray-50 border-b px-4 py-3 flex items-center gap-2 overflow-x-auto flex-shrink-0">
+        <div className="flex items-center gap-2 flex-1">
+          {Array.from({ length: 26 }).map((_, i) => {
+            const pos = i + 1;
+            const isUnlocked = unlockedPos.includes(pos);
+            return (
+              <button
+                key={pos}
+                onClick={() => toggleLock(pos)}
+                className={`w-8 h-8 rounded text-xs font-bold transition-all ${
+                  isUnlocked
+                    ? "bg-purple-500 text-white"
+                    : "bg-gray-300 text-gray-600"
+                }`}
+              >
+                {pos}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-2 ml-4">
+          <button
+            onClick={() => setShowBilan(true)}
+            className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+          >
+            📊 Bilan
+          </button>
+          <button
+            onClick={() => { const d = studentRows.map(s => ({ name: s.name, scores: Object.fromEntries(Object.entries(s.results).map(([k,v]) => [k, v.bestPct])), attempts: s.totalAttempts, totalStars: s.totalStars, note20: s.note20 })); exportPronote(d, dictees); toast.success("Copié !"); }}
+            className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+          >
+            📋 Pronote
+          </button>
+          <button
+            onClick={() => { const d = studentRows.map(s => ({ name: s.name, scores: Object.fromEntries(Object.entries(s.results).map(([k,v]) => [k, v.bestPct])), attempts: s.totalAttempts, totalStars: s.totalStars, note20: s.note20 })); exportExcel(d, dictees, selectedClasseName, dn); toast.success("CSV téléchargé !"); }}
+            className="px-3 py-1 bg-orange-500 text-white rounded text-sm hover:bg-orange-600"
+          >
+            📥 Excel
+          </button>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {tab === "tableau" ? (
+          <>
+            {/* Table */}
+            <div
+              className={`${selectedStudent ? "h-[55%]" : "h-full"} overflow-y-auto border-b`}
+            >
+              <table className="w-full border-collapse">
+                <thead className="sticky top-0 bg-purple-600 text-white">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-bold">Élève ▲</th>
+                    {dictees.map((d) => (
+                      <th
+                        key={d.id}
+                        className="px-2 py-2 text-center font-bold text-xs"
+                      >
+                        D{d.position}
+                      </th>
+                    ))}
+                    <th className="px-2 py-2 text-center font-bold">⭐</th>
+                    <th className="px-2 py-2 text-center font-bold">XP</th>
+                    <th className="px-2 py-2 text-center font-bold">Niv</th>
+                    <th className="px-2 py-2 text-center font-bold">Note</th>
+                    <th className="px-2 py-2 text-center font-bold">Ess</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {studentRows.map((row, idx) => (
+                    <tr
+                      key={row.id}
+                      onClick={() => setSelectedStudent(row)}
+                      className={`cursor-pointer hover:bg-purple-100 transition-colors ${
+                        idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
+                    >
+                      <td className="px-4 py-2 font-medium">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              onlineStudents.has(row.id)
+                                ? "bg-green-500"
+                                : "bg-gray-400"
+                            }`}
+                          />
+                          {anon.active ? (
+                            <span>{dn(row.name)}</span>
+                          ) : (
+                            <span>
+                              {row.name.split(" ")[0]} {row.lastName[0]}.
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      {dictees.map((d) => {
+                        const r = row.results[d.id];
+                        const color =
+                          r.bestPct >= 80
+                            ? "bg-green-100 text-green-700"
+                            : r.bestPct >= 50
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-red-100 text-red-700";
+                        return (
+                          <td
+                            key={d.id}
+                            className={`px-2 py-2 text-center text-sm ${color}`}
+                          >
+                            {r.bestPct > 0 ? (
+                              <>
+                                {r.bestPct}%{r.attempts > 1 && <sub>×{r.attempts}</sub>}
+                              </>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td className="px-2 py-2 text-center">
+                        {row.totalStars}
+                      </td>
+                      <td className="px-2 py-2 text-center">{row.xp}</td>
+                      <td className="px-2 py-2 text-center">
+                        {row.level.emoji} {row.level.name}
+                      </td>
+                      <td className="px-2 py-2 text-center font-bold">
+                        {row.note20}/20
+                      </td>
+                      <td className="px-2 py-2 text-center">
+                        {row.totalAttempts}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Student detail panel */}
+            {selectedStudent && (
+              <div className="h-[45%] bg-white border-t overflow-y-auto p-4">
+                <button
+                  onClick={() => setSelectedStudent(null)}
+                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+
+                {/* Section A: Name + Note + Mastery + Stats */}
+                <div className="mb-4 flex items-center gap-4 border-b pb-4">
+                  <div>
+                    <h3 className="font-bold text-lg">
+                      {anon.active ? dn(selectedStudent.name) : selectedStudent.name}
+                    </h3>
+                  </div>
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-2xl">
+                    {selectedStudent.note20}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">
+                      {getMasteryLevel(selectedStudent.note20).emoji}{" "}{getMasteryLevel(selectedStudent.note20).name}{" "}
+                      {selectedStudent.level.emoji} {selectedStudent.level.name}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {selectedStudent.totalStars} stars · {selectedStudent.totalAttempts} essais
+                    </p>
+                  </div>
+                </div>
+
+                {/* Section B: Dictées travaillées */}
+                <div className="mb-4">
+                  <h4 className="font-bold mb-2">Dictées travaillées</h4>
+                  <div className="grid grid-cols-4 gap-2">
+                    {dictees.map((d) => {
+                      const r = selectedStudent.results[d.id];
+                      const color =
+                        r.bestPct >= 80
+                          ? "bg-green-100 text-green-700"
+                          : r.bestPct >= 50
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-red-100 text-red-700";
+                      return (
+                        <div
+                          key={d.id}
+                          className={`p-2 rounded text-center text-xs font-bold ${
+                            r.bestPct > 0
+                              ? color
+                              : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          <div>{r.bestPct}%</div>
+                          <div>
+                            {getStars(r.bestPct)} ⭐
+                          </div>
+                          {r.attempts > 1 && <div>×{r.attempts}</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Section C: Badges */}
+                <div className="mb-4">
+                  <h4 className="font-bold mb-2">Badges</h4>
+                  <div className="grid grid-cols-8 gap-2">
+                    {BADGES.map((badge) => {
+                      const dicteesTried = Object.values(selectedStudent.results).filter(r => r.bestPct > 0).length;
+                      const maxAttempts = Math.max(...Object.values(selectedStudent.results).map(r => r.attempts), 0);
+                      const perfectCount = Object.values(selectedStudent.results).filter(r => r.bestPct >= 95).length;
+                      const isEarned = badge.id === "premier-pas" ? dicteesTried >= 1 : badge.id === "perseverant" ? maxAttempts >= 10 : badge.id === "zero-faute" ? perfectCount >= 1 : badge.id === "marathonien" ? selectedStudent.totalAttempts >= 50 : badge.id === "explorateur" ? dicteesTried >= 10 : false;
+                      return (
+                        <div
+                          key={badge.id}
+                          className={`text-center p-2 rounded ${
+                            isEarned
+                              ? "bg-amber-100"
+                              : "bg-gray-100 opacity-20 grayscale"
+                          }`}
+                        >
+                          <div className="text-2xl">{badge.emoji}</div>
+                          <div className="text-xs font-bold text-gray-600">
+                            {badge.name}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Section D: Auto-appreciation */}
+                <div className="mb-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl">📝</span>
+                    <p className="text-sm text-gray-700">
+                      {generateAppreciation({
+                        totalAttempts: selectedStudent.totalAttempts,
+                        dicteesTried: Object.values(selectedStudent.results).filter(r => r.bestPct > 0).length,
+                        totalDictees: dictees.length,
+                        avgBestPct: (() => { const tried = Object.values(selectedStudent.results).filter(r => r.bestPct > 0); return tried.length > 0 ? tried.reduce((a, r) => a + r.bestPct, 0) / tried.length : 0; })(),
+                        perfectCount: Object.values(selectedStudent.results).filter(r => r.bestPct >= 95).length,
+                        improvementCount: 0,
+                        streak: 0,
+                        weakDictees: Object.entries(selectedStudent.results).filter(([_,r]) => r.bestPct > 0 && r.bestPct < 50).map(([dId]) => dictees.find(d => d.id === dId)?.position || 0),
+                        strongDictees: Object.entries(selectedStudent.results).filter(([_,r]) => r.bestPct >= 80).map(([dId]) => dictees.find(d => d.id === dId)?.position || 0),
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Section E: Certificate level */}
+                {(() => {
+                  const dt = Object.values(selectedStudent.results).filter(r => r.bestPct > 0).length;
+                  const cert = getCertificateLevel(selectedStudent.note20, dt, 3);
+                  return cert ? (
+                    <div className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-200">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{cert.emoji}</span>
+                        <div>
+                          <div className="font-bold text-amber-900 text-xs">{cert.name}</div>
+                          <div className="text-[9px] text-amber-700">{cert.mention}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-2 bg-gray-50 rounded-lg border border-gray-200 text-center">
+                      <span className="text-[10px] text-gray-400">🎓 Certificat après 3 dictées ({dt} actuellement)</span>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </>
+        ) : (
+          /* Erreurs tab */
+          <div className="overflow-y-auto p-4">
+            <h3 className="font-bold text-lg mb-4">Erreurs les plus fréquentes</h3>
+            <div className="grid grid-cols-3 gap-4">
+              {commonErrors.slice(0, 50).map((err, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white border rounded-lg p-4 shadow-sm"
+                >
+                  <div className="inline-block bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold mb-2">
+                    {err.count}
+                  </div>
+                  <p className="font-bold text-lg mb-1">{err.word}</p>
+                  <p className="text-xs text-gray-500 mb-2">
+                    {err.dicteeTitle}
+                  </p>
+                  <div className="space-y-1">
+                    {err.wrongAnswers.slice(0, 3).map((wa, i) => (
+                      <p key={i} className="text-xs text-gray-600 line-through">
+                        {wa}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
+
+      {/* Bilan Preview Modal */}
+      {showBilan && (
+        <BilanPreview
+          open={showBilan}
+          onClose={() => setShowBilan(false)}
+          students={studentRows.map(s => ({
+            name: s.name,
+            lastName: s.lastName,
+            scores: Object.fromEntries(Object.entries(s.results).map(([k,v]) => [k, v.bestPct])),
+            attemptsPerDictee: Object.fromEntries(Object.entries(s.results).map(([k,v]) => [k, v.attempts])),
+            attempts: s.totalAttempts,
+            totalStars: s.totalStars,
+            note20: s.note20,
+          }))}
+          dictees={dictees}
+          className={selectedClasseName}
+        />
+      )}
     </main>
   );
 }

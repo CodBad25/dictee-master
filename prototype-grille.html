@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DictéeMaster — Prototype Grille Compacte</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f3ff; min-height: 100dvh; display: flex; flex-direction: column; }
+
+  /* Header élève — compact */
+  .header {
+    background: white;
+    border-bottom: 2px solid #ede9fe;
+    padding: 8px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .header-logo { font-size: 16px; font-weight: 800; color: #7c3aed; }
+  .header-user { font-size: 12px; color: #6b7280; }
+  .header-user strong { color: #1f2937; }
+  .header-stats { display: flex; gap: 12px; }
+  .header-stat { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 700; }
+  .header-stat.streak { color: #f59e0b; }
+  .header-stat.stars { color: #7c3aed; }
+
+  /* Progress — slim */
+  .progress-row {
+    padding: 6px 16px;
+    background: white;
+    border-bottom: 1px solid #f3f0ff;
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+  }
+  .progress-text { font-size: 11px; color: #6b7280; white-space: nowrap; }
+  .progress-bar { flex: 1; background: #e5e7eb; border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-fill { background: linear-gradient(90deg, #7c3aed, #a78bfa); height: 100%; border-radius: 4px; }
+
+  /* Grille — remplit l'espace restant */
+  .grid-container {
+    flex: 1;
+    padding: 10px;
+    display: grid;
+    /* Desktop : 7 colonnes pour 26 cartes (4 lignes) */
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 8px;
+    align-content: stretch;
+  }
+
+  /* Card — ultra compact */
+  .card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+  .card:hover:not(.locked) {
+    border-color: #7c3aed;
+    box-shadow: 0 2px 12px rgba(124,58,237,0.18);
+    transform: translateY(-1px);
+  }
+  .card .num { font-size: 10px; color: #7c3aed; font-weight: 700; letter-spacing: 0.3px; }
+  .card .title { font-size: 13px; font-weight: 700; color: #1f2937; line-height: 1.2; margin: 2px 0; }
+  .card .meta { font-size: 10px; color: #9ca3af; }
+  .card .stars { font-size: 12px; margin-top: 2px; }
+  .card .score { font-size: 10px; color: #6b7280; }
+
+  /* Done card — green left border */
+  .card.done { border-left: 4px solid #10b981; }
+  /* Current card — purple border */
+  .card.current { border-color: #7c3aed; background: #faf5ff; }
+
+  /* Locked */
+  .card.locked { cursor: default; }
+  .card.locked .card-content { opacity: 0.3; }
+  .card .lock-overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    z-index: 2;
+  }
+  .lock-badge { background: rgba(0,0,0,0.65); color: white; padding: 3px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+  .unlock-btn { background: #3b82f6; color: white; border: none; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 600; cursor: pointer; }
+  .unlock-btn:hover { background: #2563eb; }
+  .pending-badge { background: #fef3c7; color: #92400e; padding: 3px 10px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+
+  /* RESPONSIVE — Tablet */
+  @media (max-width: 1024px) {
+    .grid-container {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      overflow-y: auto;
+    }
+  }
+
+  /* RESPONSIVE — Mobile */
+  @media (max-width: 640px) {
+    .header { padding: 8px 12px; }
+    .header-logo { font-size: 14px; }
+    .progress-row { padding: 5px 12px; }
+    .grid-container {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    .card { padding: 6px 8px; border-radius: 10px; }
+    .card .title { font-size: 12px; }
+    .card .num { font-size: 9px; }
+    .card .meta { display: none; }
+    .lock-badge { font-size: 10px; padding: 2px 8px; }
+    .unlock-btn { font-size: 9px; padding: 3px 8px; }
+    .pending-badge { font-size: 9px; }
+  }
+
+  /* RESPONSIVE — Petit mobile */
+  @media (max-width: 400px) {
+    .grid-container {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .header-stats { gap: 8px; }
+    .header-stat { font-size: 12px; }
+  }
+
+  /* Logout button */
+  .btn-logout { background: none; border: none; cursor: pointer; font-size: 18px; color: #9ca3af; }
+  .btn-logout:hover { color: #ef4444; }
+</style>
+</head>
+<body>
+
+<!-- Header compact -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">DictéeMaster</div>
+    <div class="header-user"><strong>Lambda T.</strong> — 6C</div>
+  </div>
+  <div class="header-stats">
+    <div class="header-stat streak">🔥 3</div>
+    <div class="header-stat stars">⭐ 7</div>
+    <button class="btn-logout" title="Déconnexion">⎋</button>
+  </div>
+</div>
+
+<!-- Progress slim -->
+<div class="progress-row">
+  <span class="progress-text">3 / 26 dictées</span>
+  <div class="progress-bar"><div class="progress-fill" style="width: 11.5%"></div></div>
+</div>
+
+<!-- Grille 26 cartes -->
+<div class="grid-container" id="grid"></div>
+
+<script>
+const themes = [
+  "L'école","La famille","Les animaux","La nature","Les saisons",
+  "La ville","Les métiers","Le sport","La musique","Les voyages",
+  "La nourriture","Les vêtements","La maison","Le temps","Les couleurs",
+  "Le corps","Les émotions","La mer","La montagne","L'espace",
+  "Les fêtes","L'histoire","La science","Les contes","L'amitié","L'aventure"
+];
+
+const dictees = [];
+for (let i = 1; i <= 26; i++) {
+  const unlocked = i <= 3;
+  const done = i <= 2;
+  const current = i === 3;
+  const nextRequest = i === 4;
+  const pending = i === 5;
+  dictees.push({
+    num: i, title: themes[i-1],
+    words: 18 + Math.floor(Math.random() * 8),
+    unlocked, done, current, nextRequest, pending,
+    stars: done ? (i === 1 ? '⭐⭐⭐' : '⭐⭐') : (current ? '⭐' : ''),
+    score: done ? (i === 1 ? '14/15' : '11/15') : (current ? '8/15' : ''),
+  });
+}
+
+function renderCard(d) {
+  const locked = !d.unlocked;
+  const classes = ['card'];
+  if (locked) classes.push('locked');
+  if (d.done) classes.push('done');
+  if (d.current) classes.push('current');
+
+  let lockHTML = '';
+  if (locked) {
+    if (d.nextRequest) {
+      lockHTML = `<div class="lock-overlay"><div class="lock-badge">🔒</div><button class="unlock-btn">Demander</button></div>`;
+    } else if (d.pending) {
+      lockHTML = `<div class="lock-overlay"><div class="lock-badge">🔒</div><div class="pending-badge">⏳ Envoyée</div></div>`;
+    } else {
+      lockHTML = `<div class="lock-overlay"><div class="lock-badge">🔒</div></div>`;
+    }
+  }
+
+  return `
+    <div class="${classes.join(' ')}">
+      ${lockHTML}
+      <div class="card-content">
+        <div class="num">N°${d.num}</div>
+        <div class="title">${d.title}</div>
+        <div class="meta">${d.words} mots</div>
+        ${d.stars ? `<div class="stars">${d.stars}</div>` : ''}
+        ${d.score ? `<div class="score">${d.score}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+document.getElementById('grid').innerHTML = dictees.map(renderCard).join('');
+</script>
+</body>
+</html>

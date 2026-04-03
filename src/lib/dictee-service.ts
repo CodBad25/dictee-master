@@ -1,0 +1,324 @@
+import { createClient } from "@/lib/supabase/client";
+
+// === TYPES ===
+
+export interface DicteeResult {
+  id: string;
+  class_id: string;
+  student_id: string;
+  student_name: string;
+  dictee_id: string;
+  activity_mode: string;
+  score: number;
+  total: number;
+  percentage: number;
+  time_spent: number | null;
+  created_at: string;
+}
+
+export interface Dictee {
+  id: string;
+  title: string;
+  position: number;
+  share_code: string;
+  fill_blanks_text: string;
+}
+
+export interface DicteeWord {
+  dictee_id: string;
+  word: string;
+  definition: string;
+  spelling_errors: string[];
+  position: number;
+}
+
+// === DICTÉES ===
+
+export async function loadAllDictees(): Promise<Dictee[]> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dictees")
+    .select("id, title, position, share_code, fill_blanks_text")
+    .order("position");
+  return data || [];
+}
+
+export async function loadDicteeWords(dicteeId: string): Promise<DicteeWord[]> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dictee_words")
+    .select("dictee_id, word, definition, spelling_errors, position")
+    .eq("dictee_id", dicteeId)
+    .order("position");
+  return data || [];
+}
+
+// === RÉSULTATS ===
+
+export async function saveResult(params: {
+  studentId: string;
+  studentName: string;
+  dicteeId: string;
+  activityMode: string;
+  score: number;
+  total: number;
+  percentage: number;
+  timeSpent?: number;
+  answers?: { word: string; userAnswer: string; isCorrect: boolean }[];
+}): Promise<void> {
+  const sb = createClient();
+
+  // Sauvegarder le résultat
+  const { data: result, error } = await sb
+    .from("dm_results")
+    .insert({
+      class_id: null, // Sera lié à une classe quand le dashboard enseignant sera prêt
+      student_id: params.studentId,
+      student_name: params.studentName,
+      dictee_id: params.dicteeId,
+      activity_mode: params.activityMode,
+      score: params.score,
+      total: params.total,
+      percentage: params.percentage,
+      time_spent: params.timeSpent || null,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("Erreur sauvegarde résultat:", error.message);
+    return;
+  }
+
+  // Sauvegarder les tentatives mot par mot
+  if (result && params.answers && params.answers.length > 0) {
+    const attempts = params.answers.map((a) => ({
+      result_id: result.id,
+      word: a.word,
+      user_answer: a.userAnswer || "(vide)",
+      is_correct: a.isCorrect,
+    }));
+
+    const { error: attErr } = await sb.from("dm_word_attempts").insert(attempts);
+    if (attErr) {
+      console.error("Erreur sauvegarde tentatives:", attErr.message);
+    }
+  }
+}
+
+// Charger les résultats d'un élève
+export async function loadStudentResults(studentId: string): Promise<DicteeResult[]> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dm_results")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("created_at", { ascending: false });
+  return data || [];
+}
+
+// Charger les résultats d'un élève pour une dictée spécifique
+export async function loadStudentDicteeResults(
+  studentId: string,
+  dicteeId: string
+): Promise<DicteeResult[]> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dm_results")
+    .select("*")
+    .eq("student_id", studentId)
+    .eq("dictee_id", dicteeId)
+    .order("created_at", { ascending: false });
+  return data || [];
+}
+
+// Charger le détail des tentatives d'un résultat
+export async function loadWordAttempts(
+  resultId: string
+): Promise<{ word: string; user_answer: string; is_correct: boolean }[]> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dm_word_attempts")
+    .select("word, user_answer, is_correct")
+    .eq("result_id", resultId);
+  return data || [];
+}
+
+// Stats résumées par dictée pour un élève (pour affichage sur les cartes)
+export async function loadStudentDicteeStats(studentId: string): Promise<
+  Record<string, { bestScore: number; attempts: number; lastMode: string }>
+> {
+  const results = await loadStudentResults(studentId);
+  const stats: Record<string, { bestScore: number; attempts: number; lastMode: string }> = {};
+
+  for (const r of results) {
+    if (!stats[r.dictee_id]) {
+      stats[r.dictee_id] = { bestScore: 0, attempts: 0, lastMode: "" };
+    }
+    stats[r.dictee_id].attempts++;
+    if (r.percentage > stats[r.dictee_id].bestScore) {
+      stats[r.dictee_id].bestScore = r.percentage;
+    }
+    if (!stats[r.dictee_id].lastMode) {
+      stats[r.dictee_id].lastMode = r.activity_mode;
+    }
+  }
+
+  return stats;
+}
+
+// === CLASSES (enseignant) ===
+
+export async function loadTeacherClasses(teacherId: string) {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dm_classes")
+    .select("*")
+    .eq("teacher_id", teacherId)
+    .order("created_at");
+  return data || [];
+}
+
+export async function createClass(teacherId: string, name: string) {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from("dm_classes")
+    .insert({
+      teacher_id: teacherId,
+      name,
+      unlocked_dictees: [1],
+      default_activity_order: ["flashcard", "spelling_choice", "definitions", "fill_blanks", "audio"],
+    })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function updateUnlockedDictees(classId: string, positions: number[]) {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dm_classes")
+    .update({ unlocked_dictees: positions })
+    .eq("id", classId);
+  if (error) throw new Error(error.message);
+}
+
+export async function updateActivityOrder(classId: string, order: string[]) {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dm_classes")
+    .update({ default_activity_order: order })
+    .eq("id", classId);
+  if (error) throw new Error(error.message);
+}
+
+// Charger tous les résultats d'une classe
+export async function loadClassResults(classId: string): Promise<DicteeResult[]> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dm_results")
+    .select("*")
+    .eq("class_id", classId)
+    .order("created_at", { ascending: false });
+  return data || [];
+}
+
+// === UNLOCK REQUESTS ===
+
+export interface UnlockRequest {
+  id: string;
+  class_id: string;
+  dictee_position: number;
+  student_name: string;
+  student_id: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at: string;
+}
+
+export async function createUnlockRequest(
+  classId: string,
+  dicteePosition: number,
+  studentId: string,
+  studentName: string
+): Promise<UnlockRequest | null> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from("dm_unlock_requests")
+    .insert({
+      class_id: classId,
+      dictee_position: dicteePosition,
+      student_id: studentId,
+      student_name: studentName,
+      status: "pending",
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Erreur création demande de déverrouillage:", error.message);
+    return null;
+  }
+  return data;
+}
+
+export async function loadPendingUnlockRequests(classId: string): Promise<UnlockRequest[]> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dm_unlock_requests")
+    .select("*")
+    .eq("class_id", classId)
+    .eq("status", "pending")
+    .order("created_at", { ascending: false });
+  return data || [];
+}
+
+export async function approveUnlockRequest(
+  requestId: string,
+  classId: string,
+  dicteePosition: number
+): Promise<boolean> {
+  const sb = createClient();
+
+  // Mettre à jour le statut de la demande
+  const { error: updateError } = await sb
+    .from("dm_unlock_requests")
+    .update({ status: "approved" })
+    .eq("id", requestId);
+
+  if (updateError) {
+    console.error("Erreur mise à jour demande:", updateError.message);
+    return false;
+  }
+
+  // Ajouter la dictée aux positions déverrouillées si elle n'y est pas
+  const { data: dmClass } = await sb
+    .from("dm_classes")
+    .select("unlocked_dictees")
+    .eq("id", classId)
+    .single();
+
+  if (dmClass) {
+    const newPositions = [
+      ...new Set([...(dmClass.unlocked_dictees || []), dicteePosition]),
+    ].sort((a, b) => a - b);
+    await updateUnlockedDictees(classId, newPositions);
+  }
+
+  return true;
+}
+
+export async function rejectUnlockRequest(requestId: string): Promise<boolean> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dm_unlock_requests")
+    .update({ status: "rejected" })
+    .eq("id", requestId);
+
+  if (error) {
+    console.error("Erreur rejet demande:", error.message);
+    return false;
+  }
+  return true;
+}
