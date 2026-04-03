@@ -23,26 +23,40 @@ export interface MnemonicRule {
 // 🔀 Inversion      — lettres dans le mauvais ordre
 // 📍 Homophones     — a/à, ou/où, etc.
 
+// Paires de mots français réels souvent confondus (les deux existent)
+const CONFUSIONS_CONNUES: Record<string, string> = {
+  "ranger": "ronger", "ronger": "ranger",
+  "poison": "poisson", "poisson": "poison",
+  "dessert": "désert", "désert": "dessert",
+  "conte": "compte", "compte": "conte", "comte": "conte",
+  "mer": "mère", "mère": "mer",
+  "vers": "vert", "vert": "vers", "verre": "vers",
+  "sang": "cent", "cent": "sang", "sans": "sang",
+  "cour": "cours", "cours": "cour", "court": "cour",
+  "pain": "pin", "pin": "pain",
+  "voie": "voix", "voix": "voie",
+  "ancre": "encre", "encre": "ancre",
+  "chair": "chaire", "chaire": "chair",
+  "seau": "sot", "sot": "seau", "sceau": "seau",
+  "tante": "tente", "tente": "tante",
+  "bal": "balle", "balle": "bal",
+  "amande": "amende", "amende": "amande",
+  "repère": "repaire", "repaire": "repère",
+};
+
 const RULES: {
   test: (word: string, answer: string, definition?: string) => boolean;
   rule: MnemonicRule;
 }[] = [
   // ===== 🔄 CONFUSION DE MOTS =====
-  // Détecte quand la réponse est un mot réel différent du mot attendu
-  // (distance d'édition faible + les deux existent)
+  // Ne se déclenche QUE si la réponse est un vrai mot français connu
   {
     test: (w, a) => {
       const wl = w.toLowerCase().replace(/^(le |la |l'|un |une |les |des |du )/g, "").trim();
       const al = a.toLowerCase().replace(/^(le |la |l'|un |une |les |des |du )/g, "").trim();
-      // Mots complètement différents mais de longueur similaire
       if (wl === al) return false;
-      if (Math.abs(wl.length - al.length) > 2) return false;
-      // Au moins 3 lettres différentes = probable confusion de mots
-      let diff = 0;
-      for (let i = 0; i < Math.max(wl.length, al.length); i++) {
-        if (wl[i] !== al[i]) diff++;
-      }
-      return diff >= 3 && al.length >= 3;
+      // Vérifier si c'est une confusion connue
+      return CONFUSIONS_CONNUES[al] === wl || CONFUSIONS_CONNUES[wl] === al;
     },
     rule: {
       id: "confusion-mots",
@@ -50,7 +64,7 @@ const RULES: {
       icon: "🔄",
       color: "bg-violet-50 border-violet-200 text-violet-800",
       title: "Confusion de mots",
-      tip: "Ce mot existe mais ce n'est pas le bon ! Relis la définition.",
+      tip: "Attention, tu as écrit un autre mot qui existe ! Vérifie le sens.",
     },
   },
 
