@@ -227,6 +227,9 @@ export default function DicteeGrid({ unlockedPositions = [1, 2, 3], onCardClick 
                     {stat.bestScore}% · {stat.attempts} essai{stat.attempts > 1 ? "s" : ""}
                   </div>
                 )}
+                {hasTried && stat.bestScore < 100 && (
+                  <div className="text-[9px] text-purple-500 mt-0.5">📊 Voir détails</div>
+                )}
               </div>
             </div>
           );

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store";
 import { ArrowLeft, Check, ChevronRight, Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { findMnemonicForError, summarizeErrors } from "@/lib/mnemonics";
 
 interface DicteeWord {
   word: string;
@@ -42,6 +43,8 @@ export default function DicteeDetail({
   const [words, setWords] = useState<DicteeWord[]>([]);
   const [loading, setLoading] = useState(true);
   const [completedActivities, setCompletedActivities] = useState<number>(0);
+  const [lastResult, setLastResult] = useState<any>(null);
+  const [lastAttempts, setLastAttempts] = useState<any[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -79,6 +82,30 @@ export default function DicteeDetail({
     };
     checkCompletion();
   }, [dicteeId, connectedEleve, activityOrder]);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      const connectedEleveState = useAppStore.getState().connectedEleve;
+      if (!connectedEleveState) return;
+      const sb = createClient();
+
+      const { data: results } = await sb.from("dm_results")
+        .select("*")
+        .eq("student_id", connectedEleveState.eleveId)
+        .eq("dictee_id", dicteeId)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (results && results.length > 0) {
+        setLastResult(results[0]);
+        const { data: attempts } = await sb.from("dm_word_attempts")
+          .select("*")
+          .eq("result_id", results[0].id);
+        if (attempts) setLastAttempts(attempts);
+      }
+    };
+    loadHistory();
+  }, [dicteeId]);
 
   if (loading) {
     return (
@@ -189,6 +216,58 @@ export default function DicteeDetail({
             ))}
           </div>
         </div>
+
+        {/* Dernière tentative */}
+        {lastResult && lastAttempts.length > 0 && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wide">
+              Dernière tentative — {lastResult.percentage}% · {new Date(lastResult.created_at).toLocaleDateString("fr-FR")}
+            </h2>
+
+            {/* Error category badges */}
+            <div className="flex flex-wrap gap-1.5">
+              {summarizeErrors(lastAttempts.filter(a => !a.is_correct).map(a => ({
+                word: a.word, userAnswer: a.user_answer, isCorrect: a.is_correct
+              }))).map(s => (
+                <span key={s.category} className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-bold ${s.color}`}>
+                  {s.icon} {s.category} ×{s.count}
+                </span>
+              ))}
+            </div>
+
+            {/* Errors with mnemonics */}
+            <div className="grid gap-2 grid-cols-2">
+              {lastAttempts.filter(a => !a.is_correct).map((a, i) => {
+                const mnemonic = findMnemonicForError(a.word, a.user_answer);
+                return (
+                  <div key={i} className="bg-white rounded-lg border border-red-100 p-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="text-xs text-red-400 line-through">{a.user_answer}</div>
+                        <div className="text-xs font-bold text-emerald-700">{a.word}</div>
+                      </div>
+                      {mnemonic && <span className="text-sm">{mnemonic.icon}</span>}
+                    </div>
+                    {mnemonic && (
+                      <div className={`mt-1 px-2 py-1 rounded text-[10px] border ${mnemonic.color}`}>
+                        {mnemonic.icon} {mnemonic.tip}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Words réussis */}
+            {lastAttempts.filter(a => a.is_correct).length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {lastAttempts.filter(a => a.is_correct).map((a, i) => (
+                  <span key={i} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[11px] rounded-md">{a.word}</span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
