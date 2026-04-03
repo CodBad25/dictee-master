@@ -238,7 +238,7 @@ export default function BilanPreview({ open, onClose, students, dictees, classNa
                             pct >= 50 ? "text-amber-600 bg-amber-50" :
                             "text-red-600 bg-red-50"
                           }`}>
-                            {pct !== undefined ? Math.round(pct * 15 / 100) : "—"}
+                            {pct !== undefined ? Math.round(pct * 20 / 100) : "—"}
                           </td>
                         );
                       })}
@@ -257,7 +257,7 @@ export default function BilanPreview({ open, onClose, students, dictees, classNa
                   <td className="p-1.5 px-2 border-r border-purple-500">Moyenne</td>
                   {dictees.map((d) => {
                     const scores = sorted.map((s) => s.scores[d.id]).filter((s) => s !== undefined);
-                    const a = scores.length > 0 ? (scores.reduce((sum, s) => sum + s, 0) / scores.length * 15 / 100).toFixed(1) : "—";
+                    const a = scores.length > 0 ? (scores.reduce((sum, s) => sum + s, 0) / scores.length * 20 / 100).toFixed(1) : "—";
                     return <td key={d.id} className="p-1 text-center border-r border-purple-500">{a}</td>;
                   })}
                   <td className="p-1 text-center border-r border-purple-500">
@@ -338,7 +338,7 @@ export default function BilanPreview({ open, onClose, students, dictees, classNa
                           <div className={`text-base font-black mb-1 ${
                             pct === undefined ? "text-slate-300" : pct >= 80 ? "text-green-600" : pct >= 50 ? "text-amber-600" : "text-red-600"
                           }`}>
-                            {pct !== undefined ? Math.round(pct * 15 / 100) : "—"}
+                            {pct !== undefined ? Math.round(pct * 20 / 100) : "—"}
                           </div>
                           {attempts > 0 && <div className="text-[9px] text-slate-500 font-semibold mb-1">×{attempts}</div>}
                           <div className="text-xs h-4 flex items-center justify-center">{stars > 0 ? "⭐".repeat(stars) : "—"}</div>
@@ -358,7 +358,7 @@ export default function BilanPreview({ open, onClose, students, dictees, classNa
                             <div className={`text-base font-black mb-1 ${
                               pct === undefined ? "text-slate-300" : pct >= 80 ? "text-green-600" : pct >= 50 ? "text-amber-600" : "text-red-600"
                             }`}>
-                              {pct !== undefined ? Math.round(pct * 15 / 100) : "—"}
+                              {pct !== undefined ? Math.round(pct * 20 / 100) : "—"}
                             </div>
                             {attempts > 0 && <div className="text-[9px] text-slate-500 font-semibold mb-1">×{attempts}</div>}
                             <div className="text-xs h-4 flex items-center justify-center">{stars > 0 ? "⭐".repeat(stars) : "—"}</div>

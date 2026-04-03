@@ -124,20 +124,20 @@ export function generateAppreciation(params: {
   }
 
   // Part 2: Performance
-  const avgScore15 = Math.round(avgBestPct * 15 / 100);
+  const avgScore20 = Math.round(avgBestPct * 20 / 100);
   if (avgBestPct >= 85) {
-    parts.push(`Excellent niveau en orthographe (${avgScore15}/15 en moyenne).`);
+    parts.push(`Excellent niveau en orthographe (${avgScore20}/20 en moyenne).`);
     if (perfectCount > 0) parts.push(`${perfectCount} dictée${perfectCount > 1 ? "s" : ""} sans faute, bravo !`);
   } else if (avgBestPct >= 60) {
-    parts.push(`Niveau satisfaisant (${avgScore15}/15 en moyenne).`);
+    parts.push(`Niveau satisfaisant (${avgScore20}/20 en moyenne).`);
     if (weakDictees.length > 0) parts.push(`Attention aux dictées ${weakDictees.map(d => "n°" + d).join(", ")} qui restent fragiles.`);
     parts.push("Avec un peu plus de régularité, les résultats vont encore progresser.");
   } else if (avgBestPct >= 35) {
-    parts.push(`Des bases à consolider (${avgScore15}/15 en moyenne).`);
+    parts.push(`Des bases à consolider (${avgScore20}/20 en moyenne).`);
     if (strongDictees.length > 0) parts.push(`De bons résultats sur les dictées ${strongDictees.map(d => "n°" + d).join(", ")}, c'est encourageant.`);
     parts.push("Il faut persévérer, quelques minutes chaque jour font la différence.");
   } else {
-    parts.push(`Des difficultés importantes (${avgScore15}/15 en moyenne).`);
+    parts.push(`Des difficultés importantes (${avgScore20}/20 en moyenne).`);
     parts.push("Reprendre les premières dictées en mode flashcard, sans pression.");
   }
 

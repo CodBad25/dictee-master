@@ -297,7 +297,7 @@ export default function TeacherPage() {
 
       const n20 = note20(resultsByDictee, maxDictees);
       const perfectCount = Object.values(resultsByDictee).filter(r => r.bestPct >= 95).length;
-      const totalCorrect = Object.values(resultsByDictee).reduce((a, r) => a + Math.round(r.bestPct * 15 / 100), 0);
+      const totalCorrect = Object.values(resultsByDictee).reduce((a, r) => a + Math.round(r.bestPct * 20 / 100), 0);
       const xp = computeXPFromStats(totalCorrect, totalAttempts, perfectCount);
       const level = getLevel(xp);
       const lastName = getLastName(student.name);
@@ -506,7 +506,7 @@ export default function TeacherPage() {
                           >
                             {pct > 0 ? (
                               <>
-                                {Math.round(pct * 15 / 100)}
+                                {Math.round(pct * 20 / 100)}
                                 {r?.attempts > 1 && <sub className="text-[8px] opacity-50">×{r.attempts}</sub>}
                               </>
                             ) : (
@@ -586,7 +586,7 @@ export default function TeacherPage() {
                           className={`p-2 rounded text-center text-xs font-bold ${color}`}
                         >
                           <div className="text-[9px] text-purple-600 mb-0.5">D{d.position}</div>
-                          <div>{pct > 0 ? `${Math.round(pct * 15 / 100)}/15` : "—"}</div>
+                          <div>{pct > 0 ? `${Math.round(pct * 20 / 100)}/20` : "—"}</div>
                           <div>
                             {pct > 0 ? "⭐".repeat(getStars(pct)) : ""}
                           </div>

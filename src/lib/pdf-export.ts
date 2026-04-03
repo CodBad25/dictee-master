@@ -154,7 +154,7 @@ export function generateClassPDF(
         else if (pct >= 50) doc.setTextColor(...C.amber);
         else doc.setTextColor(...C.red);
         doc.setFont("helvetica", "bold");
-        doc.text(Math.round(pct * 15 / 100).toString(), cx + colW / 2, y + ty, { align: "center" });
+        doc.text(Math.round(pct * 20 / 100).toString(), cx + colW / 2, y + ty, { align: "center" });
       } else {
         doc.setTextColor(...C.light);
         doc.text("-", cx + colW / 2, y + ty, { align: "center" });
@@ -190,7 +190,7 @@ export function generateClassPDF(
   dictees.slice(0, numDictees).forEach((d) => {
     const scores = sorted.map((s) => s.scores[d.id]).filter((s) => s !== undefined);
     if (scores.length > 0) {
-      const a = (scores.reduce((sum, s) => sum + s, 0) / scores.length * 15 / 100).toFixed(1);
+      const a = (scores.reduce((sum, s) => sum + s, 0) / scores.length * 20 / 100).toFixed(1);
       doc.text(a, fx + colW / 2, y + headerH * 0.7, { align: "center" });
     }
     fx += colW;
@@ -226,7 +226,7 @@ export function exportExcel(students: StudentExport[], dictees: DicteeInfo[], cl
   const sorted = [...students].sort((a, b) => a.name.localeCompare(b.name, "fr"));
   const header = ["Élève", ...dictees.map((d) => `D${d.position}`), "Étoiles", "Note/20", "Essais"];
   const rows = sorted.map((s) => {
-    const scores = dictees.map((d) => s.scores[d.id] !== undefined ? Math.round(s.scores[d.id] * 15 / 100).toString() : "");
+    const scores = dictees.map((d) => s.scores[d.id] !== undefined ? Math.round(s.scores[d.id] * 20 / 100).toString() : "");
     return [displayName(s.name), ...scores, s.totalStars.toString(), s.note20.toString(), s.attempts.toString()];
   });
   const csv = "\uFEFF" + [header, ...rows].map((r) => r.join(";")).join("\n");
