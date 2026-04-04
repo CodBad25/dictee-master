@@ -103,11 +103,14 @@ export default function AudioDictationMode() {
       let cumChars = 0;
       const timestamps: { start: number; end: number }[] = [];
 
-      for (const phrase of p) {
-        const start = (cumChars / totalChars) * duration;
-        cumChars += phrase.length;
-        const end = (cumChars / totalChars) * duration - 0.4; // marge pour éviter de déborder sur la phrase suivante
-        timestamps.push({ start: Math.max(0, start), end: Math.max(start + 0.5, end) });
+      for (let i = 0; i < p.length; i++) {
+        const rawStart = (cumChars / totalChars) * duration;
+        cumChars += p[i].length;
+        const rawEnd = (cumChars / totalChars) * duration;
+        // Marges : +0.5s au début (sauf phrase 1), -0.5s à la fin (sauf dernière phrase)
+        const start = i === 0 ? 0 : rawStart + 0.5;
+        const end = i === p.length - 1 ? rawEnd : rawEnd - 0.5;
+        timestamps.push({ start, end: Math.max(start + 1, end) });
       }
       phraseTimestampsRef.current = timestamps;
 
