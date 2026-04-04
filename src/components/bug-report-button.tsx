@@ -290,9 +290,11 @@ export default function BugReportButton() {
             {sent ? (
               <div className="py-8 text-center">
                 <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-3" />
-                <p className="text-lg font-semibold text-gray-800">Merci pour ton signalement !</p>
+                <p className="text-lg font-semibold text-gray-800">
+                  Merci {connectedEleve?.prenom || ""} pour ton signalement !
+                </p>
                 <p className="text-gray-500 text-sm">
-                  {isTeacher ? "C'est noté." : "Ton prof va regarder ça."}
+                  {isTeacher ? "C'est noté." : "M. Belhaj va regarder ça."}
                 </p>
               </div>
             ) : (
