@@ -133,15 +133,42 @@ export default function FillBlanksMode() {
     }
   }, [currentWords, currentList]);
 
-  // Lecture du texte (Web Speech API pour les textes longs)
+  // Position de la dictée (pour le fichier audio)
+  const [dicteePosition, setDicteePosition] = useState<number | null>(null);
+  useEffect(() => {
+    if (!currentList) return;
+    const sb = (async () => {
+      const { createClient } = await import("@/lib/supabase/client");
+      const { data } = await createClient()
+        .from("dictees")
+        .select("position")
+        .eq("id", currentList.id)
+        .maybeSingle();
+      if (data) setDicteePosition(data.position);
+    })();
+  }, [currentList]);
+
+  // Lecture du texte via fichier MP3 pré-enregistré
   const speakText = useCallback(() => {
     if (!generatedText) return;
-    playTextAudio(
-      generatedText.fullText,
-      () => setIsPlaying(true),
-      () => setIsPlaying(false),
-    );
-  }, [generatedText]);
+    stopAudio();
+
+    if (dicteePosition) {
+      const audio = new Audio(`/audio/dictees/dictee_${dicteePosition}.mp3`);
+      audio.onplay = () => setIsPlaying(true);
+      audio.onended = () => setIsPlaying(false);
+      audio.onerror = () => {
+        // Fallback Web Speech si le fichier n'existe pas
+        playTextAudio(generatedText.fullText, () => setIsPlaying(true), () => setIsPlaying(false));
+      };
+      audio.play().catch(() => {
+        playTextAudio(generatedText.fullText, () => setIsPlaying(true), () => setIsPlaying(false));
+      });
+      return;
+    }
+
+    playTextAudio(generatedText.fullText, () => setIsPlaying(true), () => setIsPlaying(false));
+  }, [generatedText, dicteePosition]);
 
   const stopSpeaking = () => {
     stopAudio();
