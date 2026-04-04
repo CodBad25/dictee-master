@@ -71,13 +71,34 @@ export default function FillBlanksMode() {
         const fullText = dictee.fill_blanks_text as string;
         const blanks: GeneratedText["blanks"] = [];
 
+        // Positions déjà utilisées pour éviter les chevauchements
+        const usedRanges: { start: number; end: number }[] = [];
+
         for (const originalWord of words) {
-          // Chercher le mot dans le texte (insensible à la casse)
-          const escaped = originalWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-          const regex = new RegExp(escaped, "i");
-          const match = regex.exec(fullText);
-          if (match) {
-            blanks.push({ word: match[0], originalWord, position: match.index });
+          // Essayer le mot complet d'abord, puis sans article
+          const stripped = originalWord.replace(/^(le |la |l'|l\u2019|un |une |les |des |du )/i, "");
+          const candidates = [originalWord];
+          if (stripped !== originalWord) candidates.push(stripped);
+
+          let found = false;
+          for (const candidate of candidates) {
+            const escaped = candidate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            // Chercher avec frontière de mot pour éviter les faux positifs
+            const regex = new RegExp(escaped, "gi");
+            let match;
+            while ((match = regex.exec(fullText)) !== null) {
+              // Vérifier que cette position n'est pas déjà prise
+              const overlaps = usedRanges.some(
+                r => match!.index < r.end && match!.index + match![0].length > r.start
+              );
+              if (!overlaps) {
+                blanks.push({ word: match[0], originalWord, position: match.index });
+                usedRanges.push({ start: match.index, end: match.index + match[0].length });
+                found = true;
+                break;
+              }
+            }
+            if (found) break;
           }
         }
 
