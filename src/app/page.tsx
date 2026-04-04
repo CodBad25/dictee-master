@@ -146,16 +146,16 @@ export default function HomePage() {
       </motion.div>
 
       {/* Footer */}
-      <motion.p
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.5 }}
-        className="mt-12 text-xs text-muted-foreground text-center"
+        className="mt-12 text-center"
       >
-        Version démo • Fonctionne hors-ligne
-        <br />
-        <a href="/admin" className="text-gray-300 hover:text-gray-400 transition-colors">·</a>
-      </motion.p>
+        <a href="/admin" className="text-[10px] text-gray-300 hover:text-gray-500 transition-colors">
+          Administration
+        </a>
+      </motion.div>
     </main>
   );
 }
