@@ -160,15 +160,15 @@ export default function DictionaryMode() {
   };
 
   const handleNextWord = () => {
-    if (!currentPageNumber.trim() || currentGenre === null || currentClasse === null) {
-      return;
-    }
+    if (!currentPageNumber.trim() || currentClasse === null) return;
+    if (currentClasse !== "verbe" && currentClasse !== "adverbe" && currentGenre === null) return;
 
     const currentWord = currentWords[currentWordIndex];
     const correctGenre = getCorrectGenre(currentWord.word);
     const correctClasse = getCorrectClasse(currentWord.word, currentWord.hint);
 
-    const genreCorrect = currentGenre === correctGenre;
+    const skipGenre = currentClasse === "verbe" || currentClasse === "adverbe";
+    const genreCorrect = skipGenre || currentGenre === correctGenre;
     const classeCorrect = currentClasse === correctClasse;
     const isCorrect = genreCorrect && classeCorrect;
 
@@ -427,6 +427,9 @@ export default function DictionaryMode() {
             {/* Word Display */}
             <div className="text-center mb-8">
               <p className="text-sm text-gray-500 mb-2">Cherchez ce mot :</p>
+              <p className="text-sm text-gray-400 font-medium mb-2">
+                Mot {currentWordIndex + 1} / {currentWords.length}
+              </p>
               <p className="text-4xl font-bold text-emerald-600">
                 {currentWord.word.split(" ").slice(-1)[0]}
               </p>
@@ -453,7 +456,37 @@ export default function DictionaryMode() {
                 />
               </div>
 
-              {/* Genre */}
+              {/* Classe Grammaticale (avant le genre pour savoir si on affiche le genre) */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Classe grammaticale
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {["nom", "verbe", "adjectif", "adverbe"].map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        setCurrentClasse(option);
+                        if (option === "verbe" || option === "adverbe") {
+                          setCurrentGenre("-");
+                        } else if (currentGenre === "-") {
+                          setCurrentGenre(null);
+                        }
+                      }}
+                      className={`py-3 px-4 rounded-lg font-semibold transition-all capitalize ${
+                        currentClasse === option
+                          ? "bg-emerald-600 text-white shadow-lg"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Genre — uniquement pour nom et adjectif */}
+              {currentClasse !== "verbe" && currentClasse !== "adverbe" && (
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Genre
@@ -474,36 +507,17 @@ export default function DictionaryMode() {
                   ))}
                 </div>
               </div>
+              )}
 
-              {/* Classe Grammaticale */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Classe grammaticale
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  {["nom", "verbe", "adjectif", "adverbe"].map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => setCurrentClasse(option)}
-                      className={`py-3 px-4 rounded-lg font-semibold transition-all capitalize ${
-                        currentClasse === option
-                          ? "bg-emerald-600 text-white shadow-lg"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Classe grammaticale déjà affichée au-dessus */}
 
               {/* Next Button */}
               <Button
                 onClick={handleNextWord}
                 disabled={
                   !currentPageNumber.trim() ||
-                  currentGenre === null ||
-                  currentClasse === null
+                  currentClasse === null ||
+                  (currentClasse !== "verbe" && currentClasse !== "adverbe" && currentGenre === null)
                 }
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg disabled:opacity-50"
               >
