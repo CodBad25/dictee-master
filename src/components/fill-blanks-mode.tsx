@@ -48,60 +48,60 @@ export default function FillBlanksMode() {
   const [startTime, setStartTime] = useState<number>(0);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const [frenchVoice, setFrenchVoice] = useState<SpeechSynthesisVoice | null>(null);
 
-  // Charger les voix disponibles et trouver la meilleure voix française
-  useEffect(() => {
-    const loadVoices = () => {
-      const voices = speechSynthesis.getVoices();
-      if (voices.length === 0) return;
-
-      // Chercher les voix françaises par ordre de préférence
-      const frenchVoices = voices.filter(v => v.lang.startsWith('fr'));
-
-      if (frenchVoices.length > 0) {
-        // Préférer les voix natives/premium (souvent marquées comme "local" ou avec des noms spécifiques)
-        const preferredVoice = frenchVoices.find(v =>
-          v.name.includes('Thomas') || // Voix française de qualité sur macOS
-          v.name.includes('Amélie') ||
-          v.name.includes('Audrey') ||
-          v.name.includes('Aurélie') ||
-          v.name.includes('Google français') ||
-          v.name.includes('Microsoft Paul') ||
-          v.name.includes('Microsoft Julie') ||
-          v.localService === true // Préférer les voix locales (souvent meilleures)
-        ) || frenchVoices.find(v => v.lang === 'fr-FR') || frenchVoices[0];
-
-        setFrenchVoice(preferredVoice);
-        console.log('Voix française sélectionnée:', preferredVoice.name, preferredVoice.lang);
-      }
-    };
-
-    loadVoices();
-    // Les voix peuvent ne pas être chargées immédiatement
-    speechSynthesis.onvoiceschanged = loadVoices;
-
-    return () => {
-      speechSynthesis.onvoiceschanged = null;
-    };
-  }, []);
-
-  // Générer le texte au démarrage
+  // Charger le texte depuis Supabase, fallback sur le générateur
   const generateText = useCallback(async () => {
-    if (!currentWords.length) return;
+    if (!currentWords.length || !currentList) return;
 
     setIsGenerating(true);
     try {
       const words = currentWords.map(w => w.word);
+      const dicteeId = currentList.id;
 
-      let text: GeneratedText;
-      if (apiConfig?.apiKey) {
-        text = await generateTextWithAI(words, apiConfig.apiKey);
-      } else {
-        text = generateTextWithBlanks(words);
+      // 1. Essayer de charger le texte pré-écrit depuis Supabase
+      const sb = (await import("@/lib/supabase/client")).createClient();
+      const { data: dictee } = await sb
+        .from("dictees")
+        .select("fill_blanks_text")
+        .eq("id", dicteeId)
+        .maybeSingle();
+
+      if (dictee?.fill_blanks_text) {
+        // Utiliser le texte pré-écrit : trouver les mots à transformer en trous
+        const fullText = dictee.fill_blanks_text as string;
+        const blanks: GeneratedText["blanks"] = [];
+
+        for (const originalWord of words) {
+          // Chercher le mot dans le texte (insensible à la casse)
+          const escaped = originalWord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const regex = new RegExp(escaped, "i");
+          const match = regex.exec(fullText);
+          if (match) {
+            blanks.push({ word: match[0], originalWord, position: match.index });
+          }
+        }
+
+        // Créer le texte avec les trous
+        let displayText = fullText;
+        const sortedBlanks = [...blanks].sort((a, b) => b.position - a.position);
+        for (const blank of sortedBlanks) {
+          const before = displayText.substring(0, blank.position);
+          const after = displayText.substring(blank.position + blank.word.length);
+          displayText = before + "_".repeat(Math.max(5, blank.word.length)) + after;
+        }
+
+        setGeneratedText({
+          fullText,
+          displayText,
+          blanks: blanks.sort((a, b) => a.position - b.position),
+        });
+        setUserAnswers({});
+        setIsGenerating(false);
+        return;
       }
 
+      // 2. Fallback : générateur de templates
+      const text = generateTextWithBlanks(words);
       setGeneratedText(text);
       setUserAnswers({});
     } catch (error) {
@@ -110,7 +110,7 @@ export default function FillBlanksMode() {
     } finally {
       setIsGenerating(false);
     }
-  }, [currentWords, apiConfig]);
+  }, [currentWords, currentList]);
 
   // Lecture du texte (Web Speech API pour les textes longs)
   const speakText = useCallback(() => {
