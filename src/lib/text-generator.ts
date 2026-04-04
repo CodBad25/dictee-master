@@ -105,6 +105,12 @@ export function generateTextWithBlanks(words: string[]): GeneratedText {
   // Limiter a 10 mots max pour ne pas avoir un texte trop long
   const wordsToUse = shuffledWords.slice(0, Math.min(10, shuffledWords.length));
 
+  // Choisir les variantes UNE SEULE FOIS pour éviter les incohérences
+  const chosenVariants = wordsToUse.map(w => ({
+    original: w,
+    variant: chooseWordVariant(w),
+  }));
+
   // Choisir un template d'histoire au hasard
   const storyTemplate = STORY_TEMPLATES[Math.floor(Math.random() * STORY_TEMPLATES.length)];
 
@@ -113,30 +119,24 @@ export function generateTextWithBlanks(words: string[]): GeneratedText {
   let wordIndex = 0;
 
   // Phrase d'introduction avec le premier mot
-  if (wordIndex < wordsToUse.length) {
-    const originalWord = wordsToUse[wordIndex];
-    const word = chooseWordVariant(originalWord);
-    sentences.push(storyTemplate.intro.replace('{word1}', word));
+  if (wordIndex < chosenVariants.length) {
+    sentences.push(storyTemplate.intro.replace('{word1}', chosenVariants[wordIndex].variant));
     wordIndex++;
   }
 
   // Phrases du milieu avec les mots suivants
   for (const middleTemplate of storyTemplate.middle) {
-    if (wordIndex < wordsToUse.length) {
-      const originalWord = wordsToUse[wordIndex];
-      const word = chooseWordVariant(originalWord);
+    if (wordIndex < chosenVariants.length) {
       const placeholder = `{word${wordIndex + 1}}`;
-      sentences.push(middleTemplate.replace(placeholder, word));
+      sentences.push(middleTemplate.replace(placeholder, chosenVariants[wordIndex].variant));
       wordIndex++;
     }
   }
 
   // Si on a encore des mots, utiliser les templates de remplissage
-  while (wordIndex < wordsToUse.length) {
-    const originalWord = wordsToUse[wordIndex];
-    const word = chooseWordVariant(originalWord);
+  while (wordIndex < chosenVariants.length) {
     const fillerTemplate = FILLER_TEMPLATES[wordIndex % FILLER_TEMPLATES.length];
-    sentences.push(fillerTemplate.replace('{word}', word));
+    sentences.push(fillerTemplate.replace('{word}', chosenVariants[wordIndex].variant));
     wordIndex++;
   }
 
@@ -145,17 +145,13 @@ export function generateTextWithBlanks(words: string[]): GeneratedText {
 
   const fullText = sentences.join(' ');
 
-  // Trouver les positions des mots dans le texte final
+  // Trouver les positions des mots dans le texte final (avec les mêmes variantes)
   let searchStart = 0;
-  for (let i = 0; i < wordsToUse.length; i++) {
-    const originalWord = wordsToUse[i];
-    const word = chooseWordVariant(originalWord);
-
-    // Chercher le mot dans le texte à partir de la dernière position trouvée
-    const pos = fullText.indexOf(word, searchStart);
+  for (const { original, variant } of chosenVariants) {
+    const pos = fullText.indexOf(variant, searchStart);
     if (pos !== -1) {
-      blanks.push({ word, originalWord, position: pos });
-      searchStart = pos + word.length;
+      blanks.push({ word: variant, originalWord: original, position: pos });
+      searchStart = pos + variant.length;
     }
   }
 
