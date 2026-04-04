@@ -62,43 +62,45 @@ export function playWordAudio(
   const candidates = wordToFileName(word);
 
   // Essayer chaque candidat
-  tryNextCandidate(candidates, 0, word, onStart, onEnd);
+  tryPlayAudio(candidates, word, onStart, onEnd);
 }
 
-function tryNextCandidate(
+async function tryPlayAudio(
   candidates: string[],
-  index: number,
   word: string,
   onStart?: () => void,
   onEnd?: () => void,
-): void {
-  if (index >= candidates.length) {
-    // Aucun fichier trouvé → fallback Web Speech API
-    fallbackSpeak(word, onStart, onEnd);
-    return;
+): Promise<void> {
+  for (const fileName of candidates) {
+    const url = `/audio/${fileName}.mp3`;
+    try {
+      // Vérifier si le fichier existe avant de créer l'Audio
+      const res = await fetch(url, { method: "HEAD" });
+      if (!res.ok) continue;
+
+      const audio = new Audio(url);
+      currentAudio = audio;
+
+      return new Promise<void>((resolve) => {
+        audio.onplay = () => onStart?.();
+        audio.onended = () => {
+          currentAudio = null;
+          onEnd?.();
+          resolve();
+        };
+        audio.onerror = () => {
+          currentAudio = null;
+          resolve(); // passer au fallback
+        };
+        audio.play().catch(() => resolve());
+      });
+    } catch {
+      continue;
+    }
   }
 
-  const fileName = candidates[index];
-  const audio = new Audio(`/audio/${encodeURIComponent(fileName)}.mp3`);
-  currentAudio = audio;
-
-  audio.addEventListener("canplaythrough", () => {
-    onStart?.();
-    audio.play();
-  }, { once: true });
-
-  audio.addEventListener("ended", () => {
-    currentAudio = null;
-    onEnd?.();
-  }, { once: true });
-
-  audio.addEventListener("error", () => {
-    // Ce fichier n'existe pas → essayer le suivant
-    tryNextCandidate(candidates, index + 1, word, onStart, onEnd);
-  }, { once: true });
-
-  // Lancer le chargement
-  audio.load();
+  // Aucun fichier trouvé → fallback Web Speech API
+  fallbackSpeak(word, onStart, onEnd);
 }
 
 function fallbackSpeak(
