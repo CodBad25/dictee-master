@@ -7,8 +7,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const password = request.headers.get("x-teacher-password");
-  if (password !== process.env.TEACHER_PASSWORD) {
+  const password = request.headers.get("x-teacher-password") || request.headers.get("x-admin-password");
+  if (password !== process.env.TEACHER_PASSWORD && password !== process.env.ADMIN_PASSWORD) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
@@ -35,8 +35,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const password = request.headers.get("x-teacher-password");
-  if (password !== process.env.TEACHER_PASSWORD) {
+  const password = request.headers.get("x-teacher-password") || request.headers.get("x-admin-password");
+  if (password !== process.env.TEACHER_PASSWORD && password !== process.env.ADMIN_PASSWORD) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 

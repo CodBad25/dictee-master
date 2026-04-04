@@ -363,47 +363,8 @@ export default function BugReportButton() {
                         Capture d'écran
                       </label>
 
-                      {/* Mode recadrage */}
-                      {isCropping && rawScreenshot ? (
-                        <div className="space-y-2">
-                          <p className="text-xs text-gray-500">
-                            Glisse pour sélectionner la zone à garder, ou clique sur « Garder tout »
-                          </p>
-                          <div className="border rounded-lg overflow-hidden bg-gray-100">
-                            <ReactCrop
-                              crop={crop}
-                              onChange={(c) => setCrop(c)}
-                              onComplete={(c) => setCompletedCrop(c)}
-                            >
-                              <img
-                                ref={cropImageRef}
-                                src={rawScreenshot}
-                                alt="Capture à recadrer"
-                                className="max-w-full"
-                                style={{ maxHeight: "300px" }}
-                              />
-                            </ReactCrop>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={applyCrop}
-                              className="flex-1"
-                              disabled={!completedCrop || completedCrop.width === 0}
-                            >
-                              <CropIcon className="w-4 h-4 mr-1" />
-                              Recadrer
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={skipCrop} className="flex-1">
-                              Garder tout
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={removeScreenshot}>
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ) : finalScreenshot ? (
+                      {/* Mode recadrage — PLEIN ÉCRAN */}
+                      {isCropping && rawScreenshot ? null : finalScreenshot ? (
                         /* Image finale (recadrée ou complète) */
                         <div className="relative">
                           <img
@@ -533,6 +494,51 @@ export default function BugReportButton() {
                 )}
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Overlay plein écran pour le recadrage */}
+      {isCropping && rawScreenshot && (
+        <div className="fixed inset-0 bg-black/90 z-[70] flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 bg-black/50">
+            <p className="text-white text-sm font-medium">
+              Glisse pour sélectionner la zone à garder
+            </p>
+            <button onClick={removeScreenshot} className="text-white/70 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto flex items-center justify-center p-4">
+            <ReactCrop
+              crop={crop}
+              onChange={(c) => setCrop(c)}
+              onComplete={(c) => setCompletedCrop(c)}
+            >
+              <img
+                ref={cropImageRef}
+                src={rawScreenshot}
+                alt="Capture à recadrer"
+                className="max-w-full max-h-[75vh] object-contain"
+              />
+            </ReactCrop>
+          </div>
+          <div className="flex gap-3 justify-center px-4 py-4 bg-black/50">
+            <Button
+              onClick={applyCrop}
+              disabled={!completedCrop || completedCrop.width === 0}
+              className="bg-red-500 hover:bg-red-600 px-6"
+            >
+              <CropIcon className="w-4 h-4 mr-2" />
+              Recadrer
+            </Button>
+            <Button
+              variant="outline"
+              onClick={skipCrop}
+              className="border-white/30 text-white hover:bg-white/10 px-6"
+            >
+              Garder tout
+            </Button>
           </div>
         </div>
       )}

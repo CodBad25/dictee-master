@@ -153,6 +153,8 @@ export default function HomePage() {
         className="mt-12 text-xs text-muted-foreground text-center"
       >
         Version démo • Fonctionne hors-ligne
+        <br />
+        <a href="/admin" className="text-gray-300 hover:text-gray-400 transition-colors">·</a>
       </motion.p>
     </main>
   );

@@ -40,9 +40,9 @@ export async function GET(request: Request) {
   const supabase = await createClient();
 
   if (admin === "true") {
-    // Vérifier le mot de passe enseignant
-    const password = request.headers.get("x-teacher-password");
-    if (password !== process.env.TEACHER_PASSWORD) {
+    // Vérifier le mot de passe enseignant ou admin
+    const password = request.headers.get("x-teacher-password") || request.headers.get("x-admin-password");
+    if (password !== process.env.TEACHER_PASSWORD && password !== process.env.ADMIN_PASSWORD) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
