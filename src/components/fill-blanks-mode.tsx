@@ -21,7 +21,7 @@ import { useAppStore } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import { generateTextWithBlanks, generateTextWithAI, GeneratedText } from "@/lib/text-generator";
 import confetti from "canvas-confetti";
-import { playTextAudio, stopAudio } from "@/lib/audio";
+import { playWordAudio, playTextAudio, stopAudio } from "@/lib/audio";
 
 type Phase = "setup" | "dictation" | "result";
 
@@ -548,7 +548,15 @@ export default function FillBlanksMode() {
       const isWrong = showResults && !isCorrect;
 
       parts.push(
-        <span key={`blank-${index}`} className="inline-block mx-1 align-middle">
+        <span key={`blank-${index}`} className="inline-flex items-center mx-1 align-middle gap-0.5">
+          <button
+            type="button"
+            onClick={() => playWordAudio(blank.originalWord)}
+            className="w-6 h-6 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center flex-shrink-0 transition-colors"
+            title="Écouter le mot"
+          >
+            <Volume2 className="w-3 h-3" />
+          </button>
           <input
             ref={el => { inputRefs.current[index] = el; }}
             type="text"
