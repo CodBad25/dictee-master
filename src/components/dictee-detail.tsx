@@ -41,7 +41,8 @@ export default function DicteeDetail({
   onBack,
   onStartActivity,
 }: DicteeDetailProps) {
-  const { connectedEleve } = useAppStore();
+  const { connectedEleve, user } = useAppStore();
+  const isTeacher = user?.role === "teacher";
   const [words, setWords] = useState<DicteeWord[]>([]);
   const [loading, setLoading] = useState(true);
   const [completedActivities, setCompletedActivities] = useState<number>(0);
@@ -178,9 +179,9 @@ export default function DicteeDetail({
             </h2>
           {activityOrder.map((mode, index) => {
             const info = ACTIVITY_LABELS[mode] || { label: mode, icon: "📋", desc: "" };
-            const isDone = index < completedActivities;
-            const isCurrent = index === currentStep;
-            const isLocked = index > currentStep;
+            const isDone = isTeacher ? false : index < completedActivities;
+            const isCurrent = isTeacher ? true : index === currentStep;
+            const isLocked = isTeacher ? false : index > currentStep;
 
             return (
               <button
