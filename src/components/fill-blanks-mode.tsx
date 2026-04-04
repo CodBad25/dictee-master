@@ -576,6 +576,7 @@ export default function FillBlanksMode() {
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
+            data-gramm="false"
           />
           {isWrong && (
             <span className="ml-1 text-green-600 font-bold">

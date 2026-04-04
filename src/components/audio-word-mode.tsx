@@ -263,6 +263,11 @@ export default function AudioWordMode() {
                   onChange={e => setAnswer(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && handleValidate()}
                   className="text-center text-lg h-12 rounded-xl border-2 border-purple-200"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  data-gramm="false"
                 />
 
                 <Button

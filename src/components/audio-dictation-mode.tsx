@@ -106,8 +106,8 @@ export default function AudioDictationMode() {
       for (const phrase of p) {
         const start = (cumChars / totalChars) * duration;
         cumChars += phrase.length;
-        const end = (cumChars / totalChars) * duration;
-        timestamps.push({ start, end });
+        const end = (cumChars / totalChars) * duration - 0.4; // marge pour éviter de déborder sur la phrase suivante
+        timestamps.push({ start: Math.max(0, start), end: Math.max(start + 0.5, end) });
       }
       phraseTimestampsRef.current = timestamps;
 
@@ -347,14 +347,24 @@ export default function AudioDictationMode() {
         <div className="flex-1 flex flex-col items-center justify-center p-6 gap-5 max-w-2xl mx-auto w-full">
           {/* Contrôles audio */}
           <div className="flex items-center gap-3">
-            <Button
-              size="lg"
-              onClick={playCurrentPhrase}
-              disabled={isPlaying || replayCount >= maxReplays}
-              className="rounded-full w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg disabled:opacity-40"
-            >
-              <Volume2 className="w-6 h-6" />
-            </Button>
+            {isPlaying ? (
+              <Button
+                size="lg"
+                onClick={pauseAudio}
+                className="rounded-full w-16 h-16 bg-gradient-to-br from-red-400 to-rose-500 shadow-lg"
+              >
+                <Pause className="w-6 h-6" />
+              </Button>
+            ) : (
+              <Button
+                size="lg"
+                onClick={playCurrentPhrase}
+                disabled={replayCount >= maxReplays}
+                className="rounded-full w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg disabled:opacity-40"
+              >
+                <Volume2 className="w-6 h-6" />
+              </Button>
+            )}
           </div>
 
           {/* Vitesse + compteur réécoutes */}
@@ -392,6 +402,11 @@ export default function AudioDictationMode() {
               placeholder="Tape ici..."
               className="w-full h-32 p-4 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none resize-none text-lg"
               autoFocus
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              data-gramm="false"
             />
           </div>
 
