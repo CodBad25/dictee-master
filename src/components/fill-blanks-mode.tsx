@@ -62,9 +62,11 @@ export default function FillBlanksMode() {
       const sb = (await import("@/lib/supabase/client")).createClient();
       const { data: dictee } = await sb
         .from("dictees")
-        .select("fill_blanks_text")
+        .select("fill_blanks_text, position")
         .eq("id", dicteeId)
         .maybeSingle();
+
+      if (dictee?.position) setDicteePosition(dictee.position);
 
       if (dictee?.fill_blanks_text) {
         // Utiliser le texte pré-écrit : trouver les mots à transformer en trous
@@ -133,35 +135,32 @@ export default function FillBlanksMode() {
     }
   }, [currentWords, currentList]);
 
-  // Position de la dictée (pour le fichier audio)
+  // Position de la dictée (chargée dans generateText)
   const [dicteePosition, setDicteePosition] = useState<number | null>(null);
-  useEffect(() => {
-    if (!currentList) return;
-    const sb = (async () => {
-      const { createClient } = await import("@/lib/supabase/client");
-      const { data } = await createClient()
-        .from("dictees")
-        .select("position")
-        .eq("id", currentList.id)
-        .maybeSingle();
-      if (data) setDicteePosition(data.position);
-    })();
-  }, [currentList]);
+  const dicteeAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Lecture du texte via fichier MP3 pré-enregistré
   const speakText = useCallback(() => {
     if (!generatedText) return;
+
+    // Arrêter tout audio en cours
+    if (dicteeAudioRef.current) {
+      dicteeAudioRef.current.pause();
+      dicteeAudioRef.current = null;
+    }
     stopAudio();
 
     if (dicteePosition) {
       const audio = new Audio(`/audio/dictees/dictee_${dicteePosition}.mp3`);
+      dicteeAudioRef.current = audio;
       audio.onplay = () => setIsPlaying(true);
-      audio.onended = () => setIsPlaying(false);
+      audio.onended = () => { setIsPlaying(false); dicteeAudioRef.current = null; };
       audio.onerror = () => {
-        // Fallback Web Speech si le fichier n'existe pas
+        dicteeAudioRef.current = null;
         playTextAudio(generatedText.fullText, () => setIsPlaying(true), () => setIsPlaying(false));
       };
       audio.play().catch(() => {
+        dicteeAudioRef.current = null;
         playTextAudio(generatedText.fullText, () => setIsPlaying(true), () => setIsPlaying(false));
       });
       return;
@@ -171,6 +170,10 @@ export default function FillBlanksMode() {
   }, [generatedText, dicteePosition]);
 
   const stopSpeaking = () => {
+    if (dicteeAudioRef.current) {
+      dicteeAudioRef.current.pause();
+      dicteeAudioRef.current = null;
+    }
     stopAudio();
     setIsPlaying(false);
   };
