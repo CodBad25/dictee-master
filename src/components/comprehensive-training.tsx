@@ -33,6 +33,7 @@ import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import { generateTextWithBlanks, generateTextWithAI, GeneratedText } from "@/lib/text-generator";
 import { generateSpellingChoice, SpellingChoice, generateWordVariants } from "@/lib/spelling-errors";
 import confetti from "canvas-confetti";
+import { playWordAudio, playTextAudio, stopAudio } from "@/lib/audio";
 
 type Phase = "setup" | "flashcard" | "audio" | "spelling-choice" | "fill-blanks" | "result";
 
@@ -88,28 +89,22 @@ export default function ComprehensiveTraining() {
   const [showBlankResults, setShowBlankResults] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Parler un mot
+  // Parler un mot (fichier MP3 pré-enregistré, fallback Web Speech)
   const speakWord = useCallback((word: string) => {
-    speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.lang = "fr-FR";
-    utterance.rate = 0.85;
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
-    speechRef.current = utterance;
-    speechSynthesis.speak(utterance);
+    playWordAudio(
+      word,
+      () => setIsPlaying(true),
+      () => setIsPlaying(false),
+    );
   }, []);
 
-  // Parler le texte complet
+  // Parler le texte complet (Web Speech API pour les textes longs)
   const speakText = useCallback((text: string) => {
-    speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "fr-FR";
-    utterance.rate = 0.8;
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
-    speechRef.current = utterance;
-    speechSynthesis.speak(utterance);
+    playTextAudio(
+      text,
+      () => setIsPlaying(true),
+      () => setIsPlaying(false),
+    );
   }, []);
 
   // Demarrer l'entrainement
@@ -349,14 +344,14 @@ export default function ComprehensiveTraining() {
 
   // Quitter
   const handleQuit = () => {
-    speechSynthesis.cancel();
+    stopAudio();
     clearCurrentTraining();
   };
 
   // Cleanup
   useEffect(() => {
     return () => {
-      speechSynthesis.cancel();
+      stopAudio();
     };
   }, []);
 

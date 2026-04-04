@@ -21,6 +21,7 @@ import { useAppStore } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import { generateTextWithBlanks, generateTextWithAI, GeneratedText } from "@/lib/text-generator";
 import confetti from "canvas-confetti";
+import { playTextAudio, stopAudio } from "@/lib/audio";
 
 type Phase = "setup" | "dictation" | "result";
 
@@ -111,33 +112,18 @@ export default function FillBlanksMode() {
     }
   }, [currentWords, apiConfig]);
 
-  // Synthèse vocale avec voix française de qualité
+  // Lecture du texte (Web Speech API pour les textes longs)
   const speakText = useCallback(() => {
     if (!generatedText) return;
-
-    // Arrêter la synthèse en cours
-    speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(generatedText.fullText);
-    utterance.lang = "fr-FR";
-    utterance.rate = 0.8; // Un peu plus lent pour une dictée
-    utterance.pitch = 1;
-
-    // Utiliser la voix française sélectionnée si disponible
-    if (frenchVoice) {
-      utterance.voice = frenchVoice;
-    }
-
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => setIsPlaying(false);
-
-    speechRef.current = utterance;
-    speechSynthesis.speak(utterance);
-  }, [generatedText, frenchVoice]);
+    playTextAudio(
+      generatedText.fullText,
+      () => setIsPlaying(true),
+      () => setIsPlaying(false),
+    );
+  }, [generatedText]);
 
   const stopSpeaking = () => {
-    speechSynthesis.cancel();
+    stopAudio();
     setIsPlaying(false);
   };
 

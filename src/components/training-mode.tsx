@@ -31,6 +31,7 @@ import { useAppStore } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import DicteeResults from "@/components/dictee-results";
 import confetti from "canvas-confetti";
+import { playWordAudio } from "@/lib/audio";
 
 type Phase = "setup" | "memorize" | "write" | "result";
 
@@ -121,13 +122,10 @@ export default function TrainingMode() {
     setPhase("memorize");
   };
 
-  // Text-to-speech for audio mode
+  // Audio du mot (fichier MP3, fallback Web Speech)
   const speakWord = useCallback(() => {
     if (!currentWord) return;
-    const utterance = new SpeechSynthesisUtterance(currentWord.word);
-    utterance.lang = "fr-FR";
-    utterance.rate = 0.8;
-    speechSynthesis.speak(utterance);
+    playWordAudio(currentWord.word);
   }, [currentWord]);
 
   // Auto-speak in audio mode
