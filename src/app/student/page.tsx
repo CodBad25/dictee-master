@@ -15,6 +15,9 @@ import WordDefinitionMode from "@/components/word-definition-mode";
 import ComprehensiveTraining from "@/components/comprehensive-training";
 import SpellingChoiceMode from "@/components/spelling-choice-mode";
 import GenreMode from "@/components/genre-mode";
+import DictionaryMode from "@/components/dictionary-mode";
+import AudioWordMode from "@/components/audio-word-mode";
+import AudioDictationMode from "@/components/audio-dictation-mode";
 import type { WordList, Word } from "@/types/database";
 import { saveResult } from "@/lib/dictee-service";
 import { pingPresence } from "@/lib/presence";
@@ -24,8 +27,9 @@ const DEFAULT_ACTIVITY_ORDER = [
   "genre",
   "spelling_choice",
   "definitions",
-  "fill_blanks",
+  "dictionary",
   "audio_word",
+  "fill_blanks",
   "audio_dictation",
 ];
 
@@ -109,8 +113,9 @@ export default function StudentPage() {
       genre: "genre",
       spelling_choice: "spelling-choice",
       definitions: "definition",
+      dictionary: "dictionary",
+      audio_word: "audio-word",
       fill_blanks: "fill-blanks",
-      audio_word: "audio",
       audio_dictation: "audio-dictation",
     };
 
@@ -150,11 +155,20 @@ export default function StudentPage() {
     if (currentList.mode === "progression") {
       return <ComprehensiveTraining />;
     }
+    if (currentList.mode === "dictionary") {
+      return <DictionaryMode />;
+    }
+    if (currentList.mode === "audio-word") {
+      return <AudioWordMode />;
+    }
     if (currentList.mode === "fill-blanks") {
       return <FillBlanksMode />;
     }
     if (currentList.mode === "definition") {
       return <WordDefinitionMode />;
+    }
+    if (currentList.mode === "audio-dictation") {
+      return <AudioDictationMode />;
     }
     return <TrainingMode />;
   }

@@ -28,9 +28,10 @@ const ACTIVITY_LABELS: Record<string, { label: string; icon: string; desc: strin
   genre: { label: "Genre", icon: "🏷️", desc: "Choisis le bon article pour chaque mot" },
   spelling_choice: { label: "Choix orthographique", icon: "✏️", desc: "Trouve la bonne orthographe parmi les propositions" },
   definitions: { label: "Définitions", icon: "📖", desc: "Associe chaque mot à sa définition" },
-  fill_blanks: { label: "Texte à trous", icon: "📝", desc: "Complète le texte avec les bons mots" },
+  dictionary: { label: "Dictionnaire", icon: "📚", desc: "Cherche les mots dans ton dictionnaire" },
   audio_word: { label: "Audio mot", icon: "🎧", desc: "Écoute et écris le mot correctement" },
-  audio_dictation: { label: "Dictée audio", icon: "🎙️", desc: "Écoute le texte et complète les trous" },
+  fill_blanks: { label: "Texte à trous", icon: "📝", desc: "Complète le texte avec les bons mots" },
+  audio_dictation: { label: "Dictée audio", icon: "🎙️", desc: "Écoute la dictée phrase par phrase et écris" },
 };
 
 export default function DicteeDetail({
