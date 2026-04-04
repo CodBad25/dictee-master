@@ -24,6 +24,7 @@ import {
   getCertificateLevel,
 } from "@/lib/gamification";
 import BilanPreview from "@/components/bilan-preview";
+import AdminBugs from "@/components/admin-bugs";
 import type { DicteeResult } from "@/lib/dictee-service";
 
 // Interfaces
@@ -104,6 +105,7 @@ export default function TeacherPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"tableau" | "erreurs">("tableau");
   const [showBilan, setShowBilan] = useState(false);
+  const [showBugs, setShowBugs] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
     null
   );
@@ -370,6 +372,12 @@ export default function TeacherPage() {
           ))}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowBugs(true)}
+            className="px-3 py-1 rounded text-sm hover:bg-white/10"
+          >
+            🐛 Signalements
+          </button>
           <button
             onClick={() => setTab("erreurs")}
             className={`px-3 py-1 rounded text-sm ${
@@ -698,6 +706,9 @@ export default function TeacherPage() {
           </div>
         )}
       </div>
+
+      {/* Admin Bugs Modal */}
+      <AdminBugs open={showBugs} onClose={() => setShowBugs(false)} />
 
       {/* Bilan Preview Modal */}
       {showBilan && (

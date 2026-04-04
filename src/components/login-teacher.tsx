@@ -30,6 +30,7 @@ export default function LoginTeacher({ onLogin, onClose }: LoginTeacherProps) {
       if (response.ok) {
         // Sauvegarder la session enseignant
         localStorage.setItem("dictee_master_teacher", "true");
+        localStorage.setItem("dictee_master_teacher_pwd", password);
         onLogin();
       } else {
         setError("Mot de passe incorrect");
