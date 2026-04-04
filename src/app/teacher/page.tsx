@@ -373,6 +373,12 @@ export default function TeacherPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => router.push("/student")}
+            className="px-3 py-1 rounded text-sm hover:bg-white/10"
+          >
+            🧪 Tester
+          </button>
+          <button
             onClick={() => setShowBugs(true)}
             className="px-3 py-1 rounded text-sm hover:bg-white/10"
           >
