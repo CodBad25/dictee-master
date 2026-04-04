@@ -194,8 +194,8 @@ export default function DicteeDetail({
                   ${isCurrent
                     ? "border-purple-500 bg-purple-50 shadow-md shadow-purple-100 hover:shadow-lg cursor-pointer"
                     : isDone
-                    ? "border-emerald-200 bg-emerald-50"
-                    : "border-gray-100 bg-gray-50 opacity-50 cursor-default"
+                    ? "border-emerald-300 bg-emerald-50"
+                    : "border-gray-200 bg-gray-100 opacity-60 cursor-default"
                   }
                 `}
               >
@@ -203,7 +203,7 @@ export default function DicteeDetail({
                 <div
                   className={`
                     w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0
-                    ${isDone ? "bg-emerald-500 text-white" : isCurrent ? "bg-purple-600 text-white" : "bg-gray-200 text-gray-400"}
+                    ${isDone ? "bg-emerald-500 text-white" : isCurrent ? "bg-purple-600 text-white" : "bg-gray-300 text-gray-500"}
                   `}
                 >
                   {isDone ? <Check className="w-5 h-5" /> : isLocked ? <Lock className="w-4 h-4" /> : info.icon}

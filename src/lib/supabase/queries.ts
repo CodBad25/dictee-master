@@ -274,7 +274,7 @@ export async function createStudent(teacherId: string | null, name: string) {
 export async function createTrainingSession(session: {
   listId: string;
   studentName?: string | null;
-  modeUsed: 'flashcard' | 'audio';
+  modeUsed: string;
   totalWords: number;
   correctWords: number;
   percentage: number;

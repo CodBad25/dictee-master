@@ -127,7 +127,7 @@ export function useSupabaseSync() {
     listId: string;
     listTitle: string;
     studentName?: string;
-    modeUsed: 'flashcard' | 'audio';
+    modeUsed: string;
     totalWords: number;
     correctWords: number;
     percentage: number;

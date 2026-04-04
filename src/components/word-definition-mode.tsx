@@ -152,7 +152,7 @@ export default function WordDefinitionMode() {
       listId: currentList?.id || "",
       listTitle: currentList?.title || "",
       studentName: currentStudentName,
-      modeUsed: "flashcard", // On utilise flashcard comme type générique
+      modeUsed: "definitions",
       totalWords: definitions.length,
       correctWords: correctCount,
       percentage,
