@@ -215,7 +215,22 @@ export default function TeacherPage() {
         setDmClassId(dmClassData.id);
         setUnlockedPos(dmClassData.unlocked_dictees || [1]);
       } else {
-        setDmClassId(null);
+        // Auto-créer la classe si elle n'existe pas
+        const { data: newClass } = await supabase
+          .from("dm_classes")
+          .insert({
+            teacher_id: "teacher",
+            name: className,
+            unlocked_dictees: [1],
+            default_activity_order: ["flashcard", "genre", "spelling_choice", "definitions", "dictionary", "audio_word", "fill_blanks", "audio_dictation"],
+          })
+          .select()
+          .single();
+        if (newClass) {
+          setDmClassId(newClass.id);
+        } else {
+          setDmClassId(null);
+        }
         setUnlockedPos([1]);
       }
     } catch (error) {
