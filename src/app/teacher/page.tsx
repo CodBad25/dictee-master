@@ -32,8 +32,20 @@ import type { DicteeResult } from "@/lib/dictee-service";
 const PARCOURS_TOUR_STEPS: TourStep[] = [
   {
     target: "parcours-config-button",
-    title: "Configuration du parcours",
-    description: "Personnalisez l'ordre des exercices et les mots actifs pour chaque dictée. Vos collègues verront le parcours que vous avez défini.",
+    title: "Nouveau : configurez le parcours !",
+    description: "Réorganisez les exercices par glisser-déposer, choisissez les mots à travailler, et personnalisez chaque dictée. Cliquez sur ce bouton pour commencer.",
+    position: "bottom",
+  },
+  {
+    target: "class-tabs",
+    title: "Sélectionnez une classe",
+    description: "Choisissez d'abord la classe pour laquelle vous souhaitez configurer le parcours. Chaque classe a son propre ordre d'exercices.",
+    position: "bottom",
+  },
+  {
+    target: "lock-bar",
+    title: "Vos dictées",
+    description: "Les numéros correspondent à vos dictées. Cliquez pour verrouiller/déverrouiller. Le bouton Parcours permet de personnaliser l'ordre et les mots.",
     position: "bottom",
   },
 ];
@@ -370,7 +382,7 @@ export default function TeacherPage() {
     <main className="h-dvh flex flex-col overflow-hidden bg-gray-50">
       {/* Header - Purple bar */}
       <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-3 flex items-center justify-between z-20">
-        <div className="flex items-center gap-3">
+        <div data-tour="class-tabs" className="flex items-center gap-3">
           {hubClasses.map((hc) => (
             <button
               key={hc.id}
@@ -424,7 +436,7 @@ export default function TeacherPage() {
       </div>
 
       {/* Lock bar */}
-      <div className="bg-gray-50 border-b px-4 py-3 flex items-center gap-2 overflow-x-auto flex-shrink-0">
+      <div data-tour="lock-bar" className="bg-gray-50 border-b px-4 py-3 flex items-center gap-2 overflow-x-auto flex-shrink-0">
         <div className="flex items-center gap-2 flex-1">
           {Array.from({ length: 26 }).map((_, i) => {
             const pos = i + 1;
@@ -447,7 +459,13 @@ export default function TeacherPage() {
         <div className="flex items-center gap-2 ml-4">
           <button
             data-tour="parcours-config-button"
-            onClick={() => setShowParcours(true)}
+            onClick={() => {
+              if (!dmClassId) {
+                toast.error("Sélectionnez d'abord une classe");
+                return;
+              }
+              setShowParcours(true);
+            }}
             className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600"
           >
             🎯 Parcours
@@ -741,7 +759,7 @@ export default function TeacherPage() {
       <AdminBugs open={showBugs} onClose={() => setShowBugs(false)} />
 
       {/* Parcours Config Modal */}
-      {showParcours && dmClassId && (
+      {showParcours && dmClassId !== null && dmClassId !== "" && (
         <ParcoursConfig
           open={showParcours}
           onClose={() => setShowParcours(false)}
