@@ -44,8 +44,9 @@ export default function ParcoursConfig({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Ordre par défaut de la classe
-  const [defaultOrder, setDefaultOrder] = useState<string[]>([]);
+  // Ordre par défaut de la classe (toujours les 8 activités, order = position)
+  const [defaultOrder, setDefaultOrder] = useState<string[]>(ALL_ACTIVITIES);
+  const [defaultDisabled, setDefaultDisabled] = useState<Set<string>>(new Set());
   const [defaultOrderDirty, setDefaultOrderDirty] = useState(false);
 
   // Dictée sélectionnée
@@ -66,7 +67,13 @@ export default function ParcoursConfig({
         loadClassDefaultOrder(dmClassId),
         loadAllDicteeOverrides(dmClassId),
       ]);
-      setDefaultOrder(order || ALL_ACTIVITIES);
+      const savedOrder = order || ALL_ACTIVITIES;
+      // L'ordre sauvegardé ne contient que les activités actives
+      // Reconstruire l'ordre complet : actives en premier (dans l'ordre), puis désactivées
+      const disabled = new Set(ALL_ACTIVITIES.filter(a => !savedOrder.includes(a)));
+      const fullOrder = [...savedOrder, ...ALL_ACTIVITIES.filter(a => !savedOrder.includes(a))];
+      setDefaultOrder(fullOrder);
+      setDefaultDisabled(disabled);
       setOverrides(allOverrides);
       setLoading(false);
     };
@@ -95,7 +102,8 @@ export default function ParcoursConfig({
   const handleSaveDefault = async () => {
     setSaving(true);
     try {
-      await updateActivityOrder(dmClassId, defaultOrder);
+      const activeOrder = defaultOrder.filter(a => !defaultDisabled.has(a));
+      await updateActivityOrder(dmClassId, activeOrder);
       setDefaultOrderDirty(false);
       toast.success("Ordre par défaut sauvegardé");
     } catch {
@@ -145,7 +153,16 @@ export default function ParcoursConfig({
 
   // Helpers pour gérer les overrides
   const getOverrideOrder = (dicteeId: string): string[] => {
-    return overrides[dicteeId]?.activityOrder || defaultOrder;
+    const saved = overrides[dicteeId]?.activityOrder;
+    if (!saved) return defaultOrder;
+    // Reconstituer : actives (dans l'ordre sauvegardé) + désactivées
+    return [...saved, ...ALL_ACTIVITIES.filter(a => !saved.includes(a))];
+  };
+
+  const getOverrideDisabled = (dicteeId: string): Set<string> => {
+    const saved = overrides[dicteeId]?.activityOrder;
+    if (!saved) return defaultDisabled;
+    return new Set(ALL_ACTIVITIES.filter(a => !saved.includes(a)));
   };
 
   const getSelectedWords = (dicteeId: string): number[] | null => {
@@ -263,6 +280,7 @@ export default function ParcoursConfig({
                   {defaultOrder.map((activity) => {
                     const info = ACTIVITY_LABELS[activity];
                     if (!info) return null;
+                    const isDisabled = defaultDisabled.has(activity);
                     return (
                       <Reorder.Item
                         key={activity}
@@ -274,26 +292,42 @@ export default function ParcoursConfig({
                         }}
                         layout
                         transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4 hover:border-purple-300 transition-colors cursor-grab active:cursor-grabbing"
+                        className={`rounded-xl p-4 flex items-center gap-4 transition-all cursor-grab active:cursor-grabbing border ${
+                          isDisabled
+                            ? "bg-gray-50 border-gray-200 opacity-50"
+                            : "bg-white border-gray-200 hover:border-purple-300"
+                        }`}
                       >
                         <GripVertical className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                        <div className={`text-3xl flex-shrink-0 bg-gradient-to-br ${info.color} bg-clip-text text-transparent`}>
+                        <div className="text-3xl flex-shrink-0">
                           {info.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900">{info.label}</p>
-                          <p className="text-sm text-gray-600">{info.desc}</p>
+                          <p className={`font-semibold ${isDisabled ? "text-gray-400 line-through" : "text-gray-900"}`}>{info.label}</p>
+                          <p className={`text-sm ${isDisabled ? "text-gray-300" : "text-gray-600"}`}>{info.desc}</p>
                         </div>
                         <motion.button
-                          onClick={() => {
-                            setDefaultOrder((prev) => toggleActivity(prev, activity));
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDefaultDisabled(prev => {
+                              const next = new Set(prev);
+                              if (next.has(activity)) next.delete(activity);
+                              else next.add(activity);
+                              return next;
+                            });
                             setDefaultOrderDirty(true);
                           }}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="p-2 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors flex-shrink-0"
+                          whileTap={{ scale: 0.9 }}
+                          className={`w-12 h-7 rounded-full flex-shrink-0 flex items-center px-1 transition-colors ${
+                            isDisabled ? "bg-gray-300" : "bg-purple-600"
+                          }`}
                         >
-                          <Check className="w-5 h-5" />
+                          <motion.div
+                            layout
+                            className="w-5 h-5 bg-white rounded-full shadow-sm"
+                            animate={{ x: isDisabled ? 0 : 20 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                          />
                         </motion.button>
                       </Reorder.Item>
                     );
@@ -376,7 +410,7 @@ export default function ParcoursConfig({
 
                     {/* Parcours de la dictée */}
                     <div>
-                      <h5 className="text-sm font-semibold text-gray-700 mb-3">Ordre d'exercices</h5>
+                      <h5 className="text-sm font-semibold text-gray-700 mb-3">Ordre des exercices</h5>
                       <Reorder.Group
                         axis="y"
                         values={getOverrideOrder(selectedDicteeId)}
@@ -386,6 +420,7 @@ export default function ParcoursConfig({
                         {getOverrideOrder(selectedDicteeId).map((activity) => {
                           const info = ACTIVITY_LABELS[activity];
                           if (!info) return null;
+                          const isOff = getOverrideDisabled(selectedDicteeId).has(activity);
                           return (
                             <Reorder.Item
                               key={activity}
@@ -397,59 +432,43 @@ export default function ParcoursConfig({
                               }}
                               layout
                               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                              className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100 rounded-xl p-3 flex items-center gap-3 hover:border-purple-300 transition-colors cursor-grab active:cursor-grabbing"
+                              className={`rounded-xl p-3 flex items-center gap-3 transition-all cursor-grab active:cursor-grabbing border ${
+                                isOff
+                                  ? "bg-gray-50 border-gray-200 opacity-50"
+                                  : "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-100 hover:border-purple-300"
+                              }`}
                             >
-                              <GripVertical className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                              <GripVertical className="w-4 h-4 text-gray-400 flex-shrink-0" />
                               <div className="text-2xl flex-shrink-0">{info.icon}</div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-gray-900 text-sm">{info.label}</p>
+                                <p className={`font-semibold text-sm ${isOff ? "text-gray-400 line-through" : "text-gray-900"}`}>{info.label}</p>
                               </div>
                               <motion.button
-                                onClick={() => {
-                                  const newOrder = getOverrideOrder(selectedDicteeId).filter(
-                                    (a) => a !== activity
-                                  );
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Toggle : ajouter/retirer de l'ordre actif
+                                  const currentOrder = overrides[selectedDicteeId]?.activityOrder || defaultOrder.filter(a => !defaultDisabled.has(a));
+                                  const newOrder = isOff
+                                    ? [...currentOrder, activity]
+                                    : currentOrder.filter(a => a !== activity);
                                   setOverrideOrder(selectedDicteeId, newOrder);
                                 }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex-shrink-0"
+                                whileTap={{ scale: 0.9 }}
+                                className={`w-10 h-6 rounded-full flex-shrink-0 flex items-center px-0.5 transition-colors ${
+                                  isOff ? "bg-gray-300" : "bg-purple-600"
+                                }`}
                               >
-                                <X className="w-4 h-4" />
+                                <motion.div
+                                  layout
+                                  className="w-5 h-5 bg-white rounded-full shadow-sm"
+                                  animate={{ x: isOff ? 0 : 16 }}
+                                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                />
                               </motion.button>
                             </Reorder.Item>
                           );
                         })}
                       </Reorder.Group>
-
-                      {/* Ajouter activités manquantes */}
-                      {ALL_ACTIVITIES.length > getOverrideOrder(selectedDicteeId).length && (
-                        <div className="mt-3 space-y-2">
-                          {ALL_ACTIVITIES.filter(
-                            (a) => !getOverrideOrder(selectedDicteeId).includes(a)
-                          ).map((activity) => {
-                            const info = ACTIVITY_LABELS[activity];
-                            return (
-                              <motion.button
-                                key={activity}
-                                onClick={() => {
-                                  setOverrideOrder(selectedDicteeId, [
-                                    ...getOverrideOrder(selectedDicteeId),
-                                    activity,
-                                  ]);
-                                }}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="w-full text-left p-3 rounded-xl border-2 border-dashed border-purple-200 hover:border-purple-400 hover:bg-purple-50 transition-all"
-                              >
-                                <p className="text-sm font-semibold text-purple-700">
-                                  + Ajouter {info.label}
-                                </p>
-                              </motion.button>
-                            );
-                          })}
-                        </div>
-                      )}
                     </div>
 
                     {/* Grille de mots */}
