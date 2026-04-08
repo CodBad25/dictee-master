@@ -59,7 +59,9 @@ interface AppState {
   // Current training session
   currentList: WordList | null;
   currentWords: Word[];
+  selectedWordPositions: number[] | null;
   setCurrentTraining: (list: WordList, words: Word[]) => void;
+  setSelectedWordPositions: (positions: number[] | null) => void;
   clearCurrentTraining: () => void;
 
   // Session progress
@@ -122,8 +124,10 @@ export const useAppStore = create<AppState>()(
       // Current training
       currentList: null,
       currentWords: [],
+      selectedWordPositions: null,
       setCurrentTraining: (list, words) => set({ currentList: list, currentWords: words }),
-      clearCurrentTraining: () => set({ currentList: null, currentWords: [], sessionProgress: null }),
+      setSelectedWordPositions: (positions) => set({ selectedWordPositions: positions }),
+      clearCurrentTraining: () => set({ currentList: null, currentWords: [], selectedWordPositions: null, sessionProgress: null }),
 
       // Session progress
       sessionProgress: null,

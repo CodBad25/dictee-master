@@ -213,6 +213,105 @@ export async function updateActivityOrder(classId: string, order: string[]) {
   if (error) throw new Error(error.message);
 }
 
+// === PARCOURS CONFIG ===
+
+export async function loadClassDefaultOrder(classId: string): Promise<string[] | null> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dm_classes")
+    .select("default_activity_order")
+    .eq("id", classId)
+    .single();
+  return data?.default_activity_order || null;
+}
+
+export async function loadAllDicteeOverrides(classId: string): Promise<
+  Record<string, { activityOrder: string[]; selectedWords: number[] | null }>
+> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dictee_activity_overrides")
+    .select("dictee_id, activity_order, selected_words")
+    .eq("class_id", classId);
+  const result: Record<string, { activityOrder: string[]; selectedWords: number[] | null }> = {};
+  for (const row of data || []) {
+    result[row.dictee_id] = {
+      activityOrder: row.activity_order,
+      selectedWords: row.selected_words,
+    };
+  }
+  return result;
+}
+
+export async function saveDicteeOverride(
+  classId: string,
+  dicteeId: string,
+  activityOrder: string[],
+  selectedWords: number[] | null,
+): Promise<void> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dictee_activity_overrides")
+    .upsert(
+      { class_id: classId, dictee_id: dicteeId, activity_order: activityOrder, selected_words: selectedWords },
+      { onConflict: "class_id,dictee_id" },
+    );
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteDicteeOverride(classId: string, dicteeId: string): Promise<void> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dictee_activity_overrides")
+    .delete()
+    .eq("class_id", classId)
+    .eq("dictee_id", dicteeId);
+  if (error) throw new Error(error.message);
+}
+
+const DEFAULT_ACTIVITY_ORDER_FALLBACK = [
+  "flashcard", "genre", "spelling_choice", "definitions",
+  "dictionary", "audio_word", "fill_blanks", "audio_dictation",
+];
+
+export async function loadActivityConfig(
+  className: string,
+  dicteeId: string,
+): Promise<{ activityOrder: string[]; selectedWords: number[] | null }> {
+  const sb = createClient();
+
+  // Trouver la classe par nom
+  const { data: cls } = await sb
+    .from("dm_classes")
+    .select("id, default_activity_order")
+    .eq("name", className)
+    .maybeSingle();
+
+  if (!cls) {
+    return { activityOrder: DEFAULT_ACTIVITY_ORDER_FALLBACK, selectedWords: null };
+  }
+
+  // Chercher un override pour cette dictée
+  const { data: override } = await sb
+    .from("dictee_activity_overrides")
+    .select("activity_order, selected_words")
+    .eq("class_id", cls.id)
+    .eq("dictee_id", dicteeId)
+    .maybeSingle();
+
+  if (override) {
+    return {
+      activityOrder: override.activity_order,
+      selectedWords: override.selected_words,
+    };
+  }
+
+  return {
+    activityOrder: cls.default_activity_order || DEFAULT_ACTIVITY_ORDER_FALLBACK,
+    selectedWords: null,
+  };
+}
+
 // Charger tous les résultats d'une classe
 export async function loadClassResults(classId: string): Promise<DicteeResult[]> {
   const sb = createClient();

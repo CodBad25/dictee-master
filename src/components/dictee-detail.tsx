@@ -19,6 +19,7 @@ interface DicteeDetailProps {
   dicteeTitle: string;
   dicteePosition: number;
   activityOrder: string[];
+  selectedWords?: number[] | null;
   onBack: () => void;
   onStartActivity: (mode: string, words: DicteeWord[]) => void;
 }
@@ -39,6 +40,7 @@ export default function DicteeDetail({
   dicteeTitle,
   dicteePosition,
   activityOrder,
+  selectedWords,
   onBack,
   onStartActivity,
 }: DicteeDetailProps) {
@@ -234,16 +236,28 @@ export default function DicteeDetail({
           <div className="space-y-3">
             <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wide">
               Mots de cette dictée
+              {selectedWords && (
+                <span className="ml-2 text-xs font-normal text-purple-500">
+                  ({selectedWords.length}/{words.length} sélectionnés)
+                </span>
+              )}
             </h2>
           <div className="flex flex-wrap gap-2">
-            {words.map((w) => (
-              <span
-                key={w.position}
-                className="px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700"
-              >
-                {w.word}
-              </span>
-            ))}
+            {words.map((w) => {
+              const isActive = !selectedWords || selectedWords.includes(w.position);
+              return (
+                <span
+                  key={w.position}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                    isActive
+                      ? "bg-white border-gray-200 text-gray-700"
+                      : "bg-gray-50 border-gray-100 text-gray-300 line-through"
+                  }`}
+                >
+                  {w.word}
+                </span>
+              );
+            })}
           </div>
         </div>
 

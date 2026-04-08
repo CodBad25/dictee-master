@@ -25,6 +25,7 @@ import {
 } from "@/lib/gamification";
 import BilanPreview from "@/components/bilan-preview";
 import AdminBugs from "@/components/admin-bugs";
+import ParcoursConfig from "@/components/parcours-config";
 import type { DicteeResult } from "@/lib/dictee-service";
 
 // Interfaces
@@ -106,6 +107,7 @@ export default function TeacherPage() {
   const [tab, setTab] = useState<"tableau" | "erreurs">("tableau");
   const [showBilan, setShowBilan] = useState(false);
   const [showBugs, setShowBugs] = useState(false);
+  const [showParcours, setShowParcours] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
     null
   );
@@ -432,6 +434,13 @@ export default function TeacherPage() {
         </div>
         <div className="flex items-center gap-2 ml-4">
           <button
+            data-tour="parcours-config-button"
+            onClick={() => setShowParcours(true)}
+            className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600"
+          >
+            🎯 Parcours
+          </button>
+          <button
             onClick={() => setShowBilan(true)}
             className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
           >
@@ -715,6 +724,17 @@ export default function TeacherPage() {
 
       {/* Admin Bugs Modal */}
       <AdminBugs open={showBugs} onClose={() => setShowBugs(false)} />
+
+      {/* Parcours Config Modal */}
+      {showParcours && dmClassId && (
+        <ParcoursConfig
+          open={showParcours}
+          onClose={() => setShowParcours(false)}
+          dmClassId={dmClassId}
+          className={selectedClasseName}
+          dictees={dictees.map(d => ({ id: d.id, title: d.title, position: d.position }))}
+        />
+      )}
 
       {/* Bilan Preview Modal */}
       {showBilan && (

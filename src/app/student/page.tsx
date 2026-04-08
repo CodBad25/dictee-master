@@ -19,7 +19,7 @@ import DictionaryMode from "@/components/dictionary-mode";
 import AudioWordMode from "@/components/audio-word-mode";
 import AudioDictationMode from "@/components/audio-dictation-mode";
 import type { WordList, Word } from "@/types/database";
-import { saveResult } from "@/lib/dictee-service";
+import { saveResult, loadActivityConfig } from "@/lib/dictee-service";
 import { pingPresence } from "@/lib/presence";
 
 const DEFAULT_ACTIVITY_ORDER = [
@@ -55,6 +55,8 @@ export default function StudentPage() {
 
   const [selectedDictee, setSelectedDictee] = useState<SelectedDictee | null>(null);
   const [unlockedPositions, setUnlockedPositions] = useState<number[]>([1]);
+  const [activityOrder, setActivityOrder] = useState<string[]>(DEFAULT_ACTIVITY_ORDER);
+  const [selectedWords, setSelectedWords] = useState<number[] | null>(null);
 
   // Charger les positions déverrouillées au montage
   useEffect(() => {
@@ -102,8 +104,21 @@ export default function StudentPage() {
     router.push("/");
   };
 
-  const handleCardClick = (dictee: SelectedDictee) => {
+  const handleCardClick = async (dictee: SelectedDictee) => {
     setSelectedDictee(dictee);
+    // Charger la config du parcours pour cette dictée
+    try {
+      const config = await loadActivityConfig(
+        connectedEleve?.classe || "",
+        dictee.id,
+      );
+      setActivityOrder(config.activityOrder);
+      setSelectedWords(config.selectedWords);
+      useAppStore.getState().setSelectedWordPositions(config.selectedWords);
+    } catch {
+      setActivityOrder(DEFAULT_ACTIVITY_ORDER);
+      setSelectedWords(null);
+    }
   };
 
   const handleStartActivity = (mode: string, words: { word: string; definition: string; spelling_errors: string[]; position: number }[]) => {
@@ -121,8 +136,13 @@ export default function StudentPage() {
 
     const v1Mode = modeMap[mode] || "flashcard";
 
+    // Filtrer les mots si une sélection est active
+    const filteredWords = selectedWords
+      ? words.filter(w => selectedWords.includes(w.position))
+      : words;
+
     // Convertir les mots au format V1
-    const v1Words: Word[] = words.map((w, i) => ({
+    const v1Words: Word[] = filteredWords.map((w, i) => ({
       id: `word-${i}`,
       list_id: selectedDictee?.id || "dictee",
       word: w.word,
@@ -217,7 +237,8 @@ export default function StudentPage() {
           dicteeId={selectedDictee.id}
           dicteeTitle={selectedDictee.title}
           dicteePosition={selectedDictee.position}
-          activityOrder={DEFAULT_ACTIVITY_ORDER}
+          activityOrder={activityOrder}
+          selectedWords={selectedWords}
           onBack={() => setSelectedDictee(null)}
           onStartActivity={handleStartActivity}
         />
