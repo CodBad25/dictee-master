@@ -16,7 +16,10 @@ type Phase = "listening" | "feedback" | "result";
 
 function normalizeForComparison(text: string): string {
   return text
+    .trim()
     .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/[\u2018\u2019\u02BC]/g, "'")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 }
@@ -33,8 +36,7 @@ export default function AudioWordMode() {
   } = useAppStore();
   const { saveSession } = useSupabaseSync();
 
-  if (!currentList || !currentWords.length) return null;
-
+  // Tous les hooks AVANT le return conditionnel (Rules of Hooks)
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -45,6 +47,8 @@ export default function AudioWordMode() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const currentWord = currentWords[currentIndex];
+
+  if (!currentList || !currentWords.length) return null;
   const progress = ((currentIndex + 1) / currentWords.length) * 100;
   const correctCount = answers.filter(a => a.isCorrect).length;
 
@@ -77,12 +81,13 @@ export default function AudioWordMode() {
       return;
     }
 
-    const normalized = normalizeForComparison(answer);
+    const userAnswer = answer.trim();
+    const normalized = normalizeForComparison(userAnswer);
     const expectedNormalized = normalizeForComparison(currentWord.word);
     const correct = normalized === expectedNormalized;
 
     setIsCorrect(correct);
-    setAnswers(prev => [...prev, { word: currentWord.word, userAnswer: answer, isCorrect: correct }]);
+    setAnswers(prev => [...prev, { word: currentWord.word, userAnswer, isCorrect: correct }]);
     setPhase("feedback");
 
     if (correct) {
