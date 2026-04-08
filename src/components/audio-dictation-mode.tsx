@@ -68,6 +68,9 @@ export default function AudioDictationMode() {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const phraseTimestampsRef = useRef<{ start: number; end: number }[]>([]);
+  const autoReplayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasTypedRef = useRef(false);
+  const replayCountRef = useRef(0);
 
   if (!currentList || !currentWords.length) return null;
 
@@ -132,6 +135,7 @@ export default function AudioDictationMode() {
   useEffect(() => {
     if (phase === "loading") loadData();
     return () => {
+      cancelAutoReplay();
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -166,27 +170,48 @@ export default function AudioDictationMode() {
   };
 
   const maxReplays = 3; // TODO: configurable par l'enseignant
+  const AUTO_REPLAY_DELAY = 3000; // 3s avant la 2e lecture automatique
+
+  const cancelAutoReplay = () => {
+    if (autoReplayTimerRef.current) {
+      clearTimeout(autoReplayTimerRef.current);
+      autoReplayTimerRef.current = null;
+    }
+  };
 
   // Jouer la phrase courante (section du MP3)
   const playCurrentPhrase = () => {
-    if (replayCount >= maxReplays) {
+    if (replayCountRef.current >= maxReplays) {
       toast.error(`Maximum ${maxReplays} écoutes par phrase`);
       return;
     }
+    cancelAutoReplay();
     const audio = audioRef.current;
     const ts = phraseTimestampsRef.current[phraseIndex];
     if (!audio || !ts) return;
 
+    const isFirstPlay = replayCountRef.current === 0;
+
     audio.playbackRate = speed;
     audio.currentTime = ts.start;
     setIsPlaying(true);
-    setReplayCount(r => r + 1);
+    replayCountRef.current += 1;
+    setReplayCount(replayCountRef.current);
 
     const checkEnd = () => {
       if (audio.currentTime >= ts.end - 0.1) {
         audio.pause();
         setIsPlaying(false);
         audio.removeEventListener("timeupdate", checkEnd);
+
+        // Auto-replay : après la 1re écoute, relancer après 3s (sauf si l'élève tape)
+        if (isFirstPlay && !hasTypedRef.current) {
+          autoReplayTimerRef.current = setTimeout(() => {
+            if (!hasTypedRef.current && replayCountRef.current < maxReplays) {
+              playCurrentPhrase();
+            }
+          }, AUTO_REPLAY_DELAY);
+        }
       }
     };
     audio.addEventListener("timeupdate", checkEnd);
@@ -200,10 +225,13 @@ export default function AudioDictationMode() {
   // Phrase suivante
   const handleNext = () => {
     if (!currentAnswer.trim()) return;
+    cancelAutoReplay();
     const result = comparePhrase(phrases[phraseIndex], currentAnswer);
     const newResults = [...results, result];
     setResults(newResults);
     setReplayCount(0);
+    replayCountRef.current = 0;
+    hasTypedRef.current = false;
 
     if (phraseIndex + 1 < phrases.length) {
       setPhraseIndex(phraseIndex + 1);
@@ -244,6 +272,9 @@ export default function AudioDictationMode() {
   };
 
   const handleRetry = () => {
+    cancelAutoReplay();
+    hasTypedRef.current = false;
+    replayCountRef.current = 0;
     setPhraseIndex(0);
     setCurrentAnswer("");
     setResults([]);
@@ -401,7 +432,13 @@ export default function AudioDictationMode() {
             </label>
             <textarea
               value={currentAnswer}
-              onChange={e => setCurrentAnswer(e.target.value)}
+              onChange={e => {
+                setCurrentAnswer(e.target.value);
+                if (!hasTypedRef.current && e.target.value.length > 0) {
+                  hasTypedRef.current = true;
+                  cancelAutoReplay();
+                }
+              }}
               placeholder="Tape ici..."
               className="w-full h-32 p-4 border-2 border-gray-200 rounded-2xl focus:border-purple-500 focus:outline-none resize-none text-lg"
               autoFocus

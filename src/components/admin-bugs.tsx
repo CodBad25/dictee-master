@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 interface BugReport {
   id: string;
@@ -34,9 +35,6 @@ interface AdminBugsProps {
 }
 
 export default function AdminBugs({ open, onClose }: AdminBugsProps) {
-  const teacherPassword = typeof window !== "undefined"
-    ? localStorage.getItem("dictee_master_teacher_pwd") || ""
-    : "";
   const [reports, setReports] = useState<BugReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "new" | "read" | "resolved">("all");
@@ -47,20 +45,23 @@ export default function AdminBugs({ open, onClose }: AdminBugsProps) {
   const loadReports = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/bugs?admin=true", {
-        headers: { "x-teacher-password": teacherPassword },
-      });
-      if (res.ok) {
-        setReports(await res.json());
-      } else {
+      const sb = createClient();
+      const { data, error } = await sb
+        .from("bug_reports")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) {
         toast.error("Erreur de chargement des signalements");
+      } else {
+        setReports(data || []);
       }
     } catch {
       toast.error("Erreur réseau");
     } finally {
       setLoading(false);
     }
-  }, [teacherPassword]);
+  }, []);
 
   useEffect(() => {
     if (open) loadReports();
@@ -68,15 +69,12 @@ export default function AdminBugs({ open, onClose }: AdminBugsProps) {
 
   const updateStatus = async (id: string, status: string, adminNote?: string) => {
     try {
-      const res = await fetch(`/api/bugs/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-teacher-password": teacherPassword,
-        },
-        body: JSON.stringify({ status, adminNote }),
-      });
-      if (res.ok) {
+      const sb = createClient();
+      const update: Record<string, unknown> = { status };
+      if (adminNote !== undefined) update.admin_note = adminNote;
+      if (status === "resolved") update.resolved_at = new Date().toISOString();
+      const { error } = await sb.from("bug_reports").update(update).eq("id", id);
+      if (!error) {
         loadReports();
         toast.success(status === "resolved" ? "Signalement résolu" : "Statut mis à jour");
       }
@@ -87,11 +85,9 @@ export default function AdminBugs({ open, onClose }: AdminBugsProps) {
 
   const deleteReport = async (id: string) => {
     try {
-      const res = await fetch(`/api/bugs/${id}`, {
-        method: "DELETE",
-        headers: { "x-teacher-password": teacherPassword },
-      });
-      if (res.ok) {
+      const sb = createClient();
+      const { error } = await sb.from("bug_reports").delete().eq("id", id);
+      if (!error) {
         setReports((prev) => prev.filter((r) => r.id !== id));
         toast.success("Signalement supprimé");
       }

@@ -63,7 +63,33 @@ export default function DictionaryMode() {
     { word: string; userAnswer: string; isCorrect: boolean }[]
   >([]);
 
-  if (!currentList || !currentWords.length) return null;
+  // Sélection de mots par round (3 mots aléatoires parmi tous les mots)
+  const WORDS_PER_ROUND = 3;
+  const [roundWords, setRoundWords] = useState<typeof currentWords>([]);
+  const [seenWordIds, setSeenWordIds] = useState<Set<string>>(new Set());
+
+  const pickNewRound = (seen: Set<string>) => {
+    const available = currentWords.filter(w => !seen.has(w.id));
+    const pool = available.length >= WORDS_PER_ROUND ? available : [...currentWords];
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const picked = shuffled.slice(0, Math.min(WORDS_PER_ROUND, pool.length));
+    setRoundWords(picked);
+    const newSeen = new Set(seen);
+    picked.forEach(w => newSeen.add(w.id));
+    if (newSeen.size >= currentWords.length) {
+      setSeenWordIds(new Set(picked.map(w => w.id)));
+    } else {
+      setSeenWordIds(newSeen);
+    }
+  };
+
+  useEffect(() => {
+    if (currentWords.length > 0 && roundWords.length === 0) {
+      pickNewRound(new Set());
+    }
+  }, [currentWords.length]);
+
+  if (!currentList || !currentWords.length || !roundWords.length) return null;
 
   // Chrono effect
   useEffect(() => {
@@ -161,13 +187,13 @@ export default function DictionaryMode() {
 
   const handleNextWord = () => {
     if (!currentPageNumber.trim() || currentClasse === null) return;
-    if (currentClasse !== "verbe" && currentClasse !== "adverbe" && currentGenre === null) return;
+    if (currentClasse === "nom" && currentGenre === null) return;
 
-    const currentWord = currentWords[currentWordIndex];
+    const currentWord = roundWords[currentWordIndex];
     const correctGenre = getCorrectGenre(currentWord.word);
     const correctClasse = getCorrectClasse(currentWord.word, currentWord.hint);
 
-    const skipGenre = currentClasse === "verbe" || currentClasse === "adverbe";
+    const skipGenre = currentClasse !== "nom";
     const genreCorrect = skipGenre || currentGenre === correctGenre;
     const classeCorrect = currentClasse === correctClasse;
     const isCorrect = genreCorrect && classeCorrect;
@@ -195,7 +221,7 @@ export default function DictionaryMode() {
       },
     ]);
 
-    if (currentWordIndex < currentWords.length - 1) {
+    if (currentWordIndex < roundWords.length - 1) {
       setCurrentWordIndex((i) => i + 1);
       setCurrentPageNumber("");
       setCurrentGenre(null);
@@ -208,12 +234,12 @@ export default function DictionaryMode() {
   const finishExercise = async () => {
     const endTime = Date.now();
     const timeSpentSeconds = startTime ? Math.floor((endTime - startTime) / 1000) : 0;
-    const percentage = Math.round((score / currentWords.length) * 100);
+    const percentage = Math.round((score / roundWords.length) * 100);
 
     setPhase("results");
 
     // Show confetti if perfect score
-    if (score === currentWords.length) {
+    if (score === roundWords.length) {
       confetti({
         particleCount: 100,
         spread: 70,
@@ -223,7 +249,7 @@ export default function DictionaryMode() {
     }
 
     // Update streak
-    const newStreak = score === currentWords.length ? streak + 1 : 0;
+    const newStreak = score === roundWords.length ? streak + 1 : 0;
     updateStreak(newStreak);
 
     // Save session
@@ -232,7 +258,7 @@ export default function DictionaryMode() {
       listTitle: currentList.title,
       studentName: currentStudentName,
       modeUsed: "dictionary",
-      totalWords: currentWords.length,
+      totalWords: roundWords.length,
       correctWords: score,
       percentage,
       timeSpentSeconds: useChrono ? chronoSeconds : timeSpentSeconds,
@@ -242,6 +268,10 @@ export default function DictionaryMode() {
   };
 
   const handleRetry = () => {
+    const isPerfect = score === roundWords.length;
+    if (isPerfect) {
+      pickNewRound(seenWordIds);
+    }
     setPhase("setup");
     setCurrentWordIndex(0);
     setEntries([]);
@@ -252,9 +282,6 @@ export default function DictionaryMode() {
     setCurrentClasse(null);
     setChronoSeconds(0);
     setStartTime(null);
-    setDictionaryName("");
-    setDictionaryYear("");
-    setUseChrono(false);
   };
 
   const handleQuit = () => {
@@ -364,7 +391,7 @@ export default function DictionaryMode() {
   // PHASE 2: EXERCISE
   // ============================================
   if (phase === "exercise") {
-    const currentWord = currentWords[currentWordIndex];
+    const currentWord = roundWords[currentWordIndex];
     const currentEntry = entries[currentWordIndex];
     const correctGenre = getCorrectGenre(currentWord.word);
     const correctClasse = getCorrectClasse(currentWord.word, currentWord.hint);
@@ -400,7 +427,7 @@ export default function DictionaryMode() {
           {/* Progress */}
           <div className="mb-6 space-y-2">
             <div className="flex justify-between text-sm text-gray-600">
-              <span>Mot {currentWordIndex + 1}/{currentWords.length}</span>
+              <span>Mot {currentWordIndex + 1}/{roundWords.length}</span>
               <span className="font-semibold">
                 {score} correct{score !== 1 ? "s" : ""}
               </span>
@@ -409,7 +436,7 @@ export default function DictionaryMode() {
               <motion.div
                 initial={{ width: 0 }}
                 animate={{
-                  width: `${((currentWordIndex + 1) / currentWords.length) * 100}%`,
+                  width: `${((currentWordIndex + 1) / roundWords.length) * 100}%`,
                 }}
                 transition={{ duration: 0.3 }}
                 className="h-full bg-emerald-600"
@@ -428,7 +455,7 @@ export default function DictionaryMode() {
             <div className="text-center mb-8">
               <p className="text-sm text-gray-500 mb-2">Cherchez ce mot :</p>
               <p className="text-sm text-gray-400 font-medium mb-2">
-                Mot {currentWordIndex + 1} / {currentWords.length}
+                Mot {currentWordIndex + 1} / {roundWords.length}
               </p>
               <p className="text-4xl font-bold text-emerald-600">
                 {currentWord.word.split(" ").slice(-1)[0]}
@@ -467,7 +494,7 @@ export default function DictionaryMode() {
                       key={option}
                       onClick={() => {
                         setCurrentClasse(option);
-                        if (option === "verbe" || option === "adverbe") {
+                        if (option === "verbe" || option === "adverbe" || option === "adjectif") {
                           setCurrentGenre("-");
                         } else if (currentGenre === "-") {
                           setCurrentGenre(null);
@@ -485,8 +512,8 @@ export default function DictionaryMode() {
                 </div>
               </div>
 
-              {/* Genre — uniquement pour nom et adjectif */}
-              {currentClasse !== "verbe" && currentClasse !== "adverbe" && (
+              {/* Genre — uniquement pour les noms */}
+              {currentClasse === "nom" && (
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Genre
@@ -517,12 +544,12 @@ export default function DictionaryMode() {
                 disabled={
                   !currentPageNumber.trim() ||
                   currentClasse === null ||
-                  (currentClasse !== "verbe" && currentClasse !== "adverbe" && currentGenre === null)
+                  (currentClasse === "nom" && currentGenre === null)
                 }
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg disabled:opacity-50"
               >
                 <ArrowRight className="w-5 h-5 mr-2" />
-                {currentWordIndex === currentWords.length - 1
+                {currentWordIndex === roundWords.length - 1
                   ? "Terminer"
                   : "Suivant"}
               </Button>
@@ -537,8 +564,8 @@ export default function DictionaryMode() {
   // PHASE 3: RESULTS
   // ============================================
   if (phase === "results") {
-    const percentage = Math.round((score / currentWords.length) * 100);
-    const isPerfect = score === currentWords.length;
+    const percentage = Math.round((score / roundWords.length) * 100);
+    const isPerfect = score === roundWords.length;
 
     return (
       <motion.div
@@ -580,7 +607,7 @@ export default function DictionaryMode() {
               Score final
             </p>
             <p className="text-5xl font-bold mb-2">
-              {score}/{currentWords.length}
+              {score}/{roundWords.length}
             </p>
             <p className={`text-2xl font-semibold ${isPerfect ? "" : "text-gray-700"}`}>
               {percentage}%
@@ -630,7 +657,7 @@ export default function DictionaryMode() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900">
-                          {currentWords[idx].word}
+                          {roundWords[idx].word}
                         </p>
                         <div className="text-sm text-gray-600 mt-2 space-y-1">
                           <p>
