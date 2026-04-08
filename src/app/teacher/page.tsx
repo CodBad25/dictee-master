@@ -33,33 +33,40 @@ const PARCOURS_TOUR_STEPS: TourStep[] = [
   {
     target: "class-tabs",
     title: "Bienvenue sur DictéeMaster !",
-    description: "Sélectionnez une classe pour commencer. Chaque classe a ses propres réglages : dictées déverrouillées, ordre des exercices, et mots à travailler.",
+    description: "Sélectionnez une classe pour commencer. Chaque classe a ses propres réglages.",
     position: "bottom",
   },
   {
     target: "lock-bar",
     title: "Gérez vos dictées",
-    description: "Cliquez sur un numéro pour verrouiller ou déverrouiller une dictée. Les élèves ne peuvent accéder qu'aux dictées déverrouillées.",
+    description: "Cliquez sur un numéro pour verrouiller ou déverrouiller une dictée pour vos élèves.",
     position: "bottom",
   },
   {
     target: "parcours-config-button",
-    title: "Nouveau : le bouton Parcours !",
-    description: "Personnalisez l'ordre des exercices, activez ou désactivez des activités, et choisissez quels mots sont travaillés dans chaque dictée.",
+    title: "Nouveau : le bouton Parcours",
+    description: "Personnalisez l'ordre des exercices et choisissez les mots travaillés dans chaque dictée.",
     position: "bottom",
   },
   {
     target: "default-order-section",
-    title: "Glissez pour réordonner",
-    description: "Maintenez et glissez les exercices pour changer leur ordre. Utilisez le toggle à droite pour activer ou désactiver une activité.",
+    title: "Réordonnez les exercices",
+    description: "Glissez-déposez pour changer l'ordre. Le toggle à droite active ou désactive un exercice pour toute la classe.",
     position: "right",
     clickBefore: "parcours-config-button",
   },
   {
     target: "dictee-selector",
     title: "Personnalisez par dictée",
-    description: "Cliquez sur un numéro pour personnaliser le parcours d'une dictée spécifique : ordre des exercices et sélection des mots.",
+    description: "Cliquez sur un numéro de dictée pour adapter le parcours spécifiquement : ordre des exercices ET sélection des mots.",
     position: "top",
+  },
+  {
+    target: "word-toggle-grid",
+    title: "Choisissez les mots",
+    description: "Cliquez sur un mot pour l'activer ou le désactiver. Les mots désactivés ne seront pas travaillés dans les exercices. Utilisez « Tous » ou « Aucun » pour aller plus vite.",
+    position: "top",
+    clickBefore: "dictee-first-button",
   },
 ];
 

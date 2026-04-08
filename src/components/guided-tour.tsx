@@ -41,11 +41,17 @@ export default function GuidedTour({ tourId, steps, onComplete }: GuidedTourProp
     const element = document.querySelector(`[data-tour="${step.target}"]`);
     if (element) {
       const rect = element.getBoundingClientRect();
-      setTargetRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
-      const isFullyVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
+      // Scroll l'élément dans la vue (y compris dans des containers scrollables)
+      const isFullyVisible = rect.top >= 0 && rect.bottom <= window.innerHeight && rect.left >= 0 && rect.right <= window.innerWidth;
       if (!isFullyVisible) {
-        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        element.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+        // Re-lire la position après le scroll
+        setTimeout(() => {
+          const newRect = element.getBoundingClientRect();
+          setTargetRect({ top: newRect.top, left: newRect.left, width: newRect.width, height: newRect.height });
+        }, 400);
       }
+      setTargetRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
     } else {
       setTargetRect(null);
     }

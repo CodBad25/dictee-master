@@ -347,6 +347,7 @@ export default function ParcoursConfig({
                       return (
                         <motion.button
                           key={d.id}
+                          data-tour={d.position === 1 ? "dictee-first-button" : undefined}
                           onClick={() => {
                             setSelectedDicteeId(isSelected ? null : d.id);
                             setSelectedDicteePos(isSelected ? null : d.position);
