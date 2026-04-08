@@ -53,13 +53,17 @@ export default function GuidedTour({ tourId, steps, onComplete }: GuidedTourProp
 
   useEffect(() => {
     if (step?.clickBefore) {
-      const el = document.querySelector(`[data-tour="${step.clickBefore}"]`) as HTMLElement;
-      el?.click();
+      // Délai pour laisser le DOM se stabiliser avant de cliquer
+      const timer = setTimeout(() => {
+        const el = document.querySelector(`[data-tour="${step.clickBefore}"]`) as HTMLElement;
+        el?.click();
+      }, 200);
+      return () => clearTimeout(timer);
     }
   }, [step?.clickBefore, currentStep]);
 
   useEffect(() => {
-    const delay = step?.clickBefore ? 300 : 0;
+    const delay = step?.clickBefore ? 600 : 0;
     const timer = setTimeout(updateTargetPosition, delay);
     window.addEventListener("resize", updateTargetPosition);
     window.addEventListener("scroll", updateTargetPosition);

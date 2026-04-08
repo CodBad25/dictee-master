@@ -31,22 +31,35 @@ import type { DicteeResult } from "@/lib/dictee-service";
 
 const PARCOURS_TOUR_STEPS: TourStep[] = [
   {
-    target: "parcours-config-button",
-    title: "Nouveau : configurez le parcours !",
-    description: "Réorganisez les exercices par glisser-déposer, choisissez les mots à travailler, et personnalisez chaque dictée. Cliquez sur ce bouton pour commencer.",
-    position: "bottom",
-  },
-  {
     target: "class-tabs",
-    title: "Sélectionnez une classe",
-    description: "Choisissez d'abord la classe pour laquelle vous souhaitez configurer le parcours. Chaque classe a son propre ordre d'exercices.",
+    title: "Bienvenue sur DictéeMaster !",
+    description: "Sélectionnez une classe pour commencer. Chaque classe a ses propres réglages : dictées déverrouillées, ordre des exercices, et mots à travailler.",
     position: "bottom",
   },
   {
     target: "lock-bar",
-    title: "Vos dictées",
-    description: "Les numéros correspondent à vos dictées. Cliquez pour verrouiller/déverrouiller. Le bouton Parcours permet de personnaliser l'ordre et les mots.",
+    title: "Gérez vos dictées",
+    description: "Cliquez sur un numéro pour verrouiller ou déverrouiller une dictée. Les élèves ne peuvent accéder qu'aux dictées déverrouillées.",
     position: "bottom",
+  },
+  {
+    target: "parcours-config-button",
+    title: "Nouveau : le bouton Parcours !",
+    description: "Personnalisez l'ordre des exercices, activez ou désactivez des activités, et choisissez quels mots sont travaillés dans chaque dictée.",
+    position: "bottom",
+  },
+  {
+    target: "default-order-section",
+    title: "Glissez pour réordonner",
+    description: "Maintenez et glissez les exercices pour changer leur ordre. Utilisez le toggle à droite pour activer ou désactiver une activité.",
+    position: "right",
+    clickBefore: "parcours-config-button",
+  },
+  {
+    target: "dictee-selector",
+    title: "Personnalisez par dictée",
+    description: "Cliquez sur un numéro pour personnaliser le parcours d'une dictée spécifique : ordre des exercices et sélection des mots.",
+    position: "top",
   },
 ];
 
@@ -768,7 +781,7 @@ export default function TeacherPage() {
       </div>
 
       {/* GuidedTour */}
-      {showTour && <GuidedTour tourId="parcours" steps={PARCOURS_TOUR_STEPS} onComplete={() => setShowTour(false)} />}
+      {showTour && <GuidedTour tourId="parcours" steps={PARCOURS_TOUR_STEPS} onComplete={() => { setShowTour(false); setShowParcours(false); }} />}
 
       {/* Admin Bugs Modal */}
       <AdminBugs open={showBugs} onClose={() => setShowBugs(false)} />
