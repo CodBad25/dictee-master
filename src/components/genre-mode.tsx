@@ -19,13 +19,17 @@ export default function GenreMode() {
   useEffect(() => {
     if (!currentList) return;
     const sb = createClient();
+    const selectedPositions = useAppStore.getState().selectedWordPositions;
     sb.from("dictee_words")
-      .select("word, definition")
+      .select("word, definition, position")
       .eq("dictee_id", currentList.id)
       .order("position")
       .then(({ data }) => {
         if (data) {
-          const filtered = data.filter(w => /^(le |la |l'|un |une |les |des |du )/.test(w.word));
+          let filtered = data.filter(w => /^(le |la |l'|un |une |les |des |du )/.test(w.word));
+          if (selectedPositions) {
+            filtered = filtered.filter(w => selectedPositions.includes(w.position));
+          }
           setWords(filtered);
         }
       });

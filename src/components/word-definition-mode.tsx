@@ -69,13 +69,17 @@ export default function WordDefinitionMode() {
     try {
       const sb = createClient();
       const { data } = await sb.from("dictee_words")
-        .select("word, definition")
+        .select("word, definition, position")
         .eq("dictee_id", currentList.id)
-        .order("position")
-        .limit(wordCount);
+        .order("position");
 
       if (data && data.length > 0) {
-        const defs = data.filter(d => d.definition && d.definition.length > 5).map(d => ({
+        const selectedPositions = useAppStore.getState().selectedWordPositions;
+        let filtered = data;
+        if (selectedPositions) {
+          filtered = data.filter(w => selectedPositions.includes(w.position));
+        }
+        const defs = filtered.filter(d => d.definition && d.definition.length > 5).slice(0, wordCount).map(d => ({
           word: d.word,
           definition: d.definition,
         }));

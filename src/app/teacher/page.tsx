@@ -26,7 +26,17 @@ import {
 import BilanPreview from "@/components/bilan-preview";
 import AdminBugs from "@/components/admin-bugs";
 import ParcoursConfig from "@/components/parcours-config";
+import GuidedTour, { shouldShowTour, type TourStep } from "@/components/guided-tour";
 import type { DicteeResult } from "@/lib/dictee-service";
+
+const PARCOURS_TOUR_STEPS: TourStep[] = [
+  {
+    target: "parcours-config-button",
+    title: "Configuration du parcours",
+    description: "Personnalisez l'ordre des exercices et les mots actifs pour chaque dictée. Vos collègues verront le parcours que vous avez défini.",
+    position: "bottom",
+  },
+];
 
 // Interfaces
 interface Dictee {
@@ -108,6 +118,7 @@ export default function TeacherPage() {
   const [showBilan, setShowBilan] = useState(false);
   const [showBugs, setShowBugs] = useState(false);
   const [showParcours, setShowParcours] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
     null
   );
@@ -245,6 +256,7 @@ export default function TeacherPage() {
       await loadData();
       await loadHub();
       setLoading(false);
+      if (shouldShowTour("parcours")) setShowTour(true);
     };
 
     init();
@@ -721,6 +733,9 @@ export default function TeacherPage() {
           </div>
         )}
       </div>
+
+      {/* GuidedTour */}
+      {showTour && <GuidedTour tourId="parcours" steps={PARCOURS_TOUR_STEPS} onComplete={() => setShowTour(false)} />}
 
       {/* Admin Bugs Modal */}
       <AdminBugs open={showBugs} onClose={() => setShowBugs(false)} />

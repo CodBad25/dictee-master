@@ -31,12 +31,16 @@ export default function SpellingChoiceMode() {
       if (!currentList) return;
       const sb = createClient();
       const { data } = await sb.from("dictee_words")
-        .select("word, definition, spelling_errors")
+        .select("word, definition, spelling_errors, position")
         .eq("dictee_id", currentList.id)
         .order("position");
       if (data && data.length > 0) {
-        setWords(data);
-        prepareChoices(data, 0);
+        const selectedPositions = useAppStore.getState().selectedWordPositions;
+        const filtered = selectedPositions
+          ? data.filter(w => selectedPositions.includes(w.position))
+          : data;
+        setWords(filtered);
+        prepareChoices(filtered, 0);
       }
       setLoading(false);
     };
