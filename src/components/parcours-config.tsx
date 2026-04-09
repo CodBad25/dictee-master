@@ -33,6 +33,7 @@ interface ParcoursConfigProps {
   className: string;
   dictees: { id: string; title: string; position: number }[];
   students?: { id: string; name: string }[];
+  displayName?: (name: string) => string;
 }
 
 export default function ParcoursConfig({
@@ -42,6 +43,7 @@ export default function ParcoursConfig({
   className,
   dictees,
   students = [],
+  displayName = (n) => n,
 }: ParcoursConfigProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -277,7 +279,7 @@ export default function ParcoursConfig({
                     : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300"
                 }`}
               >
-                🎯 Un élève {selectedStudentId ? `(${students.find(s => s.id === selectedStudentId)?.name})` : ""}
+                🎯 Un élève {selectedStudentId ? `(${displayName(students.find(s => s.id === selectedStudentId)?.name || "")})` : ""}
               </motion.button>
             </div>
             <AnimatePresence>
@@ -299,7 +301,7 @@ export default function ParcoursConfig({
                           : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300"
                       }`}
                     >
-                      {s.name}
+                      {displayName(s.name)}
                     </motion.button>
                   ))}
                 </motion.div>
@@ -322,7 +324,7 @@ export default function ParcoursConfig({
                   <span className="text-2xl">🎯</span>
                   <div>
                     <p className="font-semibold text-purple-800">
-                      Parcours personnalisé pour {students.find(s => s.id === selectedStudentId)?.name}
+                      Parcours personnalisé pour {displayName(students.find(s => s.id === selectedStudentId)?.name || "")}
                     </p>
                     <p className="text-sm text-purple-600">Sélectionnez une dictée ci-dessous pour configurer son parcours individuel.</p>
                   </div>
@@ -513,16 +515,16 @@ export default function ParcoursConfig({
                               }}
                               layout
                               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                              className={`rounded-xl p-3 flex items-center gap-3 transition-all cursor-grab active:cursor-grabbing border ${
+                              className={`rounded-xl ${selectedStudentId ? "px-3 py-2" : "p-3"} flex items-center gap-2 transition-all cursor-grab active:cursor-grabbing border ${
                                 isOff
                                   ? "bg-gray-50 border-gray-200 opacity-50"
                                   : "bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-100 hover:border-purple-300"
                               }`}
                             >
                               <GripVertical className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                              <div className="text-2xl flex-shrink-0">{info.icon}</div>
+                              <div className={`${selectedStudentId ? "text-lg" : "text-2xl"} flex-shrink-0`}>{info.icon}</div>
                               <div className="flex-1 min-w-0">
-                                <p className={`font-semibold text-sm ${isOff ? "text-gray-400 line-through" : "text-gray-900"}`}>{info.label}</p>
+                                <p className={`font-semibold ${selectedStudentId ? "text-xs" : "text-sm"} ${isOff ? "text-gray-400 line-through" : "text-gray-900"}`}>{info.label}</p>
                               </div>
                               <motion.button
                                 onClick={(e) => {

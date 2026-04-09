@@ -757,6 +757,7 @@ export default function TeacherPage() {
           className={selectedClasseName}
           dictees={dictees.map(d => ({ id: d.id, title: d.title, position: d.position }))}
           students={studentRows.map(s => ({ id: s.id, name: s.name }))}
+          displayName={dn}
         />
       )}
 
