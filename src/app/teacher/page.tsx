@@ -181,16 +181,34 @@ export default function TeacherPage() {
         setResults(resultsMap);
       }
 
-      const { data: wordsData } = await supabase
+      // Charger les erreurs : jointure word_attempts → results pour avoir le dictee_id
+      const { data: attemptsData } = await supabase
         .from("dm_word_attempts")
-        .select("*");
+        .select("word, user_answer, is_correct, result_id");
 
-      if (wordsData) {
-        const wordsMap: Record<string, any> = {};
-        wordsData.forEach((w: any) => {
-          wordsMap[w.id] = w;
+      if (attemptsData && resultsData) {
+        // Construire un map result_id → dictee_id
+        const resultToDictee: Record<string, string> = {};
+        resultsData.forEach((r: any) => {
+          resultToDictee[r.id] = r.dictee_id;
         });
-        setWordAttempts(wordsMap);
+
+        // Agréger les erreurs par (mot, dictee_id)
+        const errorAgg: Record<string, { word: string; dictee_id: string; error_count: number; wrong_answers: string[] }> = {};
+        attemptsData.filter((a: any) => !a.is_correct).forEach((a: any) => {
+          const dicteeId = resultToDictee[a.result_id];
+          if (!dicteeId) return;
+          const key = `${a.word}-${dicteeId}`;
+          if (!errorAgg[key]) {
+            errorAgg[key] = { word: a.word, dictee_id: dicteeId, error_count: 0, wrong_answers: [] };
+          }
+          errorAgg[key].error_count++;
+          if (a.user_answer && !errorAgg[key].wrong_answers.includes(a.user_answer)) {
+            errorAgg[key].wrong_answers.push(a.user_answer);
+          }
+        });
+
+        setWordAttempts(errorAgg);
       }
     } catch (error) {
       console.error("Error loading data:", error);
@@ -389,29 +407,15 @@ export default function TeacherPage() {
 
   // Calculate common errors
   const getCommonErrors = (): CommonError[] => {
-    const errorMap: Record<string, CommonError> = {};
-
-    Object.values(wordAttempts).forEach((wa: any) => {
-      const word = wa.word || "?";
+    return Object.values(wordAttempts).map((wa: any) => {
       const dictee = dictees.find((d) => d.id === wa.dictee_id);
-      const key = `${word}-${wa.dictee_id}`;
-
-      if (!errorMap[key]) {
-        errorMap[key] = {
-          word,
-          dicteeTitle: dictee?.title || "Dictée ?",
-          count: 0,
-          wrongAnswers: [],
-        };
-      }
-
-      errorMap[key].count += wa.error_count || 0;
-      if (wa.wrong_answers && !errorMap[key].wrongAnswers.includes(wa.wrong_answers)) {
-        errorMap[key].wrongAnswers.push(wa.wrong_answers);
-      }
-    });
-
-    return Object.values(errorMap).sort((a, b) => b.count - a.count);
+      return {
+        word: wa.word,
+        dicteeTitle: dictee?.title || "Dictée ?",
+        count: wa.error_count,
+        wrongAnswers: wa.wrong_answers || [],
+      };
+    }).sort((a, b) => b.count - a.count);
   };
 
   const commonErrors = getCommonErrors();
