@@ -6,8 +6,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, GraduationCap, Loader2, Search, X, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-// TODO: Remplacer par les vrais appels Hub quand l'API enseignants sera prête
-// import { getEnseignants, checkPinEnseignant, createPinEnseignant, verifyPinEnseignant } from "@/lib/hub";
+const HUB_URL = "https://hub.beltools.fr/api/v1";
+const HUB_KEY = process.env.NEXT_PUBLIC_HUB_API_KEY || "";
+
+async function hubFetch(path: string, options?: RequestInit) {
+  const res = await fetch(`${HUB_URL}${path}`, {
+    ...options,
+    headers: { "Content-Type": "application/json", "x-api-key": HUB_KEY, ...options?.headers },
+  });
+  if (!res.ok) throw new Error(`Hub API error: ${res.status}`);
+  return res.json();
+}
 
 interface TeacherEntry {
   id: string;
@@ -30,38 +39,37 @@ interface LoginEnseignantProps {
   onClose: () => void;
 }
 
-// === DONNÉES DE DÉMO (à retirer quand le Hub sera prêt) ===
-const DEMO_TEACHERS: TeacherEntry[] = [
-  { id: "ens-manai", prenom: "Nadia", nom: "MANAÏ", matiere: "Français", classes: ["6A", "6C", "6T"] },
-  { id: "ens-arrive", prenom: "Mme", nom: "ARRIVÉ", matiere: "Français", classes: ["6A"] },
-  { id: "ens-bousseau", prenom: "Mme", nom: "BOUSSEAU", matiere: "Français", classes: ["6C"] },
-  { id: "ens-belhaj", prenom: "Mohamed", nom: "BELHAJ", matiere: "Mathématiques", classes: ["6A", "6C", "6T"] },
-];
-
-// Simule les appels Hub (à remplacer)
 async function getEnseignants(): Promise<TeacherEntry[]> {
-  // TODO: return (await hubFetch("/enseignants?etablissement=chaissac")).enseignants;
-  return DEMO_TEACHERS;
+  const data = await hubFetch("/enseignants");
+  return (data.enseignants || []).map((e: any) => ({
+    id: e.id,
+    prenom: e.prenom || "",
+    nom: e.nom || "",
+    matiere: e.matiere || "",
+    classes: e.classes || [],
+  }));
 }
 
 async function checkPinEnseignant(enseignantId: string): Promise<{ hasPin: boolean }> {
-  // TODO: return hubFetch("/enseignants/pin", { method: "POST", body: JSON.stringify({ enseignantId, action: "check" }) });
-  const stored = typeof window !== "undefined" ? localStorage.getItem(`ens_pin_${enseignantId}`) : null;
-  return { hasPin: !!stored };
+  return hubFetch("/enseignants/pin", {
+    method: "POST",
+    body: JSON.stringify({ enseignantId, action: "check" }),
+  });
 }
 
 async function createPinEnseignant(enseignantId: string, pin: string): Promise<{ success: boolean }> {
-  // TODO: return hubFetch("/enseignants/pin", { method: "POST", body: JSON.stringify({ enseignantId, action: "create", pin }) });
-  localStorage.setItem(`ens_pin_${enseignantId}`, pin);
-  return { success: true };
+  return hubFetch("/enseignants/pin", {
+    method: "POST",
+    body: JSON.stringify({ enseignantId, action: "create", pin }),
+  });
 }
 
 async function verifyPinEnseignant(enseignantId: string, pin: string): Promise<{ valid: boolean }> {
-  // TODO: return hubFetch("/enseignants/pin", { method: "POST", body: JSON.stringify({ enseignantId, action: "verify", pin }) });
-  const stored = localStorage.getItem(`ens_pin_${enseignantId}`);
-  return { valid: stored === pin };
+  return hubFetch("/enseignants/pin", {
+    method: "POST",
+    body: JSON.stringify({ enseignantId, action: "verify", pin }),
+  });
 }
-// === FIN DONNÉES DE DÉMO ===
 
 export default function LoginEnseignant({ onLogin, onClose }: LoginEnseignantProps) {
   const [step, setStep] = useState<"search" | "pin">("search");
