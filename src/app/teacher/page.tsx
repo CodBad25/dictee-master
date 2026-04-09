@@ -90,13 +90,6 @@ interface StudentRow {
   level: { name: string; emoji: string };
 }
 
-interface CommonError {
-  word: string;
-  dicteeTitle: string;
-  count: number;
-  wrongAnswers: string[];
-}
-
 // Helper functions
 function getLastName(fullName: string): string {
   if (!fullName) return "";
@@ -181,31 +174,53 @@ export default function TeacherPage() {
         setResults(resultsMap);
       }
 
-      // Charger les erreurs : jointure word_attempts → results pour avoir le dictee_id
+      // Charger les erreurs : jointure word_attempts → results
       const { data: attemptsData } = await supabase
         .from("dm_word_attempts")
         .select("word, user_answer, is_correct, result_id");
 
       if (attemptsData && resultsData) {
-        // Construire un map result_id → dictee_id
-        const resultToDictee: Record<string, string> = {};
+        // Map result_id → { dictee_id, activity_mode, student_name }
+        const resultInfo: Record<string, { dictee_id: string; activity_mode: string; student_name: string }> = {};
         resultsData.forEach((r: any) => {
-          resultToDictee[r.id] = r.dictee_id;
+          resultInfo[r.id] = { dictee_id: r.dictee_id, activity_mode: r.activity_mode, student_name: r.student_name || "" };
         });
 
-        // Agréger les erreurs par (mot, dictee_id)
-        const errorAgg: Record<string, { word: string; dictee_id: string; error_count: number; wrong_answers: string[] }> = {};
+        // Catégoriser les modes
+        const ORTHO_MODES = ["flashcard", "audio", "audio_word", "audio_dictation", "fill_blanks", "spelling_choice"];
+        const GENRE_MODES = ["genre"];
+        const DEF_MODES = ["definitions"];
+        const DICT_MODES = ["dictionary"];
+
+        type ErrorEntry = {
+          word: string; dictee_id: string; category: string;
+          variants: Record<string, { count: number; classes: Set<string> }>;
+          total: number;
+        };
+        const errorAgg: Record<string, ErrorEntry> = {};
+
         attemptsData.filter((a: any) => !a.is_correct).forEach((a: any) => {
-          const dicteeId = resultToDictee[a.result_id];
-          if (!dicteeId) return;
-          const key = `${a.word}-${dicteeId}`;
+          const info = resultInfo[a.result_id];
+          if (!info) return;
+
+          let category = "ortho";
+          if (GENRE_MODES.includes(info.activity_mode)) category = "genre";
+          else if (DEF_MODES.includes(info.activity_mode)) category = "def";
+          else if (DICT_MODES.includes(info.activity_mode)) category = "dict";
+
+          const key = `${category}-${a.word}-${info.dictee_id}`;
           if (!errorAgg[key]) {
-            errorAgg[key] = { word: a.word, dictee_id: dicteeId, error_count: 0, wrong_answers: [] };
+            errorAgg[key] = { word: a.word, dictee_id: info.dictee_id, category, variants: {}, total: 0 };
           }
-          errorAgg[key].error_count++;
-          if (a.user_answer && !errorAgg[key].wrong_answers.includes(a.user_answer)) {
-            errorAgg[key].wrong_answers.push(a.user_answer);
+          errorAgg[key].total++;
+          const variant = a.user_answer || "(vide)";
+          if (!errorAgg[key].variants[variant]) {
+            errorAgg[key].variants[variant] = { count: 0, classes: new Set() };
           }
+          errorAgg[key].variants[variant].count++;
+          // Extraire la classe du nom (ex: "Léo DUPONT" → chercher dans hubStudents)
+          const className = info.student_name.split(" ")[0] || "";
+          if (className) errorAgg[key].variants[variant].classes.add(className);
         });
 
         setWordAttempts(errorAgg);
@@ -406,19 +421,24 @@ export default function TeacherPage() {
   const maxDictees = dictees.length;
 
   // Calculate common errors
-  const getCommonErrors = (): CommonError[] => {
-    return Object.values(wordAttempts).map((wa: any) => {
-      const dictee = dictees.find((d) => d.id === wa.dictee_id);
-      return {
-        word: wa.word,
-        dicteeTitle: dictee?.title || "Dictée ?",
-        count: wa.error_count,
-        wrongAnswers: wa.wrong_answers || [],
-      };
-    }).sort((a, b) => b.count - a.count);
+  const getErrorsByCategory = (category: string) => {
+    return Object.values(wordAttempts)
+      .filter((wa: any) => wa.category === category)
+      .map((wa: any) => {
+        const dictee = dictees.find((d) => d.id === wa.dictee_id);
+        const sortedVariants = Object.entries(wa.variants as Record<string, { count: number; classes: Set<string> }>)
+          .sort(([, a], [, b]) => b.count - a.count);
+        return {
+          word: wa.word,
+          dicteeTitle: dictee?.title || "Dictée ?",
+          total: wa.total,
+          variants: sortedVariants,
+        };
+      })
+      .sort((a, b) => b.total - a.total);
   };
 
-  const commonErrors = getCommonErrors();
+  const [errorTab, setErrorTab] = useState<"ortho" | "genre" | "def" | "dict">("ortho");
 
   return (
     <main className="h-dvh flex flex-col overflow-hidden bg-gray-50">
@@ -775,48 +795,75 @@ export default function TeacherPage() {
         ) : (
           /* Erreurs tab */
           <div className="overflow-y-auto p-4">
-            <h3 className="font-bold text-lg mb-3">Erreurs les plus fréquentes</h3>
-            {commonErrors.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">Aucune erreur enregistrée pour l'instant.</p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs text-gray-500 uppercase border-b">
-                    <th className="py-2 px-3 w-12">#</th>
-                    <th className="py-2 px-3">Mot</th>
-                    <th className="py-2 px-3">Dictée</th>
-                    <th className="py-2 px-3">Réponses incorrectes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {commonErrors.slice(0, 80).map((err, idx) => (
-                    <tr key={idx} className={`border-b border-gray-100 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
-                      <td className="py-2 px-3">
-                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-xs font-bold ${
-                          err.count >= 10 ? "bg-red-500" : err.count >= 5 ? "bg-orange-400" : "bg-yellow-400"
-                        }`}>
-                          {err.count}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 font-semibold text-gray-900">{err.word}</td>
-                      <td className="py-2 px-3 text-gray-500 text-xs">{err.dicteeTitle}</td>
-                      <td className="py-2 px-3">
-                        <div className="flex flex-wrap gap-1">
-                          {err.wrongAnswers.slice(0, 5).map((wa, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-red-50 text-red-600 rounded text-xs line-through">
-                              {wa}
-                            </span>
-                          ))}
-                          {err.wrongAnswers.length > 5 && (
-                            <span className="px-2 py-0.5 text-gray-400 text-xs">+{err.wrongAnswers.length - 5}</span>
-                          )}
-                        </div>
-                      </td>
+            {/* Onglets par type */}
+            <div className="flex gap-2 mb-4">
+              {([
+                { key: "ortho" as const, label: "✏️ Orthographe", desc: "Flashcard, audio, dictée" },
+                { key: "genre" as const, label: "🏷️ Genre", desc: "Articles" },
+                { key: "def" as const, label: "📖 Définitions", desc: "Associations" },
+                { key: "dict" as const, label: "📚 Dictionnaire", desc: "Classes grammaticales" },
+              ]).map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setErrorTab(t.key)}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                    errorTab === t.key
+                      ? "bg-purple-600 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tableau d'erreurs */}
+            {(() => {
+              const errors = getErrorsByCategory(errorTab);
+              if (errors.length === 0) return (
+                <p className="text-gray-400 text-center py-8">Aucune erreur dans cette catégorie.</p>
+              );
+              return (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-gray-500 uppercase border-b">
+                      <th className="py-2 px-3 w-12">#</th>
+                      <th className="py-2 px-3">Mot attendu</th>
+                      <th className="py-2 px-3">Dictée</th>
+                      <th className="py-2 px-3">Réponses des élèves</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  </thead>
+                  <tbody>
+                    {errors.slice(0, 80).map((err, idx) => (
+                      <tr key={idx} className={`border-b border-gray-100 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
+                        <td className="py-2 px-3">
+                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-xs font-bold ${
+                            err.total >= 10 ? "bg-red-500" : err.total >= 5 ? "bg-orange-400" : "bg-yellow-400"
+                          }`}>
+                            {err.total}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 font-semibold text-gray-900">{err.word}</td>
+                        <td className="py-2 px-3 text-gray-500 text-xs">{err.dicteeTitle}</td>
+                        <td className="py-2 px-3">
+                          <div className="flex flex-wrap gap-1.5">
+                            {err.variants.slice(0, 6).map(([variant, info], i) => (
+                              <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-100 text-red-700 rounded-lg text-xs">
+                                <span className="line-through">{variant}</span>
+                                <span className="font-bold text-red-500">×{(info as any).count}</span>
+                              </span>
+                            ))}
+                            {err.variants.length > 6 && (
+                              <span className="px-2 py-0.5 text-gray-400 text-xs">+{err.variants.length - 6}</span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              );
+            })()}
           </div>
         )}
       </div>
