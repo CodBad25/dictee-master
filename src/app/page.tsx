@@ -159,7 +159,7 @@ export default function HomePage() {
           Avec tous mes remerciements à Mme Manaï pour sa collaboration,
         </p>
         <p className="text-[11px] text-gray-400">
-          et à Mmes Arrivé et Bousseau pour leurs documents.
+          et à Mmes Arrivé et Bousseau pour leurs documents et retours précieux.
         </p>
         <a href="/admin" className="text-[10px] text-gray-300 hover:text-gray-500 transition-colors">
           Administration
