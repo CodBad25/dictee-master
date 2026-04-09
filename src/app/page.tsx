@@ -145,13 +145,22 @@ export default function HomePage() {
         </Card>
       </motion.div>
 
-      {/* Footer */}
+      {/* Footer — crédits */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.5 }}
-        className="mt-12 text-center"
+        className="mt-12 text-center space-y-1"
       >
+        <p className="text-xs text-gray-500">
+          Développé par <span className="font-semibold text-purple-600">M. Belhaj</span> — Collège Chaissac, Pouzauges
+        </p>
+        <p className="text-[11px] text-gray-400">
+          Avec tous mes remerciements à Mme Manaï pour sa collaboration,
+        </p>
+        <p className="text-[11px] text-gray-400">
+          et à Mmes Arrivé et Bousseau pour leurs documents.
+        </p>
         <a href="/admin" className="text-[10px] text-gray-300 hover:text-gray-500 transition-colors">
           Administration
         </a>
