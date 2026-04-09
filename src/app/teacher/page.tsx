@@ -419,6 +419,7 @@ export default function TeacherPage() {
 
   // Calculate common errors
   const getErrorsByCategory = (category: string) => {
+    if (!wordAttempts || Object.keys(wordAttempts).length === 0) return [];
     return Object.values(wordAttempts)
       .filter((wa: any) => wa.category === category)
       .map((wa: any) => {
@@ -436,6 +437,7 @@ export default function TeacherPage() {
   };
 
   const [errorTab, setErrorTab] = useState<"ortho" | "genre" | "def" | "dict">("ortho");
+  const currentErrors = getErrorsByCategory(errorTab);
 
   return (
     <main className="h-dvh flex flex-col overflow-hidden bg-gray-50">
@@ -815,52 +817,48 @@ export default function TeacherPage() {
             </div>
 
             {/* Tableau d'erreurs */}
-            {(() => {
-              const errors = getErrorsByCategory(errorTab);
-              if (errors.length === 0) return (
-                <p className="text-gray-400 text-center py-8">Aucune erreur dans cette catégorie.</p>
-              );
-              return (
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-xs text-gray-500 uppercase border-b">
-                      <th className="py-2 px-3 w-12">#</th>
-                      <th className="py-2 px-3">Mot attendu</th>
-                      <th className="py-2 px-3">Dictée</th>
-                      <th className="py-2 px-3">Réponses des élèves</th>
+            {currentErrors.length === 0 ? (
+              <p className="text-gray-400 text-center py-8">Aucune erreur dans cette catégorie.</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-gray-500 uppercase border-b">
+                    <th className="py-2 px-3 w-12">#</th>
+                    <th className="py-2 px-3">Mot attendu</th>
+                    <th className="py-2 px-3">Dictée</th>
+                    <th className="py-2 px-3">Réponses des élèves</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentErrors.slice(0, 80).map((err, idx) => (
+                    <tr key={idx} className={`border-b border-gray-100 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
+                      <td className="py-2 px-3">
+                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-xs font-bold ${
+                          err.total >= 10 ? "bg-red-500" : err.total >= 5 ? "bg-orange-400" : "bg-yellow-400"
+                        }`}>
+                          {err.total}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 font-semibold text-gray-900">{err.word}</td>
+                      <td className="py-2 px-3 text-gray-500 text-xs">{err.dicteeTitle}</td>
+                      <td className="py-2 px-3">
+                        <div className="flex flex-wrap gap-1.5">
+                          {err.variants.slice(0, 6).map(([variant, info], i) => (
+                            <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-100 text-red-700 rounded-lg text-xs">
+                              <span className="line-through">{variant}</span>
+                              <span className="font-bold text-red-500">×{info.count}</span>
+                            </span>
+                          ))}
+                          {err.variants.length > 6 && (
+                            <span className="px-2 py-0.5 text-gray-400 text-xs">+{err.variants.length - 6}</span>
+                          )}
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {errors.slice(0, 80).map((err, idx) => (
-                      <tr key={idx} className={`border-b border-gray-100 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
-                        <td className="py-2 px-3">
-                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-xs font-bold ${
-                            err.total >= 10 ? "bg-red-500" : err.total >= 5 ? "bg-orange-400" : "bg-yellow-400"
-                          }`}>
-                            {err.total}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 font-semibold text-gray-900">{err.word}</td>
-                        <td className="py-2 px-3 text-gray-500 text-xs">{err.dicteeTitle}</td>
-                        <td className="py-2 px-3">
-                          <div className="flex flex-wrap gap-1.5">
-                            {err.variants.slice(0, 6).map(([variant, info], i) => (
-                              <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-100 text-red-700 rounded-lg text-xs">
-                                <span className="line-through">{variant}</span>
-                                <span className="font-bold text-red-500">×{info.count}</span>
-                              </span>
-                            ))}
-                            {err.variants.length > 6 && (
-                              <span className="px-2 py-0.5 text-gray-400 text-xs">+{err.variants.length - 6}</span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              );
-            })()}
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </div>
