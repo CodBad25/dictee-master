@@ -25,7 +25,51 @@ import {
 } from "@/lib/gamification";
 import BilanPreview from "@/components/bilan-preview";
 import AdminBugs from "@/components/admin-bugs";
+import ParcoursConfig from "@/components/parcours-config";
+import GuidedTour, { shouldShowTour, type TourStep } from "@/components/guided-tour";
 import type { DicteeResult } from "@/lib/dictee-service";
+import { loadStudentsWithOverrides } from "@/lib/dictee-service";
+
+const PARCOURS_TOUR_STEPS: TourStep[] = [
+  {
+    target: "class-tabs",
+    title: "Bienvenue sur DictéeMaster !",
+    description: "Sélectionnez une classe pour commencer. Chaque classe a ses propres réglages.",
+    position: "bottom",
+  },
+  {
+    target: "lock-bar",
+    title: "Gérez vos dictées",
+    description: "Cliquez sur un numéro pour verrouiller ou déverrouiller une dictée pour vos élèves.",
+    position: "bottom",
+  },
+  {
+    target: "parcours-config-button",
+    title: "Nouveau : le bouton Parcours",
+    description: "Personnalisez l'ordre des exercices et choisissez les mots travaillés dans chaque dictée.",
+    position: "bottom",
+  },
+  {
+    target: "default-order-section",
+    title: "Réordonnez les exercices",
+    description: "Glissez-déposez pour changer l'ordre. Le toggle à droite active ou désactive un exercice pour toute la classe.",
+    position: "right",
+    clickBefore: "parcours-config-button",
+  },
+  {
+    target: "dictee-selector",
+    title: "Personnalisez par dictée",
+    description: "Cliquez sur un numéro de dictée pour adapter le parcours spécifiquement : ordre des exercices ET sélection des mots.",
+    position: "top",
+  },
+  {
+    target: "word-toggle-grid",
+    title: "Choisissez les mots",
+    description: "Cliquez sur un mot pour l'activer ou le désactiver. Les mots désactivés ne seront pas travaillés dans les exercices. Utilisez « Tous » ou « Aucun » pour aller plus vite.",
+    position: "top",
+    clickBefore: "dictee-first-button",
+  },
+];
 
 // Interfaces
 interface Dictee {
@@ -106,6 +150,9 @@ export default function TeacherPage() {
   const [tab, setTab] = useState<"tableau" | "erreurs">("tableau");
   const [showBilan, setShowBilan] = useState(false);
   const [showBugs, setShowBugs] = useState(false);
+  const [showParcours, setShowParcours] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+  const [studentsWithOverrides, setStudentsWithOverrides] = useState<Set<string>>(new Set());
   const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
     null
   );
@@ -189,8 +236,24 @@ export default function TeacherPage() {
       if (dmClassData) {
         setDmClassId(dmClassData.id);
         setUnlockedPos(dmClassData.unlocked_dictees || [1]);
+        loadStudentsWithOverrides(dmClassData.id).then(setStudentsWithOverrides).catch(() => {});
       } else {
-        setDmClassId(null);
+        // Auto-créer la classe si elle n'existe pas
+        const { data: newClass } = await supabase
+          .from("dm_classes")
+          .insert({
+            teacher_id: "teacher",
+            name: className,
+            unlocked_dictees: [1],
+            default_activity_order: ["flashcard", "genre", "spelling_choice", "definitions", "dictionary", "audio_word", "fill_blanks", "audio_dictation"],
+          })
+          .select()
+          .single();
+        if (newClass) {
+          setDmClassId(newClass.id);
+        } else {
+          setDmClassId(null);
+        }
         setUnlockedPos([1]);
       }
     } catch (error) {
@@ -243,6 +306,7 @@ export default function TeacherPage() {
       await loadData();
       await loadHub();
       setLoading(false);
+      if (shouldShowTour("parcours")) setShowTour(true);
     };
 
     init();
@@ -356,7 +420,7 @@ export default function TeacherPage() {
     <main className="h-dvh flex flex-col overflow-hidden bg-gray-50">
       {/* Header - Purple bar */}
       <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-3 flex items-center justify-between z-20">
-        <div className="flex items-center gap-3">
+        <div data-tour="class-tabs" className="flex items-center gap-3">
           {hubClasses.map((hc) => (
             <button
               key={hc.id}
@@ -401,7 +465,13 @@ export default function TeacherPage() {
             {anon.active ? "🔓 Démasquer" : "🎭 Anonymiser"}
           </button>
           <button
-            onClick={() => router.push("/")}
+            onClick={() => {
+              localStorage.removeItem("dictee_master_teacher");
+              localStorage.removeItem("dictee_master_teacher_pwd");
+              useAppStore.getState().setUser(null);
+              useAppStore.getState().setConnectedEleve(null);
+              router.push("/");
+            }}
             className="px-3 py-1 rounded text-sm bg-red-500 hover:bg-red-600"
           >
             Quitter
@@ -410,7 +480,7 @@ export default function TeacherPage() {
       </div>
 
       {/* Lock bar */}
-      <div className="bg-gray-50 border-b px-4 py-3 flex items-center gap-2 overflow-x-auto flex-shrink-0">
+      <div data-tour="lock-bar" className="bg-gray-50 border-b px-4 py-3 flex items-center gap-2 overflow-x-auto flex-shrink-0">
         <div className="flex items-center gap-2 flex-1">
           {Array.from({ length: 26 }).map((_, i) => {
             const pos = i + 1;
@@ -431,6 +501,19 @@ export default function TeacherPage() {
           })}
         </div>
         <div className="flex items-center gap-2 ml-4">
+          <button
+            data-tour="parcours-config-button"
+            onClick={() => {
+              if (!dmClassId) {
+                toast.error("Sélectionnez d'abord une classe");
+                return;
+              }
+              setShowParcours(true);
+            }}
+            className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600"
+          >
+            🎯 Parcours
+          </button>
           <button
             onClick={() => setShowBilan(true)}
             className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
@@ -500,6 +583,9 @@ export default function TeacherPage() {
                             <span>
                               {(row.name || "").split(" ")[0]} {row.lastName?.[0] || ""}.
                             </span>
+                          )}
+                          {studentsWithOverrides.has(row.id) && (
+                            <span title="Parcours personnalisé" className="text-purple-500 text-xs">🎯</span>
                           )}
                         </div>
                       </td>
@@ -713,8 +799,23 @@ export default function TeacherPage() {
         )}
       </div>
 
+      {/* GuidedTour */}
+      {showTour && <GuidedTour tourId="parcours" steps={PARCOURS_TOUR_STEPS} onComplete={() => { setShowTour(false); setShowParcours(false); }} />}
+
       {/* Admin Bugs Modal */}
       <AdminBugs open={showBugs} onClose={() => setShowBugs(false)} />
+
+      {/* Parcours Config Modal */}
+      {showParcours && dmClassId !== null && dmClassId !== "" && (
+        <ParcoursConfig
+          open={showParcours}
+          onClose={() => { setShowParcours(false); if (dmClassId) loadStudentsWithOverrides(dmClassId).then(setStudentsWithOverrides).catch(() => {}); }}
+          dmClassId={dmClassId}
+          className={selectedClasseName}
+          dictees={dictees.map(d => ({ id: d.id, title: d.title, position: d.position }))}
+          students={studentRows.map(s => ({ id: s.id, name: s.name }))}
+        />
+      )}
 
       {/* Bilan Preview Modal */}
       {showBilan && (
