@@ -223,6 +223,16 @@ export default function StudentPage() {
           <div className="flex items-center gap-1 text-[13px] font-bold text-purple-600">
             <Star className="w-4 h-4" /> {badges.length}
           </div>
+          {typeof window !== "undefined" && localStorage.getItem("dictee_master_teacher") === "true" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/teacher")}
+              className="text-xs text-purple-600 hover:bg-purple-50"
+            >
+              ← Retour prof
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
