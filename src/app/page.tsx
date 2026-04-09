@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { BookOpen, GraduationCap, Sparkles } from "lucide-react";
+import { BookOpen, GraduationCap, Sparkles, Eye } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useAppStore } from "@/lib/store";
 import LoginEleve from "@/components/login-eleve";
 import LoginTeacher from "@/components/login-teacher";
+import LoginEnseignant, { type ConnectedEnseignant } from "@/components/login-enseignant";
 import type { ConnectedEleve } from "@/lib/hub";
 
 export default function HomePage() {
@@ -15,6 +16,7 @@ export default function HomePage() {
   const { setUser, setConnectedEleve } = useAppStore();
   const connectedEleve = useAppStore((s) => s.connectedEleve);
   const [showLogin, setShowLogin] = useState(false);
+  const [showVisitorLogin, setShowVisitorLogin] = useState(false);
   const [showTeacherLogin, setShowTeacherLogin] = useState(false);
 
   useEffect(() => {
@@ -31,10 +33,21 @@ export default function HomePage() {
     }
   }, [router]);
 
-  const handleTeacherLogin = () => {
+  // Visiteur : ancien mode enseignant (mot de passe partagé, données démo)
+  const handleVisitorLogin = () => {
     setUser({
-      id: "teacher",
-      name: "Enseignant(e)",
+      id: "visitor",
+      name: "Visiteur",
+      role: "teacher",
+    });
+    router.push("/teacher");
+  };
+
+  // Enseignant authentifié via le Hub
+  const handleTeacherLogin = (enseignant: ConnectedEnseignant) => {
+    setUser({
+      id: enseignant.enseignantId,
+      name: `${enseignant.prenom} ${enseignant.nom}`,
       role: "teacher",
     });
     router.push("/teacher");
@@ -52,9 +65,18 @@ export default function HomePage() {
 
   if (showTeacherLogin) {
     return (
-      <LoginTeacher
+      <LoginEnseignant
         onLogin={handleTeacherLogin}
         onClose={() => setShowTeacherLogin(false)}
+      />
+    );
+  }
+
+  if (showVisitorLogin) {
+    return (
+      <LoginTeacher
+        onLogin={handleVisitorLogin}
+        onClose={() => setShowVisitorLogin(false)}
       />
     );
   }
@@ -120,7 +142,7 @@ export default function HomePage() {
             <div className="flex-1">
               <h2 className="font-semibold text-lg">Enseignant(e)</h2>
               <p className="text-sm text-muted-foreground">
-                Créer des listes et suivre les élèves
+                Suivre mes élèves et personnaliser le parcours
               </p>
             </div>
           </div>
@@ -139,6 +161,24 @@ export default function HomePage() {
               <h2 className="font-semibold text-lg">Élève</h2>
               <p className="text-sm text-muted-foreground">
                 S&apos;entraîner et gagner des badges
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Bouton Visiteur */}
+        <Card
+          className="p-4 cursor-pointer hover:shadow-md transition-all duration-300 hover:scale-[1.01] border hover:border-gray-300"
+          onClick={() => setShowVisitorLogin(true)}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+              <Eye className="w-5 h-5 text-gray-500" />
+            </div>
+            <div className="flex-1">
+              <h2 className="font-medium text-sm text-gray-700">Visiteur / Démo</h2>
+              <p className="text-xs text-muted-foreground">
+                Découvrir l&apos;application avec des données fictives
               </p>
             </div>
           </div>
