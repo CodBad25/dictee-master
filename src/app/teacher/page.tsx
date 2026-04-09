@@ -25,51 +25,7 @@ import {
 } from "@/lib/gamification";
 import BilanPreview from "@/components/bilan-preview";
 import AdminBugs from "@/components/admin-bugs";
-import ParcoursConfig from "@/components/parcours-config";
-import GuidedTour, { shouldShowTour, type TourStep } from "@/components/guided-tour";
 import type { DicteeResult } from "@/lib/dictee-service";
-import { loadStudentsWithOverrides } from "@/lib/dictee-service";
-
-const PARCOURS_TOUR_STEPS: TourStep[] = [
-  {
-    target: "class-tabs",
-    title: "Bienvenue sur DictéeMaster !",
-    description: "Sélectionnez une classe pour commencer. Chaque classe a ses propres réglages.",
-    position: "bottom",
-  },
-  {
-    target: "lock-bar",
-    title: "Gérez vos dictées",
-    description: "Cliquez sur un numéro pour verrouiller ou déverrouiller une dictée pour vos élèves.",
-    position: "bottom",
-  },
-  {
-    target: "parcours-config-button",
-    title: "Nouveau : le bouton Parcours",
-    description: "Personnalisez l'ordre des exercices et choisissez les mots travaillés dans chaque dictée.",
-    position: "bottom",
-  },
-  {
-    target: "default-order-section",
-    title: "Réordonnez les exercices",
-    description: "Glissez-déposez pour changer l'ordre. Le toggle à droite active ou désactive un exercice pour toute la classe.",
-    position: "right",
-    clickBefore: "parcours-config-button",
-  },
-  {
-    target: "dictee-selector",
-    title: "Personnalisez par dictée",
-    description: "Cliquez sur un numéro de dictée pour adapter le parcours spécifiquement : ordre des exercices ET sélection des mots.",
-    position: "top",
-  },
-  {
-    target: "word-toggle-grid",
-    title: "Choisissez les mots",
-    description: "Cliquez sur un mot pour l'activer ou le désactiver. Les mots désactivés ne seront pas travaillés dans les exercices. Utilisez « Tous » ou « Aucun » pour aller plus vite.",
-    position: "top",
-    clickBefore: "dictee-first-button",
-  },
-];
 
 // Interfaces
 interface Dictee {
@@ -88,6 +44,13 @@ interface StudentRow {
   note20: number;
   xp: number;
   level: { name: string; emoji: string };
+}
+
+interface CommonError {
+  word: string;
+  dicteeTitle: string;
+  count: number;
+  wrongAnswers: string[];
 }
 
 // Helper functions
@@ -143,9 +106,6 @@ export default function TeacherPage() {
   const [tab, setTab] = useState<"tableau" | "erreurs">("tableau");
   const [showBilan, setShowBilan] = useState(false);
   const [showBugs, setShowBugs] = useState(false);
-  const [showParcours, setShowParcours] = useState(false);
-  const [showTour, setShowTour] = useState(false);
-  const [studentsWithOverrides, setStudentsWithOverrides] = useState<Set<string>>(new Set());
   const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
     null
   );
@@ -229,24 +189,8 @@ export default function TeacherPage() {
       if (dmClassData) {
         setDmClassId(dmClassData.id);
         setUnlockedPos(dmClassData.unlocked_dictees || [1]);
-        loadStudentsWithOverrides(dmClassData.id).then(setStudentsWithOverrides).catch(() => {});
       } else {
-        // Auto-créer la classe si elle n'existe pas
-        const { data: newClass } = await supabase
-          .from("dm_classes")
-          .insert({
-            teacher_id: "teacher",
-            name: className,
-            unlocked_dictees: [1],
-            default_activity_order: ["flashcard", "genre", "spelling_choice", "definitions", "dictionary", "audio_word", "fill_blanks", "audio_dictation"],
-          })
-          .select()
-          .single();
-        if (newClass) {
-          setDmClassId(newClass.id);
-        } else {
-          setDmClassId(null);
-        }
+        setDmClassId(null);
         setUnlockedPos([1]);
       }
     } catch (error) {
@@ -299,7 +243,6 @@ export default function TeacherPage() {
       await loadData();
       await loadHub();
       setLoading(false);
-      if (shouldShowTour("parcours")) setShowTour(true);
     };
 
     init();
@@ -380,58 +323,40 @@ export default function TeacherPage() {
   const studentRows = getStudentRows();
   const maxDictees = dictees.length;
 
-  // Onglet actif dans le tab erreurs
-  const [errorTab, setErrorTab] = useState<"ortho" | "genre" | "def" | "dict">("ortho");
+  // Calculate common errors
+  const getCommonErrors = (): CommonError[] => {
+    const errorMap: Record<string, CommonError> = {};
 
-  // Catégories de modes
-  const ORTHO_MODES = ["flashcard", "audio", "audio_word", "audio_dictation", "fill_blanks", "spelling_choice"];
-  const GENRE_MODES = ["genre"];
-  const DEF_MODES = ["definitions"];
-  const DICT_MODES = ["dictionary"];
-
-  // Agréger les erreurs par catégorie à partir des données brutes
-  const getErrorsByCategory = (category: string): { word: string; dicteeTitle: string; total: number; variants: [string, number][] }[] => {
-    const targetModes = category === "genre" ? GENRE_MODES : category === "def" ? DEF_MODES : category === "dict" ? DICT_MODES : ORTHO_MODES;
-
-    // Map result_id → { dictee_id, activity_mode }
-    const resultInfo: Record<string, { dictee_id: string; activity_mode: string }> = {};
-    Object.values(results).forEach((r: any) => {
-      resultInfo[r.id] = { dictee_id: r.dictee_id, activity_mode: r.activity_mode };
-    });
-
-    // Agréger les erreurs
-    const agg: Record<string, { word: string; dictee_id: string; total: number; variants: Record<string, number> }> = {};
     Object.values(wordAttempts).forEach((wa: any) => {
-      if (wa.is_correct) return;
-      const info = resultInfo[wa.result_id];
-      if (!info || !targetModes.includes(info.activity_mode)) return;
+      const word = wa.word || "?";
+      const dictee = dictees.find((d) => d.id === wa.dictee_id);
+      const key = `${word}-${wa.dictee_id}`;
 
-      const key = `${wa.word}-${info.dictee_id}`;
-      if (!agg[key]) {
-        agg[key] = { word: wa.word, dictee_id: info.dictee_id, total: 0, variants: {} };
+      if (!errorMap[key]) {
+        errorMap[key] = {
+          word,
+          dicteeTitle: dictee?.title || "Dictée ?",
+          count: 0,
+          wrongAnswers: [],
+        };
       }
-      agg[key].total++;
-      const variant = wa.user_answer || "(vide)";
-      agg[key].variants[variant] = (agg[key].variants[variant] || 0) + 1;
+
+      errorMap[key].count += wa.error_count || 0;
+      if (wa.wrong_answers && !errorMap[key].wrongAnswers.includes(wa.wrong_answers)) {
+        errorMap[key].wrongAnswers.push(wa.wrong_answers);
+      }
     });
 
-    return Object.values(agg)
-      .map(e => ({
-        word: e.word,
-        dicteeTitle: dictees.find(d => d.id === e.dictee_id)?.title || "?",
-        total: e.total,
-        variants: Object.entries(e.variants).sort(([, a], [, b]) => b - a),
-      }))
-      .sort((a, b) => b.total - a.total);
+    return Object.values(errorMap).sort((a, b) => b.count - a.count);
   };
 
-  const currentErrors = getErrorsByCategory(errorTab);
+  const commonErrors = getCommonErrors();
 
   return (
     <main className="h-dvh flex flex-col overflow-hidden bg-gray-50">
       {/* Header - Purple bar */}
       <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-3 flex items-center justify-between z-20">
-        <div data-tour="class-tabs" className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
           {hubClasses.map((hc) => (
             <button
               key={hc.id}
@@ -476,13 +401,7 @@ export default function TeacherPage() {
             {anon.active ? "🔓 Démasquer" : "🎭 Anonymiser"}
           </button>
           <button
-            onClick={() => {
-              localStorage.removeItem("dictee_master_teacher");
-              localStorage.removeItem("dictee_master_teacher_pwd");
-              useAppStore.getState().setUser(null);
-              useAppStore.getState().setConnectedEleve(null);
-              router.push("/");
-            }}
+            onClick={() => router.push("/")}
             className="px-3 py-1 rounded text-sm bg-red-500 hover:bg-red-600"
           >
             Quitter
@@ -491,7 +410,7 @@ export default function TeacherPage() {
       </div>
 
       {/* Lock bar */}
-      <div data-tour="lock-bar" className="bg-gray-50 border-b px-4 py-3 flex items-center gap-2 overflow-x-auto flex-shrink-0">
+      <div className="bg-gray-50 border-b px-4 py-3 flex items-center gap-2 overflow-x-auto flex-shrink-0">
         <div className="flex items-center gap-2 flex-1">
           {Array.from({ length: 26 }).map((_, i) => {
             const pos = i + 1;
@@ -512,19 +431,6 @@ export default function TeacherPage() {
           })}
         </div>
         <div className="flex items-center gap-2 ml-4">
-          <button
-            data-tour="parcours-config-button"
-            onClick={() => {
-              if (!dmClassId) {
-                toast.error("Sélectionnez d'abord une classe");
-                return;
-              }
-              setShowParcours(true);
-            }}
-            className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600"
-          >
-            🎯 Parcours
-          </button>
           <button
             onClick={() => setShowBilan(true)}
             className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
@@ -594,9 +500,6 @@ export default function TeacherPage() {
                             <span>
                               {(row.name || "").split(" ")[0]} {row.lastName?.[0] || ""}.
                             </span>
-                          )}
-                          {studentsWithOverrides.has(row.id) && (
-                            <span title="Parcours personnalisé" className="text-purple-500 text-xs">🎯</span>
                           )}
                         </div>
                       </td>
@@ -782,92 +685,36 @@ export default function TeacherPage() {
         ) : (
           /* Erreurs tab */
           <div className="overflow-y-auto p-4">
-            {/* Onglets par type */}
-            <div className="flex gap-2 mb-4">
-              {([
-                { key: "ortho" as const, label: "✏️ Orthographe" },
-                { key: "genre" as const, label: "🏷️ Genre" },
-                { key: "def" as const, label: "📖 Définitions" },
-                { key: "dict" as const, label: "📚 Dictionnaire" },
-              ]).map(t => (
-                <button
-                  key={t.key}
-                  onClick={() => setErrorTab(t.key)}
-                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    errorTab === t.key
-                      ? "bg-purple-600 text-white shadow-sm"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+            <h3 className="font-bold text-lg mb-4">Erreurs les plus fréquentes</h3>
+            <div className="grid grid-cols-3 gap-4">
+              {commonErrors.slice(0, 50).map((err, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white border rounded-lg p-4 shadow-sm"
                 >
-                  {t.label}
-                </button>
+                  <div className="inline-block bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold mb-2">
+                    {err.count}
+                  </div>
+                  <p className="font-bold text-lg mb-1">{err.word}</p>
+                  <p className="text-xs text-gray-500 mb-2">
+                    {err.dicteeTitle}
+                  </p>
+                  <div className="space-y-1">
+                    {err.wrongAnswers.slice(0, 3).map((wa, i) => (
+                      <p key={i} className="text-xs text-gray-600 line-through">
+                        {wa}
+                      </p>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
-
-            {/* Tableau d'erreurs */}
-            {currentErrors.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">Aucune erreur dans cette catégorie.</p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs text-gray-500 uppercase border-b">
-                    <th className="py-2 px-3 w-12">#</th>
-                    <th className="py-2 px-3">Mot attendu</th>
-                    <th className="py-2 px-3">Dictée</th>
-                    <th className="py-2 px-3">Réponses des élèves</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentErrors.slice(0, 80).map((err, idx) => (
-                    <tr key={idx} className={`border-b border-gray-100 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
-                      <td className="py-2 px-3">
-                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-xs font-bold ${
-                          err.total >= 10 ? "bg-red-500" : err.total >= 5 ? "bg-orange-400" : "bg-yellow-400"
-                        }`}>
-                          {err.total}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 font-semibold text-gray-900">{err.word}</td>
-                      <td className="py-2 px-3 text-gray-500 text-xs">{err.dicteeTitle}</td>
-                      <td className="py-2 px-3">
-                        <div className="flex flex-wrap gap-1.5">
-                          {err.variants.slice(0, 6).map(([variant, count], i) => (
-                            <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-100 text-red-700 rounded-lg text-xs">
-                              <span className="line-through">{variant}</span>
-                              <span className="font-bold text-red-500">×{count}</span>
-                            </span>
-                          ))}
-                          {err.variants.length > 6 && (
-                            <span className="px-2 py-0.5 text-gray-400 text-xs">+{err.variants.length - 6}</span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
           </div>
         )}
       </div>
 
-      {/* GuidedTour */}
-      {showTour && <GuidedTour tourId="parcours" steps={PARCOURS_TOUR_STEPS} onComplete={() => { setShowTour(false); setShowParcours(false); }} />}
-
       {/* Admin Bugs Modal */}
       <AdminBugs open={showBugs} onClose={() => setShowBugs(false)} />
-
-      {/* Parcours Config Modal */}
-      {showParcours && dmClassId !== null && dmClassId !== "" && (
-        <ParcoursConfig
-          open={showParcours}
-          onClose={() => { setShowParcours(false); if (dmClassId) loadStudentsWithOverrides(dmClassId).then(setStudentsWithOverrides).catch(() => {}); }}
-          dmClassId={dmClassId}
-          className={selectedClasseName}
-          dictees={dictees.map(d => ({ id: d.id, title: d.title, position: d.position }))}
-          students={studentRows.map(s => ({ id: s.id, name: s.name }))}
-        />
-      )}
 
       {/* Bilan Preview Modal */}
       {showBilan && (
