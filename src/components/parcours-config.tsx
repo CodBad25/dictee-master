@@ -53,6 +53,7 @@ export default function ParcoursConfig({
 
   // Mode : classe entière ou élève spécifique
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [showStudentList, setShowStudentList] = useState(false);
 
   // Dictée sélectionnée
   const [selectedDicteeId, setSelectedDicteeId] = useState<string | null>(null);
@@ -253,33 +254,57 @@ export default function ParcoursConfig({
 
         {/* Sélecteur : classe entière ou élève */}
         {students.length > 0 && (
-          <div className="px-5 py-3 border-b bg-gray-50 flex items-center gap-3 flex-wrap">
-            <span className="text-sm font-semibold text-gray-600">Configurer pour :</span>
-            <motion.button
-              onClick={() => { setSelectedStudentId(null); setSelectedDicteeId(null); }}
-              whileTap={{ scale: 0.95 }}
-              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                !selectedStudentId
-                  ? "bg-purple-600 text-white shadow-sm"
-                  : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300"
-              }`}
-            >
-              Toute la classe
-            </motion.button>
-            {students.map(s => (
+          <div className="px-5 py-3 border-b bg-gray-50">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-semibold text-gray-600">Configurer pour :</span>
               <motion.button
-                key={s.id}
-                onClick={() => { setSelectedStudentId(s.id); setSelectedDicteeId(null); }}
+                onClick={() => { setSelectedStudentId(null); setShowStudentList(false); setSelectedDicteeId(null); }}
                 whileTap={{ scale: 0.95 }}
                 className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                  selectedStudentId === s.id
+                  !selectedStudentId && !showStudentList
                     ? "bg-purple-600 text-white shadow-sm"
                     : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300"
                 }`}
               >
-                {s.name}
+                Toute la classe
               </motion.button>
-            ))}
+              <motion.button
+                onClick={() => setShowStudentList(!showStudentList)}
+                whileTap={{ scale: 0.95 }}
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                  selectedStudentId || showStudentList
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300"
+                }`}
+              >
+                🎯 Un élève {selectedStudentId ? `(${students.find(s => s.id === selectedStudentId)?.name})` : ""}
+              </motion.button>
+            </div>
+            <AnimatePresence>
+              {showStudentList && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex flex-wrap gap-2 mt-3 overflow-hidden"
+                >
+                  {students.map(s => (
+                    <motion.button
+                      key={s.id}
+                      onClick={() => { setSelectedStudentId(s.id); setSelectedDicteeId(null); }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                        selectedStudentId === s.id
+                          ? "bg-purple-600 text-white shadow-sm"
+                          : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300"
+                      }`}
+                    >
+                      {s.name}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
 
