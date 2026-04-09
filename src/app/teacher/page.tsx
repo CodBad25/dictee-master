@@ -775,30 +775,48 @@ export default function TeacherPage() {
         ) : (
           /* Erreurs tab */
           <div className="overflow-y-auto p-4">
-            <h3 className="font-bold text-lg mb-4">Erreurs les plus fréquentes</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {commonErrors.slice(0, 50).map((err, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white border rounded-lg p-4 shadow-sm"
-                >
-                  <div className="inline-block bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold mb-2">
-                    {err.count}
-                  </div>
-                  <p className="font-bold text-lg mb-1">{err.word}</p>
-                  <p className="text-xs text-gray-500 mb-2">
-                    {err.dicteeTitle}
-                  </p>
-                  <div className="space-y-1">
-                    {err.wrongAnswers.slice(0, 3).map((wa, i) => (
-                      <p key={i} className="text-xs text-gray-600 line-through">
-                        {wa}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <h3 className="font-bold text-lg mb-3">Erreurs les plus fréquentes</h3>
+            {commonErrors.length === 0 ? (
+              <p className="text-gray-400 text-center py-8">Aucune erreur enregistrée pour l'instant.</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-gray-500 uppercase border-b">
+                    <th className="py-2 px-3 w-12">#</th>
+                    <th className="py-2 px-3">Mot</th>
+                    <th className="py-2 px-3">Dictée</th>
+                    <th className="py-2 px-3">Réponses incorrectes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {commonErrors.slice(0, 80).map((err, idx) => (
+                    <tr key={idx} className={`border-b border-gray-100 ${idx % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
+                      <td className="py-2 px-3">
+                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-white text-xs font-bold ${
+                          err.count >= 10 ? "bg-red-500" : err.count >= 5 ? "bg-orange-400" : "bg-yellow-400"
+                        }`}>
+                          {err.count}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 font-semibold text-gray-900">{err.word}</td>
+                      <td className="py-2 px-3 text-gray-500 text-xs">{err.dicteeTitle}</td>
+                      <td className="py-2 px-3">
+                        <div className="flex flex-wrap gap-1">
+                          {err.wrongAnswers.slice(0, 5).map((wa, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-red-50 text-red-600 rounded text-xs line-through">
+                              {wa}
+                            </span>
+                          ))}
+                          {err.wrongAnswers.length > 5 && (
+                            <span className="px-2 py-0.5 text-gray-400 text-xs">+{err.wrongAnswers.length - 5}</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </div>
