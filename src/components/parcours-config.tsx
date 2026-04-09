@@ -32,6 +32,7 @@ interface ParcoursConfigProps {
   dmClassId: string;
   className: string;
   dictees: { id: string; title: string; position: number }[];
+  students?: { id: string; name: string }[];
 }
 
 export default function ParcoursConfig({
@@ -40,6 +41,7 @@ export default function ParcoursConfig({
   dmClassId,
   className,
   dictees,
+  students = [],
 }: ParcoursConfigProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -48,6 +50,9 @@ export default function ParcoursConfig({
   const [defaultOrder, setDefaultOrder] = useState<string[]>(ALL_ACTIVITIES);
   const [defaultDisabled, setDefaultDisabled] = useState<Set<string>>(new Set());
   const [defaultOrderDirty, setDefaultOrderDirty] = useState(false);
+
+  // Mode : classe entière ou élève spécifique
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   // Dictée sélectionnée
   const [selectedDicteeId, setSelectedDicteeId] = useState<string | null>(null);
@@ -60,12 +65,12 @@ export default function ParcoursConfig({
   // Mots de la dictée sélectionnée
   const [dicteeWords, setDicteeWords] = useState<{ word: string; position: number }[]>([]);
 
-  // Chargement au montage
+  // Chargement au montage et quand on change d'élève
   useEffect(() => {
     const load = async () => {
       const [order, allOverrides] = await Promise.all([
         loadClassDefaultOrder(dmClassId),
-        loadAllDicteeOverrides(dmClassId),
+        loadAllDicteeOverrides(dmClassId, selectedStudentId),
       ]);
       const savedOrder = order || ALL_ACTIVITIES;
       // L'ordre sauvegardé ne contient que les activités actives
@@ -77,8 +82,11 @@ export default function ParcoursConfig({
       setOverrides(allOverrides);
       setLoading(false);
     };
-    if (open) load();
-  }, [open, dmClassId]);
+    if (open) {
+      setLoading(true);
+      load();
+    }
+  }, [open, dmClassId, selectedStudentId]);
 
   // Chargement des mots quand on sélectionne une dictée
   useEffect(() => {
@@ -117,7 +125,7 @@ export default function ParcoursConfig({
     if (!ov) return;
     setSaving(true);
     try {
-      await saveDicteeOverride(dmClassId, dicteeId, ov.activityOrder, ov.selectedWords);
+      await saveDicteeOverride(dmClassId, dicteeId, ov.activityOrder, ov.selectedWords, selectedStudentId);
       setOverridesDirty((prev) => {
         const n = new Set(prev);
         n.delete(dicteeId);
@@ -133,7 +141,7 @@ export default function ParcoursConfig({
   const handleResetOverride = async (dicteeId: string) => {
     setSaving(true);
     try {
-      await deleteDicteeOverride(dmClassId, dicteeId);
+      await deleteDicteeOverride(dmClassId, dicteeId, selectedStudentId);
       setOverrides((prev) => {
         const n = { ...prev };
         delete n[dicteeId];
@@ -243,6 +251,38 @@ export default function ParcoursConfig({
           </button>
         </div>
 
+        {/* Sélecteur : classe entière ou élève */}
+        {students.length > 0 && (
+          <div className="px-5 py-3 border-b bg-gray-50 flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-semibold text-gray-600">Configurer pour :</span>
+            <motion.button
+              onClick={() => { setSelectedStudentId(null); setSelectedDicteeId(null); }}
+              whileTap={{ scale: 0.95 }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                !selectedStudentId
+                  ? "bg-purple-600 text-white shadow-sm"
+                  : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300"
+              }`}
+            >
+              Toute la classe
+            </motion.button>
+            {students.map(s => (
+              <motion.button
+                key={s.id}
+                onClick={() => { setSelectedStudentId(s.id); setSelectedDicteeId(null); }}
+                whileTap={{ scale: 0.95 }}
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                  selectedStudentId === s.id
+                    ? "bg-purple-600 text-white shadow-sm"
+                    : "bg-white text-gray-600 border border-gray-200 hover:border-purple-300"
+                }`}
+              >
+                {s.name}
+              </motion.button>
+            ))}
+          </div>
+        )}
+
         {/* Content scrollable */}
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
           {loading ? (
@@ -251,7 +291,21 @@ export default function ParcoursConfig({
             </div>
           ) : (
             <>
-              {/* Section 1 — Ordre par défaut */}
+              {/* Indicateur élève sélectionné */}
+              {selectedStudentId && (
+                <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 flex items-center gap-3">
+                  <span className="text-2xl">🎯</span>
+                  <div>
+                    <p className="font-semibold text-purple-800">
+                      Parcours personnalisé pour {students.find(s => s.id === selectedStudentId)?.name}
+                    </p>
+                    <p className="text-sm text-purple-600">Sélectionnez une dictée ci-dessous pour configurer son parcours individuel.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Section 1 — Ordre par défaut (uniquement en mode classe) */}
+              {!selectedStudentId && (
               <div data-tour="default-order-section">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Ordre par défaut de la classe</h3>
@@ -334,6 +388,7 @@ export default function ParcoursConfig({
                   })}
                 </Reorder.Group>
               </div>
+              )}
 
               {/* Section 2 — Configuration par dictée */}
               <div data-tour="dictee-selector">

@@ -28,6 +28,7 @@ import AdminBugs from "@/components/admin-bugs";
 import ParcoursConfig from "@/components/parcours-config";
 import GuidedTour, { shouldShowTour, type TourStep } from "@/components/guided-tour";
 import type { DicteeResult } from "@/lib/dictee-service";
+import { loadStudentsWithOverrides } from "@/lib/dictee-service";
 
 const PARCOURS_TOUR_STEPS: TourStep[] = [
   {
@@ -151,6 +152,7 @@ export default function TeacherPage() {
   const [showBugs, setShowBugs] = useState(false);
   const [showParcours, setShowParcours] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [studentsWithOverrides, setStudentsWithOverrides] = useState<Set<string>>(new Set());
   const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
     null
   );
@@ -234,6 +236,7 @@ export default function TeacherPage() {
       if (dmClassData) {
         setDmClassId(dmClassData.id);
         setUnlockedPos(dmClassData.unlocked_dictees || [1]);
+        loadStudentsWithOverrides(dmClassData.id).then(setStudentsWithOverrides).catch(() => {});
       } else {
         // Auto-créer la classe si elle n'existe pas
         const { data: newClass } = await supabase
@@ -581,6 +584,9 @@ export default function TeacherPage() {
                               {(row.name || "").split(" ")[0]} {row.lastName?.[0] || ""}.
                             </span>
                           )}
+                          {studentsWithOverrides.has(row.id) && (
+                            <span title="Parcours personnalisé" className="text-purple-500 text-xs">🎯</span>
+                          )}
                         </div>
                       </td>
                       {dictees.map((d) => {
@@ -803,10 +809,11 @@ export default function TeacherPage() {
       {showParcours && dmClassId !== null && dmClassId !== "" && (
         <ParcoursConfig
           open={showParcours}
-          onClose={() => setShowParcours(false)}
+          onClose={() => { setShowParcours(false); if (dmClassId) loadStudentsWithOverrides(dmClassId).then(setStudentsWithOverrides).catch(() => {}); }}
           dmClassId={dmClassId}
           className={selectedClasseName}
           dictees={dictees.map(d => ({ id: d.id, title: d.title, position: d.position }))}
+          students={studentRows.map(s => ({ id: s.id, name: s.name }))}
         />
       )}
 

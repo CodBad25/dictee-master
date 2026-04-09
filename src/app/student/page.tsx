@@ -113,6 +113,7 @@ export default function StudentPage() {
       const config = await loadActivityConfig(
         connectedEleve?.classe || "",
         dictee.id,
+        connectedEleve?.eleveId || null,
       );
       setActivityOrder(config.activityOrder);
       setSelectedWords(config.selectedWords);

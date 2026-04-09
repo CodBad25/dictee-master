@@ -225,14 +225,20 @@ export async function loadClassDefaultOrder(classId: string): Promise<string[] |
   return data?.default_activity_order || null;
 }
 
-export async function loadAllDicteeOverrides(classId: string): Promise<
+export async function loadAllDicteeOverrides(classId: string, studentId?: string | null): Promise<
   Record<string, { activityOrder: string[]; selectedWords: number[] | null }>
 > {
   const sb = createClient();
-  const { data } = await sb
+  let query = sb
     .from("dictee_activity_overrides")
     .select("dictee_id, activity_order, selected_words")
     .eq("class_id", classId);
+  if (studentId) {
+    query = query.eq("student_id", studentId);
+  } else {
+    query = query.is("student_id", null);
+  }
+  const { data } = await query;
   const result: Record<string, { activityOrder: string[]; selectedWords: number[] | null }> = {};
   for (const row of data || []) {
     result[row.dictee_id] = {
@@ -248,25 +254,61 @@ export async function saveDicteeOverride(
   dicteeId: string,
   activityOrder: string[],
   selectedWords: number[] | null,
+  studentId?: string | null,
 ): Promise<void> {
   const sb = createClient();
-  const { error } = await sb
+  // Chercher si un override existe déjà
+  let query = sb
     .from("dictee_activity_overrides")
-    .upsert(
-      { class_id: classId, dictee_id: dicteeId, activity_order: activityOrder, selected_words: selectedWords },
-      { onConflict: "class_id,dictee_id" },
-    );
-  if (error) throw new Error(error.message);
+    .select("id")
+    .eq("class_id", classId)
+    .eq("dictee_id", dicteeId);
+  if (studentId) {
+    query = query.eq("student_id", studentId);
+  } else {
+    query = query.is("student_id", null);
+  }
+  const { data: existing } = await query.maybeSingle();
+
+  if (existing) {
+    const { error } = await sb
+      .from("dictee_activity_overrides")
+      .update({ activity_order: activityOrder, selected_words: selectedWords })
+      .eq("id", existing.id);
+    if (error) throw new Error(error.message);
+  } else {
+    const { error } = await sb
+      .from("dictee_activity_overrides")
+      .insert({ class_id: classId, dictee_id: dicteeId, activity_order: activityOrder, selected_words: selectedWords, student_id: studentId || null });
+    if (error) throw new Error(error.message);
+  }
 }
 
-export async function deleteDicteeOverride(classId: string, dicteeId: string): Promise<void> {
+export async function deleteDicteeOverride(classId: string, dicteeId: string, studentId?: string | null): Promise<void> {
   const sb = createClient();
-  const { error } = await sb
+  let query = sb
     .from("dictee_activity_overrides")
     .delete()
     .eq("class_id", classId)
     .eq("dictee_id", dicteeId);
+  if (studentId) {
+    query = query.eq("student_id", studentId);
+  } else {
+    query = query.is("student_id", null);
+  }
+  const { error } = await query;
   if (error) throw new Error(error.message);
+}
+
+// Charger les élèves qui ont des overrides dans une classe
+export async function loadStudentsWithOverrides(classId: string): Promise<Set<string>> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dictee_activity_overrides")
+    .select("student_id")
+    .eq("class_id", classId)
+    .not("student_id", "is", null);
+  return new Set((data || []).map(r => r.student_id).filter(Boolean));
 }
 
 const DEFAULT_ACTIVITY_ORDER_FALLBACK = [
@@ -277,6 +319,7 @@ const DEFAULT_ACTIVITY_ORDER_FALLBACK = [
 export async function loadActivityConfig(
   className: string,
   dicteeId: string,
+  studentId?: string | null,
 ): Promise<{ activityOrder: string[]; selectedWords: number[] | null }> {
   const sb = createClient();
 
@@ -291,12 +334,31 @@ export async function loadActivityConfig(
     return { activityOrder: DEFAULT_ACTIVITY_ORDER_FALLBACK, selectedWords: null };
   }
 
-  // Chercher un override pour cette dictée
+  // Priorité 1 : override spécifique à l'élève
+  if (studentId) {
+    const { data: studentOverride } = await sb
+      .from("dictee_activity_overrides")
+      .select("activity_order, selected_words")
+      .eq("class_id", cls.id)
+      .eq("dictee_id", dicteeId)
+      .eq("student_id", studentId)
+      .maybeSingle();
+
+    if (studentOverride) {
+      return {
+        activityOrder: studentOverride.activity_order,
+        selectedWords: studentOverride.selected_words,
+      };
+    }
+  }
+
+  // Priorité 2 : override de la dictée (classe entière)
   const { data: override } = await sb
     .from("dictee_activity_overrides")
     .select("activity_order, selected_words")
     .eq("class_id", cls.id)
     .eq("dictee_id", dicteeId)
+    .is("student_id", null)
     .maybeSingle();
 
   if (override) {
@@ -306,6 +368,7 @@ export async function loadActivityConfig(
     };
   }
 
+  // Priorité 3 : défaut de la classe
   return {
     activityOrder: cls.default_activity_order || DEFAULT_ACTIVITY_ORDER_FALLBACK,
     selectedWords: null,
