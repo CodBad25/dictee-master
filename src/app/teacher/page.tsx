@@ -462,7 +462,13 @@ export default function TeacherPage() {
             {anon.active ? "🔓 Démasquer" : "🎭 Anonymiser"}
           </button>
           <button
-            onClick={() => router.push("/")}
+            onClick={() => {
+              localStorage.removeItem("dictee_master_teacher");
+              localStorage.removeItem("dictee_master_teacher_pwd");
+              useAppStore.getState().setUser(null);
+              useAppStore.getState().setConnectedEleve(null);
+              router.push("/");
+            }}
             className="px-3 py-1 rounded text-sm bg-red-500 hover:bg-red-600"
           >
             Quitter

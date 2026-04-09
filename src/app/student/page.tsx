@@ -100,6 +100,8 @@ export default function StudentPage() {
     clearCurrentTraining();
     if (typeof window !== "undefined") {
       localStorage.removeItem("dictee_master_eleve");
+      localStorage.removeItem("dictee_master_teacher");
+      localStorage.removeItem("dictee_master_teacher_pwd");
     }
     router.push("/");
   };
