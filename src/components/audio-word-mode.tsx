@@ -20,8 +20,14 @@ function normalizeForComparison(text: string): string {
     .toLowerCase()
     .replace(/\s+/g, " ")
     .replace(/[\u2018\u2019\u02BC]/g, "'")
+    .replace(/œ/g, "oe")
+    .replace(/æ/g, "ae")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+function stripArticle(text: string): string {
+  return text.replace(/^(le |la |l'|l\u2019|un |une |les |des |du )/i, "").trim();
 }
 
 export default function AudioWordMode() {
@@ -84,7 +90,10 @@ export default function AudioWordMode() {
     const userAnswer = answer.trim();
     const normalized = normalizeForComparison(userAnswer);
     const expectedNormalized = normalizeForComparison(currentWord.word);
-    const correct = normalized === expectedNormalized;
+    // Accepter : réponse exacte OU sans article
+    const correct = normalized === expectedNormalized
+      || normalizeForComparison(stripArticle(userAnswer)) === normalizeForComparison(stripArticle(currentWord.word))
+      || normalized === normalizeForComparison(stripArticle(currentWord.word));
 
     setIsCorrect(correct);
     setAnswers(prev => [...prev, { word: currentWord.word, userAnswer, isCorrect: correct }]);

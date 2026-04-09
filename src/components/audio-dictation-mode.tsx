@@ -154,9 +154,29 @@ export default function AudioDictationMode() {
     audio.play();
   };
 
+  const isPausedRef = useRef(false);
+
   const pauseAudio = () => {
     audioRef.current?.pause();
+    isPausedRef.current = true;
     setIsPlaying(false);
+  };
+
+  const resumeAudio = () => {
+    const audio = audioRef.current;
+    const ts = phraseTimestampsRef.current[phraseIndex];
+    if (!audio || !ts) return;
+    isPausedRef.current = false;
+    setIsPlaying(true);
+    const checkEnd = () => {
+      if (audio.currentTime >= ts.end - 0.1) {
+        audio.pause();
+        setIsPlaying(false);
+        audio.removeEventListener("timeupdate", checkEnd);
+      }
+    };
+    audio.addEventListener("timeupdate", checkEnd);
+    audio.play();
   };
 
   // Passer en mode dictation phrase par phrase
@@ -186,6 +206,7 @@ export default function AudioDictationMode() {
       return;
     }
     cancelAutoReplay();
+    isPausedRef.current = false;
     const audio = audioRef.current;
     const ts = phraseTimestampsRef.current[phraseIndex];
     if (!audio || !ts) return;
@@ -232,6 +253,7 @@ export default function AudioDictationMode() {
     setReplayCount(0);
     replayCountRef.current = 0;
     hasTypedRef.current = false;
+    isPausedRef.current = false;
 
     if (phraseIndex + 1 < phrases.length) {
       setPhraseIndex(phraseIndex + 1);
@@ -274,6 +296,7 @@ export default function AudioDictationMode() {
   const handleRetry = () => {
     cancelAutoReplay();
     hasTypedRef.current = false;
+    isPausedRef.current = false;
     replayCountRef.current = 0;
     setPhraseIndex(0);
     setCurrentAnswer("");
@@ -392,11 +415,11 @@ export default function AudioDictationMode() {
             ) : (
               <Button
                 size="lg"
-                onClick={playCurrentPhrase}
-                disabled={replayCount >= maxReplays}
+                onClick={isPausedRef.current ? resumeAudio : playCurrentPhrase}
+                disabled={!isPausedRef.current && replayCount >= maxReplays}
                 className="rounded-full w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg disabled:opacity-40"
               >
-                <Volume2 className="w-6 h-6" />
+                {isPausedRef.current ? <Play className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
               </Button>
             )}
           </div>
