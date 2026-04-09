@@ -194,7 +194,7 @@ export default function TeacherPage() {
 
         type ErrorEntry = {
           word: string; dictee_id: string; category: string;
-          variants: Record<string, { count: number; classes: Set<string> }>;
+          variants: Record<string, { count: number }>;
           total: number;
         };
         const errorAgg: Record<string, ErrorEntry> = {};
@@ -215,12 +215,9 @@ export default function TeacherPage() {
           errorAgg[key].total++;
           const variant = a.user_answer || "(vide)";
           if (!errorAgg[key].variants[variant]) {
-            errorAgg[key].variants[variant] = { count: 0, classes: new Set() };
+            errorAgg[key].variants[variant] = { count: 0 };
           }
           errorAgg[key].variants[variant].count++;
-          // Extraire la classe du nom (ex: "Léo DUPONT" → chercher dans hubStudents)
-          const className = info.student_name.split(" ")[0] || "";
-          if (className) errorAgg[key].variants[variant].classes.add(className);
         });
 
         setWordAttempts(errorAgg);
@@ -426,7 +423,7 @@ export default function TeacherPage() {
       .filter((wa: any) => wa.category === category)
       .map((wa: any) => {
         const dictee = dictees.find((d) => d.id === wa.dictee_id);
-        const sortedVariants = Object.entries(wa.variants as Record<string, { count: number; classes: Set<string> }>)
+        const sortedVariants = Object.entries(wa.variants as Record<string, { count: number }>)
           .sort(([, a], [, b]) => b.count - a.count);
         return {
           word: wa.word,
@@ -850,7 +847,7 @@ export default function TeacherPage() {
                             {err.variants.slice(0, 6).map(([variant, info], i) => (
                               <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 border border-red-100 text-red-700 rounded-lg text-xs">
                                 <span className="line-through">{variant}</span>
-                                <span className="font-bold text-red-500">×{(info as any).count}</span>
+                                <span className="font-bold text-red-500">×{info.count}</span>
                               </span>
                             ))}
                             {err.variants.length > 6 && (
