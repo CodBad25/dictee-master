@@ -455,13 +455,13 @@ export default function TeacherPage() {
               <button
                 key={pos}
                 onClick={() => toggleLock(pos)}
-                className={`w-8 h-8 rounded text-xs font-bold transition-all ${
+                className={`px-2 py-1 rounded-full text-xs font-bold border-2 transition-all hover:scale-105 ${
                   isUnlocked
-                    ? "bg-purple-500 text-white"
-                    : "bg-gray-300 text-gray-600"
+                    ? "bg-green-100 border-green-500 text-green-900"
+                    : "bg-red-100 border-red-500 text-red-900"
                 }`}
               >
-                {pos}
+                {pos} {isUnlocked ? "🔓" : "🔒"}
               </button>
             );
           })}
