@@ -45,6 +45,7 @@ export default function StudentPage() {
     connectedEleve,
     setConnectedEleve,
     setUser,
+    user,
     streak,
     badges,
     currentList,
@@ -223,7 +224,7 @@ export default function StudentPage() {
           <div className="flex items-center gap-1 text-[13px] font-bold text-purple-600">
             <Star className="w-4 h-4" /> {badges.length}
           </div>
-          {typeof window !== "undefined" && localStorage.getItem("dictee_master_teacher") === "true" && (
+          {user?.role === "teacher" && (
             <Button
               variant="ghost"
               size="sm"

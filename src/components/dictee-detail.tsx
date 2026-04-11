@@ -45,7 +45,7 @@ export default function DicteeDetail({
   onStartActivity,
 }: DicteeDetailProps) {
   const { connectedEleve, user } = useAppStore();
-  const isTeacher = user?.role === "teacher" || (typeof window !== "undefined" && localStorage.getItem("dictee_master_teacher") === "true");
+  const isTeacher = user?.role === "teacher";
   const [words, setWords] = useState<DicteeWord[]>([]);
   const [loading, setLoading] = useState(true);
   const [completedActivities, setCompletedActivities] = useState<number>(0);

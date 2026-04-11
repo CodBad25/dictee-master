@@ -260,8 +260,7 @@ export default function BugReportButton() {
   };
 
   // Ne pas afficher si personne n'est connecté
-  const isLoggedIn = connectedEleve || user || (typeof window !== "undefined" && localStorage.getItem("dictee_master_teacher") === "true");
-  if (!isLoggedIn) return null;
+  if (!connectedEleve && !user) return null;
 
   const finalScreenshot = croppedScreenshot || rawScreenshot;
 
