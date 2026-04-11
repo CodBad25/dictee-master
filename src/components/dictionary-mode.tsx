@@ -89,8 +89,6 @@ export default function DictionaryMode() {
     }
   }, [currentWords.length]);
 
-  if (!currentList || !currentWords.length || !roundWords.length) return null;
-
   // Chrono effect
   useEffect(() => {
     if (phase !== "exercise" || !useChrono) return;
@@ -105,6 +103,8 @@ export default function DictionaryMode() {
 
     return () => clearInterval(interval);
   }, [phase, useChrono, startTime]);
+
+  if (!currentList || !currentWords.length || !roundWords.length) return null;
 
   const extractGenre = (word: string): string => {
     const lowerWord = word.toLowerCase();
