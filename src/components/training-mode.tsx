@@ -658,35 +658,6 @@ export default function TrainingMode() {
                 );
               })()}
 
-              {/* Prénom de l'élève */}
-              {/* Prénom : masqué si connecté via Hub */}
-              {!currentStudentName && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.15 }}
-                className="mb-4"
-              >
-                <div className="p-4 rounded-2xl border-2 border-gray-200 bg-white">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
-                      <User className="w-5 h-5 text-indigo-600" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-800">Ton prénom</div>
-                      <div className="text-xs text-gray-500">Pour suivre ta progression</div>
-                    </div>
-                  </div>
-                  <Input
-                    value={currentStudentName}
-                    onChange={(e) => setCurrentStudentName(e.target.value)}
-                    placeholder="Entre ton prénom..."
-                    className="h-12 text-lg font-medium border-2 border-gray-100 rounded-xl focus:border-indigo-300"
-                    maxLength={30}
-                  />
-                </div>
-              </motion.div>
-              )}
 
               {/* Mode défi */}
               <motion.div

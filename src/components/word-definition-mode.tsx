@@ -240,23 +240,6 @@ export default function WordDefinitionMode() {
               </p>
             </div>
 
-            {/* Prénom */}
-            {!currentStudentName && (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ton prénom
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    value={currentStudentName || ""}
-                    onChange={(e) => setCurrentStudentName(e.target.value)}
-                    placeholder="Entre ton prénom..."
-                    className="pl-10 h-12 text-lg rounded-xl"
-                  />
-                </div>
-              </div>
-            )}
 
             {/* Sélecteur nombre de mots */}
             <div className="mb-6">

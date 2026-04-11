@@ -723,21 +723,6 @@ export default function ComprehensiveTraining() {
                 );
               })()}
 
-              {/* Prenom */}
-              {!currentStudentName && (
-                <div className="mb-4 p-4 rounded-2xl border-2 border-gray-100 bg-white">
-                  <div className="flex items-center gap-3 mb-3">
-                    <User className="w-5 h-5 text-indigo-600" />
-                    <span className="font-bold text-gray-800">Ton prénom</span>
-                  </div>
-                  <Input
-                    value={currentStudentName}
-                    onChange={(e) => setCurrentStudentName(e.target.value)}
-                    placeholder="Entre ton prénom..."
-                    className="h-12 text-lg border-2 border-gray-100 rounded-xl"
-                  />
-                </div>
-              )}
 
               <Button
                 size="lg"
