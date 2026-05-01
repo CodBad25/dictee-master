@@ -148,7 +148,7 @@ export default function BilanPreview({ open, onClose, students, dictees, classNa
             <Button size="sm" variant="outline" className="text-xs" onClick={() => { exportPronote(exportData, dictees); toast.success("Copié ! Collez dans Pronote."); }}>
               <FileText className="w-3.5 h-3.5 mr-1" /> Pronote
             </Button>
-            <Button size="sm" variant="outline" className="text-xs" onClick={() => { exportExcel(exportData, dictees, className, dn); toast.success("CSV téléchargé !"); }}>
+            <Button size="sm" variant="outline" className="text-xs" onClick={async () => { await exportExcel(exportData, dictees, className, dn); toast.success("Excel téléchargé !"); }}>
               <Download className="w-3.5 h-3.5 mr-1" /> Excel
             </Button>
             <Button size="sm" variant="outline" className="text-xs" onClick={() => window.print()}>

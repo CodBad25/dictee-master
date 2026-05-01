@@ -28,6 +28,7 @@ import AdminBugs from "@/components/admin-bugs";
 import ParcoursConfig from "@/components/parcours-config";
 import GuidedTour, { shouldShowTour, type TourStep } from "@/components/guided-tour";
 import ErrorTabs from "@/components/error-tabs";
+import EvalPreviewModal from "@/components/eval-preview-modal";
 import type { DicteeResult } from "@/lib/dictee-service";
 import { loadStudentsWithOverrides } from "@/lib/dictee-service";
 
@@ -114,7 +115,7 @@ function note20(res: Record<string, { bestPct: number }>, maxD: number): number 
 
 export default function TeacherPage() {
   const router = useRouter();
-  const { user } = useAppStore();
+  const { user, setConnectedEleve } = useAppStore();
   const supabase = createClient();
   const anon = useAnonymize();
   const dn = useDisplayName();
@@ -145,6 +146,7 @@ export default function TeacherPage() {
   const [showBilan, setShowBilan] = useState(false);
   const [showBugs, setShowBugs] = useState(false);
   const [showParcours, setShowParcours] = useState(false);
+  const [showEvalPreview, setShowEvalPreview] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [studentsWithOverrides, setStudentsWithOverrides] = useState<Set<string>>(new Set());
   const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
@@ -196,9 +198,13 @@ export default function TeacherPage() {
   const loadHub = async () => {
     try {
       const classes = await getClasses();
-      setHubClasses(classes);
-      if (classes.length > 0) {
-        pickClass(classes[0].id, classes[0].nom);
+      const filteredClasses =
+        user?.id === "visitor"
+          ? classes.filter((c) => c.nom === "6T")
+          : classes;
+      setHubClasses(filteredClasses);
+      if (filteredClasses.length > 0) {
+        pickClass(filteredClasses[0].id, filteredClasses[0].nom);
       }
     } catch (error) {
       console.error("Error loading Hub classes:", error);
@@ -403,7 +409,16 @@ export default function TeacherPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => router.push("/student")}
+            onClick={() => {
+              setConnectedEleve({
+                eleveId: "cmn2ca8bp00rt01rx2gxh72nw",
+                prenom: "Lambda",
+                nom: "BELHAJ",
+                classe: "6T",
+                classeId: "cmn2c6ta500rs01rxg75gtr3m",
+              });
+              router.push("/student");
+            }}
             className="px-3 py-1 rounded text-sm hover:bg-white/10"
           >
             🧪 Tester
@@ -493,10 +508,17 @@ export default function TeacherPage() {
             📋 Pronote
           </button>
           <button
-            onClick={() => { const d = studentRows.map(s => ({ name: s.name, scores: Object.fromEntries(Object.entries(s.results).map(([k,v]) => [k, v.bestPct])), attempts: s.totalAttempts, totalStars: s.totalStars, note20: s.note20 })); exportExcel(d, dictees, selectedClasseName, dn); toast.success("CSV téléchargé !"); }}
+            onClick={async () => { const d = studentRows.map(s => ({ name: s.name, scores: Object.fromEntries(Object.entries(s.results).map(([k,v]) => [k, v.bestPct])), attempts: s.totalAttempts, totalStars: s.totalStars, note20: s.note20 })); await exportExcel(d, dictees, selectedClasseName, dn); toast.success("Excel téléchargé !"); }}
             className="px-3 py-1 bg-orange-500 text-white rounded text-sm hover:bg-orange-600"
           >
             📥 Excel
+          </button>
+          <button
+            onClick={() => setShowEvalPreview(true)}
+            className="px-3 py-1 bg-amber-100 text-amber-800 border border-amber-300 rounded text-sm hover:bg-amber-200"
+            title="Aperçu d'une fonctionnalité à venir : choisir les dictées qui comptent pour la note"
+          >
+            🧪 Aperçu Éval
           </button>
         </div>
       </div>
@@ -747,6 +769,16 @@ export default function TeacherPage() {
 
       {/* Admin Bugs Modal */}
       <AdminBugs open={showBugs} onClose={() => setShowBugs(false)} />
+
+      {/* Aperçu Évaluation Modal */}
+      {showEvalPreview && (
+        <EvalPreviewModal
+          students={studentRows.map(s => ({ id: s.id, name: s.name, results: s.results }))}
+          dictees={dictees.map(d => ({ id: d.id, position: d.position, title: d.title }))}
+          displayName={dn}
+          onClose={() => setShowEvalPreview(false)}
+        />
+      )}
 
       {/* Parcours Config Modal */}
       {showParcours && dmClassId !== null && dmClassId !== "" && (

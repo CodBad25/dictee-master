@@ -221,20 +221,36 @@ export function exportPronote(students: StudentExport[], dictees: DicteeInfo[]) 
   navigator.clipboard.writeText(lines.join("\n"));
 }
 
-// Export CSV/Excel
-export function exportExcel(students: StudentExport[], dictees: DicteeInfo[], className: string, displayName: (n: string) => string) {
+// Export Excel (.xlsx natif via exceljs)
+export async function exportExcel(students: StudentExport[], dictees: DicteeInfo[], className: string, displayName: (n: string) => string) {
+  const ExcelJS = (await import("exceljs")).default;
   const sorted = [...students].sort((a, b) => a.name.localeCompare(b.name, "fr"));
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "DictéeMaster";
+  wb.created = new Date();
+  const ws = wb.addWorksheet(className || "Résultats");
+
   const header = ["Élève", ...dictees.map((d) => `D${d.position}`), "Étoiles", "Note/20", "Essais"];
-  const rows = sorted.map((s) => {
-    const scores = dictees.map((d) => s.scores[d.id] !== undefined ? Math.round(s.scores[d.id] * 20 / 100).toString() : "");
-    return [displayName(s.name), ...scores, s.totalStars.toString(), s.note20.toString(), s.attempts.toString()];
+  const headerRow = ws.addRow(header);
+  headerRow.font = { bold: true };
+  headerRow.alignment = { horizontal: "center" };
+
+  for (const s of sorted) {
+    const scores = dictees.map((d) => s.scores[d.id] !== undefined ? Math.round(s.scores[d.id] * 20 / 100) : null);
+    ws.addRow([displayName(s.name), ...scores, s.totalStars, s.note20, s.attempts]);
+  }
+
+  ws.columns.forEach((col, i) => {
+    col.width = i === 0 ? 22 : 8;
   });
-  const csv = "\uFEFF" + [header, ...rows].map((r) => r.join(";")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `dictee-master_${className}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `dictee-master_${className}_${new Date().toISOString().slice(0, 10)}.xlsx`;
   a.click();
   URL.revokeObjectURL(url);
 }
