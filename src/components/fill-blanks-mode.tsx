@@ -544,7 +544,8 @@ export default function FillBlanksMode() {
             onChange={(e) => handleInputChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
             disabled={showResults}
-            className={`w-24 h-8 px-2 text-center font-bold rounded-lg border-2 outline-none transition-all ${
+            style={{ width: `${Math.max(8, blank.word.length + 2)}ch` }}
+            className={`h-8 px-2 text-center font-bold rounded-lg border-2 outline-none transition-all ${
               showResults
                 ? isCorrect
                   ? "border-green-400 bg-green-50 text-green-700"

@@ -1021,7 +1021,8 @@ export default function ComprehensiveTraining() {
               }
             }}
             disabled={showBlankResults}
-            className={`w-32 sm:w-36 h-10 sm:h-12 px-2 text-center text-lg sm:text-xl font-bold rounded-lg border-2 outline-none transition-all ${
+            style={{ width: `${Math.max(10, blank.word.length + 2)}ch` }}
+            className={`h-10 sm:h-12 px-2 text-center text-lg sm:text-xl font-bold rounded-lg border-2 outline-none transition-all ${
               showBlankResults
                 ? isCorrect
                   ? "border-green-400 bg-green-50 text-green-700"
