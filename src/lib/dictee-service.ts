@@ -53,6 +53,22 @@ export async function loadDicteeWords(dicteeId: string): Promise<DicteeWord[]> {
   return data || [];
 }
 
+// Met à jour la liste des distracteurs (spelling_errors) pour un mot donné.
+// Édition globale partagée entre tous les profs (pour aujourd'hui).
+export async function updateWordSpellingErrors(
+  dicteeId: string,
+  position: number,
+  errors: string[],
+): Promise<void> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dictee_words")
+    .update({ spelling_errors: errors })
+    .eq("dictee_id", dicteeId)
+    .eq("position", position);
+  if (error) throw new Error(error.message);
+}
+
 // === RÉSULTATS ===
 
 // Résout l'UUID interne dm_classes.id à partir du classeId Hub.
