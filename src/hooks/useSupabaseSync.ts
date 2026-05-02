@@ -153,6 +153,7 @@ export function useSupabaseSync() {
       const connectedEleve = useAppStore.getState().connectedEleve;
       if (connectedEleve) {
         await saveResultV2({
+          hubClassId: connectedEleve.classeId,
           studentId: connectedEleve.eleveId,
           studentName: `${connectedEleve.prenom} ${connectedEleve.nom}`,
           dicteeId: session.listId,

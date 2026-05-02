@@ -55,7 +55,20 @@ export async function loadDicteeWords(dicteeId: string): Promise<DicteeWord[]> {
 
 // === RÉSULTATS ===
 
+// Résout l'UUID interne dm_classes.id à partir du classeId Hub.
+// Renvoie null si la classe n'existe pas encore côté Supabase.
+export async function getDmClassIdByHub(hubClassId: string): Promise<string | null> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dm_classes")
+    .select("id")
+    .eq("hub_class_id", hubClassId)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
 export async function saveResult(params: {
+  hubClassId: string;
   studentId: string;
   studentName: string;
   dicteeId: string;
@@ -68,11 +81,17 @@ export async function saveResult(params: {
 }): Promise<void> {
   const sb = createClient();
 
+  const classId = await getDmClassIdByHub(params.hubClassId);
+  if (!classId) {
+    console.error("saveResult: dm_classes introuvable pour hub_class_id", params.hubClassId);
+    return;
+  }
+
   // Sauvegarder le résultat
   const { data: result, error } = await sb
     .from("dm_results")
     .insert({
-      class_id: '3a2441f8-fd51-46de-8d7c-b58a2b8f6f50', // Sera lié à une classe quand le dashboard enseignant sera prêt
+      class_id: classId,
       student_id: params.studentId,
       student_name: params.studentName,
       dictee_id: params.dicteeId,
@@ -394,7 +413,7 @@ export interface UnlockRequest {
   dictee_position: number;
   student_name: string;
   student_id: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "denied";
   created_at: string;
   updated_at: string;
 }
@@ -423,6 +442,22 @@ export async function createUnlockRequest(
     return null;
   }
   return data;
+}
+
+// Toutes les demandes d'un élève dans une classe (toutes statuts confondus, récentes d'abord).
+// Sert au polling côté élève pour détecter les transitions pending -> approved/denied.
+export async function loadStudentUnlockRequests(
+  classId: string,
+  studentId: string,
+): Promise<UnlockRequest[]> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dm_unlock_requests")
+    .select("*")
+    .eq("class_id", classId)
+    .eq("student_id", studentId)
+    .order("created_at", { ascending: false });
+  return data || [];
 }
 
 export async function loadPendingUnlockRequests(classId: string): Promise<UnlockRequest[]> {
@@ -475,7 +510,7 @@ export async function rejectUnlockRequest(requestId: string): Promise<boolean> {
   const sb = createClient();
   const { error } = await sb
     .from("dm_unlock_requests")
-    .update({ status: "rejected" })
+    .update({ status: "denied" })
     .eq("id", requestId);
 
   if (error) {

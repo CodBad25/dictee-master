@@ -29,6 +29,7 @@ import ParcoursConfig from "@/components/parcours-config";
 import GuidedTour, { shouldShowTour, type TourStep } from "@/components/guided-tour";
 import ErrorTabs from "@/components/error-tabs";
 import EvalPreviewModal from "@/components/eval-preview-modal";
+import UnlockRequestsPanel from "@/components/unlock-requests-panel";
 import type { DicteeResult } from "@/lib/dictee-service";
 import { loadStudentsWithOverrides } from "@/lib/dictee-service";
 
@@ -115,7 +116,7 @@ function note20(res: Record<string, { bestPct: number }>, maxD: number): number 
 
 export default function TeacherPage() {
   const router = useRouter();
-  const { user, setConnectedEleve } = useAppStore();
+  const { _hasHydrated, user, setConnectedEleve, lastSelectedClasseId, setLastSelectedClasseId } = useAppStore();
   const supabase = createClient();
   const anon = useAnonymize();
   const dn = useDisplayName();
@@ -204,7 +205,12 @@ export default function TeacherPage() {
           : classes;
       setHubClasses(filteredClasses);
       if (filteredClasses.length > 0) {
-        pickClass(filteredClasses[0].id, filteredClasses[0].nom);
+        // Restaurer la dernière classe consultée si elle est toujours présente, sinon la première
+        const remembered = lastSelectedClasseId
+          ? filteredClasses.find((c) => c.id === lastSelectedClasseId)
+          : null;
+        const target = remembered ?? filteredClasses[0];
+        pickClass(target.id, target.nom);
       }
     } catch (error) {
       console.error("Error loading Hub classes:", error);
@@ -217,6 +223,7 @@ export default function TeacherPage() {
     try {
       setSelectedClasse(classId);
       setSelectedClasseName(className);
+      setLastSelectedClasseId(classId);
 
       const students = await getEleves(classId);
       const studentsMap: Record<string, { id: string; name: string }> = {};
@@ -225,12 +232,16 @@ export default function TeacherPage() {
       });
       setHubStudents(studentsMap);
 
-      // Load dm_class for lock state
+      if (!user?.id) {
+        console.error("pickClass: aucun user connecté");
+        return;
+      }
+
+      // Load dm_class for lock state — lookup par hub_class_id (clé universelle)
       const { data: dmClassData } = await supabase
         .from("dm_classes")
         .select("*")
-        .eq("name", className)
-        .eq("teacher_id", "teacher")
+        .eq("hub_class_id", classId)
         .maybeSingle();
 
       if (dmClassData) {
@@ -242,7 +253,8 @@ export default function TeacherPage() {
         const { data: newClass } = await supabase
           .from("dm_classes")
           .insert({
-            teacher_id: "teacher",
+            teacher_id: user.id,
+            hub_class_id: classId,
             name: className,
             unlocked_dictees: [1],
             default_activity_order: ["flashcard", "genre", "spelling_choice", "definitions", "dictionary", "audio_word", "fill_blanks", "audio_dictation"],
@@ -274,7 +286,7 @@ export default function TeacherPage() {
       try {
         await supabase
           .from("dm_classes")
-          .update({ unlocked_positions: newUnlocked })
+          .update({ unlocked_dictees: newUnlocked })
           .eq("id", dmClassId);
       } catch (error) {
         console.error("Error updating lock state:", error);
@@ -299,8 +311,10 @@ export default function TeacherPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Initial load
+  // Initial load — attendre que Zustand ait restauré lastSelectedClasseId du localStorage
+  // avant de charger les classes Hub, sinon on tombe toujours sur la première (6A) au refresh.
   useEffect(() => {
+    if (!_hasHydrated) return;
     const init = async () => {
       setLoading(true);
       await loadData();
@@ -310,7 +324,7 @@ export default function TeacherPage() {
     };
 
     init();
-  }, []);
+  }, [_hasHydrated]);
 
   if (loading) {
     return (
@@ -522,6 +536,9 @@ export default function TeacherPage() {
           </button>
         </div>
       </div>
+
+      {/* Demandes de déverrouillage (s'auto-cache si aucune en attente) */}
+      <UnlockRequestsPanel classId={dmClassId} />
 
       {/* Main content */}
       <div className="flex-1 overflow-hidden flex flex-col">

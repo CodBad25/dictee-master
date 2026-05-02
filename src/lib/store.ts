@@ -52,6 +52,10 @@ interface AppState {
   connectedEleve: ConnectedEleve | null;
   setConnectedEleve: (eleve: ConnectedEleve | null) => void;
 
+  // Dernière classe sélectionnée côté prof (persistée pour survivre au refresh)
+  lastSelectedClasseId: string | null;
+  setLastSelectedClasseId: (id: string | null) => void;
+
   // Student name for session tracking
   currentStudentName: string;
   setCurrentStudentName: (name: string) => void;
@@ -116,6 +120,10 @@ export const useAppStore = create<AppState>()(
         connectedEleve: eleve,
         currentStudentName: eleve ? eleve.prenom : '',
       }),
+
+      // Last selected class (teacher view)
+      lastSelectedClasseId: null,
+      setLastSelectedClasseId: (id) => set({ lastSelectedClasseId: id }),
 
       // Student name
       currentStudentName: '',
@@ -215,6 +223,7 @@ export const useAppStore = create<AppState>()(
         user: state.user,
         apiConfig: state.apiConfig,
         connectedEleve: state.connectedEleve,
+        lastSelectedClasseId: state.lastSelectedClasseId,
         currentStudentName: state.currentStudentName,
         streak: state.streak,
         badges: state.badges,

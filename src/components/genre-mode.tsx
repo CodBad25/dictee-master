@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getDmClassIdByHub } from "@/lib/dictee-service";
 import { useAppStore } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, X } from "lucide-react";
@@ -69,20 +70,27 @@ export default function GenreMode() {
         setPhase("done");
         // Sauvegarder le résultat dans dm_results
         if (connectedEleve && currentList) {
-          const pct = Math.round(((score + (correct ? 1 : 0)) / words.length) * 100);
+          const finalScore = score + (correct ? 1 : 0);
+          const pct = Math.round((finalScore / words.length) * 100);
           const sb = createClient();
-          sb.from("dm_results").insert({
-            class_id: '3a2441f8-fd51-46de-8d7c-b58a2b8f6f50',
-            student_id: connectedEleve.eleveId,
-            student_name: `${connectedEleve.prenom} ${connectedEleve.nom}`,
-            dictee_id: currentList.id,
-            activity_mode: "genre",
-            score: score + (correct ? 1 : 0),
-            total: words.length,
-            percentage: pct,
-            time_spent: 0,
-          }).then(({ error }) => {
-            if (error) console.error("Erreur sauvegarde genre:", error.message);
+          getDmClassIdByHub(connectedEleve.classeId).then((classId) => {
+            if (!classId) {
+              console.error("genre: dm_classes introuvable pour", connectedEleve.classeId);
+              return;
+            }
+            sb.from("dm_results").insert({
+              class_id: classId,
+              student_id: connectedEleve.eleveId,
+              student_name: `${connectedEleve.prenom} ${connectedEleve.nom}`,
+              dictee_id: currentList.id,
+              activity_mode: "genre",
+              score: finalScore,
+              total: words.length,
+              percentage: pct,
+              time_spent: 0,
+            }).then(({ error }) => {
+              if (error) console.error("Erreur sauvegarde genre:", error.message);
+            });
           });
         }
       }

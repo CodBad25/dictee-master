@@ -33,17 +33,37 @@ Permet au prof de basculer en vue élève sans passer par un compte élève. À 
 
 Avant le 01/05/2026, le bouton ne faisait que `router.push("/student")` sans rien injecter. Il marchait par effet de bord (résidu Zustand persisté). Si le store était vidé → vue élève à 0/26 dictées. Le fix le rend idempotent.
 
+**Garde-fou supplémentaire (02/05/2026)** : `src/app/student/page.tsx` affiche désormais un écran "⚠️ Aucun élève connecté" + bouton retour à l'accueil quand le store est hydraté (`_hasHydrated === true`) et que `connectedEleve` est null, au lieu du fallback silencieux "Élève / 0/26 dictées" qui prêtait à confusion.
+
 ## Bouton 🧪 Aperçu Éval (header prof, ambre)
 
 Modale `EvalPreviewModal` qui prévisualise une fonctionnalité « sélectionner les dictées qui comptent pour la note ». **Aucune persistance**, aucun impact sur l'export Pronote ou la note officielle. Vise à recueillir l'avis des collègues avant de l'implémenter pour de bon (pattern inspiré de MathExpress / `calcul-mental-prix-v2`).
 
-## Bugs multi-tenant identifiés (à corriger avant ouverture aux autres profs)
+## Architecture multi-tenant (depuis 02/05/2026)
 
-1. `src/lib/dictee-service.ts:75` — `class_id` UUID codé en dur (`'3a2441f8-fd51-46de-8d7c-b58a2b8f6f50'`). Toutes les sessions atterrissent dans la classe historique de Belhaj.
-2. `src/app/teacher/page.tsx:227,239` — `teacher_id: "teacher"` codé en dur (au lieu de `user.id`). Tous les enseignants partagent le même record `dm_classes` par nom de classe.
-3. `src/app/teacher/page.tsx:271` — typo `unlocked_positions` au lieu de `unlocked_dictees`. Le déverrouillage UI échoue silencieusement.
+Tous les bugs multi-tenant historiques sont corrigés. **`dm_classes.hub_class_id`** est désormais la **clé universelle** qui relie le monde Hub (élèves, classes, enseignants) au monde Supabase (`dm_classes`, `dm_results`, `dm_unlock_requests`). Schéma :
 
-Le fix nécessite aussi une migration SQL pour ré-attribuer les `dm_results.class_id` historiques aux bons enseignants/classes (mapping `student_id` → `enseignantId` via Hub).
+- `dm_classes.id` (UUID Supabase, FK depuis `dm_results.class_id` etc.)
+- `dm_classes.hub_class_id` (TEXT UNIQUE) — pointe vers le `classeId` Hub
+- `dm_classes.teacher_id` (TEXT) — désormais le vrai `enseignantId` Hub (plus de `"teacher"` hardcodé)
+
+**Helper central** : `getDmClassIdByHub(hubClassId)` dans `src/lib/dictee-service.ts` résout l'UUID interne. Toujours l'utiliser côté élève (où on a `connectedEleve.classeId` = ID Hub) avant tout INSERT/SELECT sur `dm_results` ou `dm_unlock_requests`.
+
+Migration appliquée : `supabase/migration-multi-tenant.sql` (idempotente). Garde-fou : index UNIQUE partiel `idx_dm_classes_hub_class_id` empêche désormais les doublons.
+
+Côté élève, ne **jamais** unionner les `unlocked_dictees` de toutes les classes (bug pré-fix) — toujours filtrer sur la `dm_classes` correspondant à `connectedEleve.classeId`.
+
+## Demandes de déverrouillage — pattern intégré (refonte 02/05/2026)
+
+Composant `src/components/unlock-requests-panel.tsx` rendu **directement au-dessus de la grille de dictées prof**, scoped sur `dmClassId` courant. Pas de page séparée, pas de dropdown classe (l'ancien `unlock-requests-manager.tsx` et la page `/teacher/unlock-requests` ont été supprimés).
+
+- Polling 5s (`loadPendingUnlockRequests`). Auto-cache si zéro demande en attente.
+- Pour chaque demande : nom élève + chip dictée + temps relatif + **chips d'historique D1..Dn-1** avec score % + nb essais + code couleur (vert ≥90, vert clair 70-89, ambre 40-69, rouge <40, gris si jamais essayé).
+- Boutons ✓ (approuver) / ✕ (refuser) — la valeur de status en base est `denied` (pas `rejected`, contrainte CHECK).
+
+**Côté élève** (`src/app/student/page.tsx`), polling 5s qui (a) recharge `unlocked_dictees` de SA classe (filtrée), (b) détecte les transitions de status sur ses propres demandes → toast `🔓 Dictée n°X déverrouillée !` ou erreur si `denied`.
+
+Pattern inspiré de `~/Dev/calcul-mental-prix-v2` (déployé sous math-express.vercel.app).
 
 ## Infra DB
 
@@ -64,4 +84,6 @@ Pattern réutilisable documenté dans le `CLAUDE.md` global de l'utilisateur. Im
 
 ## Persistance localStorage (Zustand)
 
-Le store `useAppStore` persiste sous la clé `dictee-master-storage` : `user`, `apiConfig`, `connectedEleve`, `currentStudentName`, `streak`, `badges`, `demoLists`, `demoWords`, `sessionHistory` (limité à 50 entrées). Attention : le localStorage est partagé entre tous les utilisateurs du même navigateur. Si un visiteur passe après un enseignant sans déconnexion explicite, ça peut créer des comportements bizarres (résidus de `connectedEleve`, etc.).
+Le store `useAppStore` persiste sous la clé `dictee-master-storage` : `user`, `apiConfig`, `connectedEleve`, `lastSelectedClasseId`, `currentStudentName`, `streak`, `badges`, `demoLists`, `demoWords`, `sessionHistory` (limité à 50 entrées). Attention : le localStorage est partagé entre tous les utilisateurs du même navigateur. Si un visiteur passe après un enseignant sans déconnexion explicite, ça peut créer des comportements bizarres (résidus de `connectedEleve`, etc.).
+
+**`lastSelectedClasseId`** — mémorise la classe consultée par le prof pour la restaurer au refresh. Attention : Zustand persist hydrate de manière asynchrone côté client. Tout `useEffect` qui lit une valeur persistée au mount **doit attendre `_hasHydrated`** dans sa dépendance, sinon il s'exécute avec les defaults (= `null`) et le reload écrase la valeur restaurée. Pattern de référence : `loadHub()` dans `src/app/teacher/page.tsx`.

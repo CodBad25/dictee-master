@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { loadStudentDicteeStats, createUnlockRequest } from "@/lib/dictee-service";
+import { loadStudentDicteeStats, createUnlockRequest, getDmClassIdByHub } from "@/lib/dictee-service";
 import { useAppStore } from "@/lib/store";
 import { getLevel, computeXPFromStats } from "@/lib/gamification";
 import { Loader2 } from "lucide-react";
@@ -75,14 +75,10 @@ export default function DicteeGrid({ unlockedPositions = [1, 2, 3], onCardClick 
         setStats(s);
       }
 
-      // Charger la première classe (pour les unlock requests)
-      const { data: classes } = await sb
-        .from("dm_classes")
-        .select("id")
-        .limit(1)
-        .single();
-      if (classes) {
-        setClassId(classes.id);
+      // Récupérer la dm_classes correspondant à la classe Hub de l'élève (pour les unlock requests)
+      if (connectedEleve) {
+        const id = await getDmClassIdByHub(connectedEleve.classeId);
+        if (id) setClassId(id);
       }
 
       setLoading(false);

@@ -19,7 +19,13 @@ import DictionaryMode from "@/components/dictionary-mode";
 import AudioWordMode from "@/components/audio-word-mode";
 import AudioDictationMode from "@/components/audio-dictation-mode";
 import type { WordList, Word } from "@/types/database";
-import { saveResult, loadActivityConfig } from "@/lib/dictee-service";
+import {
+  saveResult,
+  loadActivityConfig,
+  getDmClassIdByHub,
+  loadStudentUnlockRequests,
+} from "@/lib/dictee-service";
+import { toast } from "sonner";
 import { pingPresence } from "@/lib/presence";
 
 const DEFAULT_ACTIVITY_ORDER = [
@@ -42,6 +48,7 @@ interface SelectedDictee {
 export default function StudentPage() {
   const router = useRouter();
   const {
+    _hasHydrated,
     connectedEleve,
     setConnectedEleve,
     setUser,
@@ -59,25 +66,50 @@ export default function StudentPage() {
   const [activityOrder, setActivityOrder] = useState<string[]>(DEFAULT_ACTIVITY_ORDER);
   const [selectedWords, setSelectedWords] = useState<number[] | null>(null);
 
-  // Charger les positions déverrouillées au montage
+  // Polling 5s : positions déverrouillées + transitions de statut sur les demandes
   useEffect(() => {
-    const loadUnlockedPositions = async () => {
-      const sb = createClient();
-      const { data: classes } = await sb.from("dm_classes").select("unlocked_dictees");
-      if (classes && classes.length > 0) {
-        const allUnlocked = new Set<number>();
-        for (const c of classes) {
-          for (const pos of c.unlocked_dictees || []) {
-            allUnlocked.add(pos);
+    if (!connectedEleve) return;
+
+    const sb = createClient();
+    let dmClassId: string | null = null;
+    const knownStatus = new Map<string, string>();
+
+    const tick = async () => {
+      // 1) Résoudre dm_classes.id à partir du classeId Hub (une fois suffit, mais idempotent)
+      if (!dmClassId) {
+        dmClassId = await getDmClassIdByHub(connectedEleve.classeId);
+      }
+      if (!dmClassId) return;
+
+      // 2) Recharger les positions déverrouillées de SA classe (et seulement la sienne)
+      const { data: cls } = await sb
+        .from("dm_classes")
+        .select("unlocked_dictees")
+        .eq("id", dmClassId)
+        .maybeSingle();
+      if (cls?.unlocked_dictees) {
+        setUnlockedPositions([...cls.unlocked_dictees].sort((a, b) => a - b));
+      }
+
+      // 3) Détecter les transitions sur SES demandes (toast à l'approbation/refus)
+      const reqs = await loadStudentUnlockRequests(dmClassId, connectedEleve.eleveId);
+      for (const r of reqs) {
+        const prev = knownStatus.get(r.id);
+        if (prev && prev !== r.status) {
+          if (r.status === "approved") {
+            toast.success(`🔓 Dictée n°${r.dictee_position} déverrouillée !`);
+          } else if (r.status === "denied") {
+            toast.error(`Demande refusée pour la dictée n°${r.dictee_position}`);
           }
         }
-        if (allUnlocked.size > 0) {
-          setUnlockedPositions(Array.from(allUnlocked).sort((a, b) => a - b));
-        }
+        knownStatus.set(r.id, r.status);
       }
     };
-    loadUnlockedPositions();
-  }, []);
+
+    tick();
+    const interval = setInterval(tick, 5000);
+    return () => clearInterval(interval);
+  }, [connectedEleve]);
 
   // Ping de présence toutes les 30s
   useEffect(() => {
@@ -167,6 +199,31 @@ export default function StudentPage() {
 
     setCurrentTraining(v1List, v1Words);
   };
+
+  // Garde-fou : si le store est hydraté mais qu'aucun élève n'est connecté, on affiche
+  // un message clair plutôt qu'une vue vide trompeuse (0/26 dictées, dictées toutes verrouillées).
+  if (_hasHydrated && !connectedEleve) {
+    return (
+      <main className="min-h-dvh bg-[#f5f3ff] flex flex-col items-center justify-center p-6">
+        <div className="bg-white rounded-xl shadow-md border border-purple-100 p-8 max-w-md text-center">
+          <div className="text-4xl mb-3">⚠️</div>
+          <h1 className="text-xl font-bold text-gray-900 mb-2">
+            Aucun élève connecté
+          </h1>
+          <p className="text-sm text-gray-600 mb-6">
+            Pour accéder à la vue élève, connecte-toi depuis la page d&apos;accueil
+            ou utilise le bouton 🧪 Tester de la vue enseignant.
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+          >
+            Retour à l&apos;accueil
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   // Si un entraînement est en cours, afficher le composant correspondant
   if (currentList && currentWords.length > 0) {
