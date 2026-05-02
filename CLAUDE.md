@@ -65,6 +65,19 @@ Composant `src/components/unlock-requests-panel.tsx` rendu **directement au-dess
 
 Pattern inspiré de `~/Dev/calcul-mental-prix-v2` (déployé sous math-express.vercel.app).
 
+## Édition manuelle des pièges (depuis 02/05/2026)
+
+Le prof peut personnaliser les `spelling_errors` (distracteurs du mode « Choix orthographique ») de chaque mot via le panneau **🎯 Parcours** → sélection de la dictée → bouton **🪤 N pièges** sur l'item « Choix orthographique » (qui scrolle vers la grille de mots) → clic sur le 🪤 d'un mot → éditeur ambre.
+
+- **Édition globale** (partagée entre tous les profs). Pas d'override par classe pour aujourd'hui — à reconsidérer si Nadia veut un contenu pédagogique différent.
+- Migration SQL associée : `supabase/migration-edit-distracteurs.sql` (policies UPDATE/INSERT/DELETE sur `dictee_words`).
+- Helper côté code : `updateWordSpellingErrors(dicteeId, position, errors)` dans `src/lib/dictee-service.ts`.
+- L'auth réelle est garantie côté UI (panneau Parcours accessible uniquement à un user prof Hub).
+
+## Décisions en attente — Nadia
+
+Les mots à variantes lexicographiques (`"flou (e)"`, `"coucher (se)"`) en `dictee_words` posent un souci UX (l'élève voit littéralement la parenthèse). En attente de la décision pédagogique de Nadia (collègue) entre 3 options : (A) garder le format en base et masquer côté élève, (B) reformater la base sans annotation, (C) garder tel quel + ajouter une consigne dans le mode Choix orthographique. Voir signalements `kr18su` et `3tlpjn` dans `bug_reports` (status `read`).
+
 ## Infra DB
 
 DictéeMaster pointe sur Supabase project `szlsapcumkldapomrsqn` (org **Foollmuun's Org**, plan free). Contrainte free = 2 projets actifs max. Quand on veut réveiller `dicteemaster`, il faut pauser **SUIVI STAG** (le projet stagiaire, sans impact). Ne **jamais** pauser **MathEval** = en réalité la DB de `calcul-mental-prix-v2` utilisée par les élèves.
