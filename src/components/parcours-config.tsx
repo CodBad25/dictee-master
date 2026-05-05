@@ -318,7 +318,7 @@ export default function ParcoursConfig({
 
   return (
     <div className="fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-4xl rounded-2xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
+      <div className="bg-white w-full max-w-4xl rounded-2xl max-h-[95vh] flex flex-col animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-2xl">
           <div>
@@ -510,11 +510,18 @@ export default function ParcoursConfig({
                           key={d.id}
                           data-tour={d.position === 1 ? "dictee-first-button" : undefined}
                           onClick={() => {
-                            setSelectedDicteeId(isSelected ? null : d.id);
+                            const newId = isSelected ? null : d.id;
+                            setSelectedDicteeId(newId);
                             setSelectedDicteePos(isSelected ? null : d.position);
+                            if (newId) {
+                              setTimeout(() => {
+                                document.getElementById("dictee-detail-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                              }, 120);
+                            }
                           }}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
+                          title={`Dictée n°${d.position} — configurer les exercices et modifier les pièges`}
                           className={`w-10 h-10 rounded-xl text-sm font-bold transition-all relative ${
                             isSelected
                               ? "bg-purple-600 text-white shadow-lg scale-110"
@@ -531,12 +538,19 @@ export default function ParcoursConfig({
                       );
                     })}
                 </div>
+                {!selectedDicteeId && (
+                  <p className="mt-3 text-xs text-gray-400 flex items-center gap-1">
+                    <span>👆</span>
+                    <span>Clique sur un numéro pour configurer les exercices et modifier les pièges du mode <strong>Choix orthographique</strong></span>
+                  </p>
+                )}
               </div>
 
               {/* Section 3 — Détail dictée */}
               <AnimatePresence mode="popLayout">
                 {selectedDicteeId && (
                   <motion.div
+                    id="dictee-detail-section"
                     key={selectedDicteeId}
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -612,10 +626,10 @@ export default function ParcoursConfig({
                                     scrollToWordGrid();
                                   }}
                                   whileTap={{ scale: 0.95 }}
-                                  className="px-2 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-800 text-xs font-bold transition-colors flex items-center gap-1 flex-shrink-0"
-                                  title="Personnaliser les pièges proposés à l'élève"
+                                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors flex items-center gap-1.5 flex-shrink-0 shadow-sm"
+                                  title="Modifier les fausses orthographes proposées à l'élève"
                                 >
-                                  🪤 {totalErrors} pièges
+                                  🪤 Modifier les pièges
                                 </motion.button>
                               )}
                               <motion.button
