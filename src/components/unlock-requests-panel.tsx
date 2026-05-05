@@ -82,12 +82,16 @@ export default function UnlockRequestsPanel({ classId }: UnlockRequestsPanelProp
   }
 
   const handleApprove = async (req: UnlockRequest) => {
-    const ok = await approveUnlockRequest(req.id, req.class_id, req.dictee_position);
-    if (ok) {
-      toast.success(`Demande approuvée pour ${req.student_name}`);
-      setRequests((prev) => prev.filter((r) => r.id !== req.id));
-    } else {
-      toast.error("Erreur lors de l'approbation");
+    try {
+      const ok = await approveUnlockRequest(req.id, req.class_id, req.dictee_position);
+      if (ok) {
+        toast.success(`Demande approuvée pour ${req.student_name}`);
+        setRequests((prev) => prev.filter((r) => r.id !== req.id));
+      } else {
+        toast.error("Erreur lors de l'approbation — dictée non déverrouillée");
+      }
+    } catch {
+      toast.error("Erreur inattendue lors de l'approbation");
     }
   };
 

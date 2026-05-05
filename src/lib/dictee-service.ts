@@ -506,20 +506,27 @@ export async function approveUnlockRequest(
   }
 
   // Ajouter la dictée aux positions déverrouillées si elle n'y est pas
-  const { data: dmClass } = await sb
+  const { data: dmClass, error: readError } = await sb
     .from("dm_classes")
     .select("unlocked_dictees")
     .eq("id", classId)
-    .single();
+    .maybeSingle();
 
-  if (dmClass) {
+  if (readError || !dmClass) {
+    console.error("approveUnlockRequest: dm_classes introuvable", classId, readError?.message);
+    return false;
+  }
+
+  try {
     const newPositions = [
       ...new Set([...(dmClass.unlocked_dictees || []), dicteePosition]),
     ].sort((a, b) => a - b);
     await updateUnlockedDictees(classId, newPositions);
+    return true;
+  } catch (e) {
+    console.error("approveUnlockRequest: échec updateUnlockedDictees", e);
+    return false;
   }
-
-  return true;
 }
 
 export async function rejectUnlockRequest(requestId: string): Promise<boolean> {
