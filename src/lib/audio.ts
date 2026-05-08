@@ -57,6 +57,7 @@ export function playWordAudio(
   onStart?: () => void,
   onEnd?: () => void,
 ): void {
+  console.trace(`[audio] playWordAudio("${word}") — isAudioPlaying=${isAudioPlaying}`);
   // Bloquer les appels concurrents (protection contre les boucles)
   if (isAudioPlaying) return;
 
