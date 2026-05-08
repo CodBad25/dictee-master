@@ -2,6 +2,8 @@
 
 let currentAudio: HTMLAudioElement | null = null;
 let isAudioPlaying = false;
+let lastPlayedWord: string | null = null;
+let lastPlayTime = 0;
 
 /**
  * Convertit un mot de la base de données en nom de fichier audio.
@@ -58,6 +60,17 @@ export function playWordAudio(
   onEnd?: () => void,
 ): void {
   console.trace(`[audio] playWordAudio("${word}") — isAudioPlaying=${isAudioPlaying}`);
+
+  // Bloquer les rejeux du même mot dans les 1.5s (protection contre les boucles infinies)
+  const now = Date.now();
+  if (lastPlayedWord === word && (now - lastPlayTime) < 1500) {
+    console.warn(`[audio] Ignoring duplicate play of "${word}" (last played ${now - lastPlayTime}ms ago)`);
+    return;
+  }
+
+  lastPlayedWord = word;
+  lastPlayTime = now;
+
   // Bloquer les appels concurrents (protection contre les boucles)
   if (isAudioPlaying) return;
 
