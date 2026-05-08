@@ -69,11 +69,12 @@ export default function AudioWordMode() {
   }, [currentWord]);
 
   useEffect(() => {
-    if (phase === "listening" && currentWord && !isPlaying) {
+    if (phase === "listening") {
       const timer = setTimeout(() => playWord(), 300);
       return () => clearTimeout(timer);
     }
-  }, [phase, currentWord, isPlaying, playWord]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, currentIndex]);
 
   useEffect(() => {
     if (phase === "listening") {
