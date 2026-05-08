@@ -222,6 +222,9 @@ export default function TrainingMode() {
   const normalizeWord = (word: string): string => {
     return word
       .trim()
+      // Ignorer les symboles parasites en fin de saisie (ex: "soirée$" → "soirée")
+      .replace(/[^a-zA-ZÀ-ÿœæŒÆ0-9\s''-]+$/, "")
+      .trim()
       // Normaliser les espaces multiples
       .replace(/\s+/g, " ")
       // Normaliser les apostrophes (typographiques → droites)
