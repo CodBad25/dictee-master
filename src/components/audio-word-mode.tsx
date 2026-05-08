@@ -54,12 +54,7 @@ export default function AudioWordMode() {
   const wordsRef = useRef(currentWords);
   wordsRef.current = currentWords;
 
-  const currentWord = currentWords[currentIndex];
-
-  if (!currentList || !currentWords.length) return null;
-  const progress = ((currentIndex + 1) / currentWords.length) * 100;
-  const correctCount = answers.filter(a => a.isCorrect).length;
-
+  // Tous les hooks AVANT le return conditionnel (Rules of Hooks)
   const playWordAtIndex = useCallback((index: number) => {
     const word = wordsRef.current[index];
     if (!word) return;
@@ -87,6 +82,12 @@ export default function AudioWordMode() {
       inputRef.current?.focus();
     }
   }, [phase, currentIndex]);
+
+  const currentWord = currentWords[currentIndex];
+
+  if (!currentList || !currentWords.length) return null;
+  const progress = ((currentIndex + 1) / currentWords.length) * 100;
+  const correctCount = answers.filter(a => a.isCorrect).length;
 
   const handleValidate = () => {
     if (!currentWord || answer.trim().length === 0) {
