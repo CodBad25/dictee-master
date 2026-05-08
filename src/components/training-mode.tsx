@@ -229,8 +229,9 @@ export default function TrainingMode() {
   };
 
   const splitArticle = (word: string) => {
-    const match = word.match(/^(le |la |l'|un |une |les |des |du )(.*)/i);
-    return match ? { article: match[1], base: match[2] } : { article: "", base: word };
+    const normalized = word.replace(/[‘’ʼ]/g, "'");
+    const match = normalized.match(/^(le |la |l'|un |une |les |des |du )(.*)/i);
+    return match ? { article: match[1], base: match[2] } : { article: "", base: normalized };
   };
 
   const compareWords = (userAnswer: string, correctWord: string): boolean => {

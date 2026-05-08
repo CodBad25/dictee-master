@@ -276,22 +276,29 @@ export default function TeacherPage() {
 
   // Toggle lock/unlock
   const toggleLock = async (position: number) => {
+    if (!dmClassId) {
+      toast.error("Classe non chargée — réessaie dans un instant");
+      return;
+    }
+
     const newUnlocked = unlockedPos.includes(position)
       ? unlockedPos.filter((p) => p !== position)
       : [...unlockedPos, position];
 
     setUnlockedPos(newUnlocked);
 
-    if (dmClassId) {
-      try {
-        await supabase
-          .from("dm_classes")
-          .update({ unlocked_dictees: newUnlocked })
-          .eq("id", dmClassId);
-      } catch (error) {
-        console.error("Error updating lock state:", error);
-        toast.error("Erreur lors de la mise à jour");
-      }
+    try {
+      const { error } = await supabase
+        .from("dm_classes")
+        .update({ unlocked_dictees: newUnlocked })
+        .eq("id", dmClassId);
+      if (error) throw error;
+      const action = newUnlocked.includes(position) ? "déverrouillée" : "verrouillée";
+      toast.success(`Dictée n°${position} ${action}`);
+    } catch (error) {
+      console.error("Error updating lock state:", error);
+      setUnlockedPos(unlockedPos); // rollback UI
+      toast.error("Erreur lors de la mise à jour — non enregistré");
     }
   };
 
