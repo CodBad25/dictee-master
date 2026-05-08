@@ -1,5 +1,9 @@
 "use client";
 
+// État module-level : survit aux remontages du composant (polling Supabase, etc.)
+// Clé = listId, valeur = index courant. Réinitialisé si on change de liste.
+const sessionState: { listId: string | null; index: number } = { listId: null, index: 0 };
+
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, Check, X, RotateCcw, Trophy, Sparkles, ArrowRight } from "lucide-react";
@@ -42,8 +46,15 @@ export default function AudioWordMode() {
   } = useAppStore();
   const { saveSession } = useSupabaseSync();
 
-  // Tous les hooks AVANT le return conditionnel (Rules of Hooks)
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Restaurer l'index depuis le module-level si c'est la même liste (remontage)
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    if (currentList && sessionState.listId === currentList.id) {
+      return sessionState.index;
+    }
+    sessionState.listId = currentList?.id ?? null;
+    sessionState.index = 0;
+    return 0;
+  });
   const [answer, setAnswer] = useState("");
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [phase, setPhase] = useState<Phase>("listening");
@@ -53,6 +64,8 @@ export default function AudioWordMode() {
   const inputRef = useRef<HTMLInputElement>(null);
   const wordsRef = useRef(currentWords);
   const hasInitialPlayedRef = useRef(false);
+  const autoAdvanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleNextRef = useRef<() => void>(() => {});
   wordsRef.current = currentWords;
 
   // Tous les hooks AVANT le return conditionnel (Rules of Hooks)
@@ -71,21 +84,31 @@ export default function AudioWordMode() {
     playWordAtIndex(currentIndex);
   }, [currentIndex, playWordAtIndex]);
 
-  // Auto-play du premier mot au montage uniquement
+  // Auto-play au montage (ou remontage) : joue le mot courant
   useEffect(() => {
     if (hasInitialPlayedRef.current) return;
     hasInitialPlayedRef.current = true;
-
-    const timer = setTimeout(() => playWordAtIndex(0), 300);
+    const idxToPlay = sessionState.index;
+    const timer = setTimeout(() => playWordAtIndex(idxToPlay), 300);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (phase === "listening") {
-      inputRef.current?.focus();
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [phase, currentIndex]);
+
+  // Entrée = Suivant en phase feedback
+  useEffect(() => {
+    if (phase !== "feedback") return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Enter") handleNextRef.current();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [phase]);
 
   const currentWord = currentWords[currentIndex];
 
@@ -117,12 +140,21 @@ export default function AudioWordMode() {
         spread: 70,
         origin: { y: 0.6 },
       });
+      autoAdvanceTimerRef.current = setTimeout(() => {
+        autoAdvanceTimerRef.current = null;
+        handleNextRef.current();
+      }, 1200);
     }
   };
 
   const handleNext = () => {
+    if (autoAdvanceTimerRef.current) {
+      clearTimeout(autoAdvanceTimerRef.current);
+      autoAdvanceTimerRef.current = null;
+    }
     if (currentIndex < currentWords.length - 1) {
       const nextIndex = currentIndex + 1;
+      sessionState.index = nextIndex;
       setCurrentIndex(nextIndex);
       setAnswer("");
       setIsCorrect(null);
@@ -132,6 +164,7 @@ export default function AudioWordMode() {
       handleFinish();
     }
   };
+  handleNextRef.current = handleNext;
 
   const handleFinish = async () => {
     stopAudio();
@@ -161,6 +194,8 @@ export default function AudioWordMode() {
   };
 
   const handleRetry = () => {
+    sessionState.listId = null;
+    sessionState.index = 0;
     clearCurrentTraining();
   };
 
@@ -347,13 +382,24 @@ export default function AudioWordMode() {
                 </div>
               )}
 
-              <Button
-                onClick={handleNext}
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-lg shadow-md font-semibold"
-              >
-                <ArrowRight className="w-4 h-4 mr-2" />
-                Suivant
-              </Button>
+              {isCorrect ? (
+                <div className="w-full h-2 bg-emerald-100 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-emerald-500 rounded-full"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 1.2, ease: "linear" }}
+                  />
+                </div>
+              ) : (
+                <Button
+                  onClick={handleNext}
+                  className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:shadow-lg shadow-md font-semibold"
+                >
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  Suivant
+                </Button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
