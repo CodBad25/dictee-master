@@ -51,7 +51,8 @@ export default function AudioWordMode() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [startTime] = useState(Date.now());
   const inputRef = useRef<HTMLInputElement>(null);
-  const lastAutoPlayedIndex = useRef(-1);
+  const wordsRef = useRef(currentWords);
+  wordsRef.current = currentWords;
 
   const currentWord = currentWords[currentIndex];
 
@@ -59,23 +60,27 @@ export default function AudioWordMode() {
   const progress = ((currentIndex + 1) / currentWords.length) * 100;
   const correctCount = answers.filter(a => a.isCorrect).length;
 
-  const playWord = useCallback(() => {
-    if (!currentWord) return;
+  const playWordAtIndex = useCallback((index: number) => {
+    const word = wordsRef.current[index];
+    if (!word) return;
     setIsPlaying(true);
     playWordAudio(
-      currentWord.word,
+      word.word,
       () => setIsPlaying(true),
       () => setIsPlaying(false)
     );
-  }, [currentWord]);
+  }, []);
 
+  const playWord = useCallback(() => {
+    playWordAtIndex(currentIndex);
+  }, [currentIndex, playWordAtIndex]);
+
+  // Auto-play du premier mot au montage uniquement
   useEffect(() => {
-    if (phase === "listening" && lastAutoPlayedIndex.current !== currentIndex) {
-      lastAutoPlayedIndex.current = currentIndex;
-      const timer = setTimeout(() => playWord(), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [phase, currentIndex, playWord]);
+    const timer = setTimeout(() => playWordAtIndex(0), 300);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (phase === "listening") {
@@ -112,10 +117,12 @@ export default function AudioWordMode() {
 
   const handleNext = () => {
     if (currentIndex < currentWords.length - 1) {
-      setCurrentIndex(i => i + 1);
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
       setAnswer("");
       setIsCorrect(null);
       setPhase("listening");
+      setTimeout(() => playWordAtIndex(nextIndex), 300);
     } else {
       handleFinish();
     }
