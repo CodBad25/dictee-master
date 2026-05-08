@@ -52,6 +52,7 @@ export default function AudioWordMode() {
   const [startTime] = useState(Date.now());
   const inputRef = useRef<HTMLInputElement>(null);
   const wordsRef = useRef(currentWords);
+  const hasInitialPlayedRef = useRef(false);
   wordsRef.current = currentWords;
 
   // Tous les hooks AVANT le return conditionnel (Rules of Hooks)
@@ -72,6 +73,9 @@ export default function AudioWordMode() {
 
   // Auto-play du premier mot au montage uniquement
   useEffect(() => {
+    if (hasInitialPlayedRef.current) return;
+    hasInitialPlayedRef.current = true;
+
     const timer = setTimeout(() => playWordAtIndex(0), 300);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
