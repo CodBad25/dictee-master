@@ -1,6 +1,7 @@
 // Lecture audio des mots — fichiers MP3 pré-générés avec fallback Web Speech API
 
 let currentAudio: HTMLAudioElement | null = null;
+let isAudioPlaying = false;
 
 /**
  * Convertit un mot de la base de données en nom de fichier audio.
@@ -56,13 +57,27 @@ export function playWordAudio(
   onStart?: () => void,
   onEnd?: () => void,
 ): void {
-  // Arrêter tout son en cours
-  stopAudio();
+  // Bloquer les appels concurrents (protection contre les boucles)
+  if (isAudioPlaying) return;
+
+  // Stopper l'audio précédent sans toucher au flag (on va le set juste après)
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  if (typeof speechSynthesis !== "undefined") {
+    speechSynthesis.cancel();
+  }
+
+  isAudioPlaying = true;
+
+  const wrappedOnEnd = () => {
+    isAudioPlaying = false;
+    onEnd?.();
+  };
 
   const candidates = wordToFileName(word);
-
-  // Essayer chaque candidat
-  tryPlayAudio(candidates, word, onStart, onEnd);
+  tryPlayAudio(candidates, word, onStart, wrappedOnEnd);
 }
 
 async function tryPlayAudio(
@@ -145,6 +160,7 @@ export function playTextAudio(
 
 /** Arrête tout son en cours (MP3 ou Speech). */
 export function stopAudio(): void {
+  isAudioPlaying = false;
   if (currentAudio) {
     currentAudio.pause();
     currentAudio = null;
