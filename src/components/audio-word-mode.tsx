@@ -51,6 +51,7 @@ export default function AudioWordMode() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [startTime] = useState(Date.now());
   const inputRef = useRef<HTMLInputElement>(null);
+  const lastAutoPlayedIndex = useRef(-1);
 
   const currentWord = currentWords[currentIndex];
 
@@ -69,12 +70,12 @@ export default function AudioWordMode() {
   }, [currentWord]);
 
   useEffect(() => {
-    if (phase === "listening") {
+    if (phase === "listening" && lastAutoPlayedIndex.current !== currentIndex) {
+      lastAutoPlayedIndex.current = currentIndex;
       const timer = setTimeout(() => playWord(), 300);
       return () => clearTimeout(timer);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, currentIndex]);
+  }, [phase, currentIndex, playWord]);
 
   useEffect(() => {
     if (phase === "listening") {
