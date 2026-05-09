@@ -375,10 +375,8 @@ const ALL_ACTIVITIES_CANONICAL = [
 ];
 
 // Activités temporairement désactivées (cachées partout côté élève + prof).
-// Pour réactiver : retirer de cet ensemble. Le code et la DB restent en place.
-// 2026-05-09 : grammar_class désactivé sur recommandation de Nadia — l'article
-// stocké avec le mot ("le prochain", "l'épaule") induit le classifieur en erreur.
-const DISABLED_ACTIVITIES = new Set(["grammar_class"]);
+// Pour désactiver une activité : ajouter son id dans cet ensemble.
+const DISABLED_ACTIVITIES = new Set<string>([]);
 
 // Merge un ordre stocké avec la liste canonique : préserve l'ordre choisi par
 // le prof, ajoute en queue toute activité nouvelle, et filtre les activités

@@ -32,6 +32,7 @@ import { pingPresence } from "@/lib/presence";
 const DEFAULT_ACTIVITY_ORDER = [
   "flashcard",
   "genre",
+  "grammar_class",
   "spelling_choice",
   "definitions",
   "dictionary",
