@@ -33,6 +33,7 @@ const ACTIVITY_LABELS: Record<string, { label: string; icon: string; desc: strin
   audio_word: { label: "Audio mot", icon: "🎧", desc: "Écoute et écris le mot correctement" },
   fill_blanks: { label: "Texte à trous", icon: "📝", desc: "Complète le texte avec les bons mots" },
   audio_dictation: { label: "Dictée audio", icon: "🎙️", desc: "Écoute la dictée phrase par phrase et écris" },
+  grammar_class: { label: "Classes grammaticales", icon: "🔤", desc: "Choisis la classe grammaticale du mot" },
 };
 
 export default function DicteeDetail({

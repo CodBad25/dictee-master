@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import { playWordAudio, stopAudio } from "@/lib/audio";
+import { expandParentheticalVariants } from "@/lib/word-variants";
 import confetti from "canvas-confetti";
 
 type Phase = "listening" | "feedback" | "result";
@@ -126,11 +127,13 @@ export default function AudioWordMode() {
 
     const userAnswer = answer.trim();
     const normalized = normalizeForComparison(userAnswer);
-    const expectedNormalized = normalizeForComparison(currentWord.word);
-    // Accepter : réponse exacte OU sans article
-    const correct = normalized === expectedNormalized
-      || normalizeForComparison(stripArticle(userAnswer)) === normalizeForComparison(stripArticle(currentWord.word))
-      || normalized === normalizeForComparison(stripArticle(currentWord.word));
+    const userNoArticle = normalizeForComparison(stripArticle(userAnswer));
+    // Accepter : réponse exacte, sans article, ou toute variante parenthétique ("flou (e)" → "flou", "floue", ...)
+    const expectedVariants = expandParentheticalVariants(currentWord.word).flatMap(v => [v, stripArticle(v)]);
+    const correct = expectedVariants.some(v => {
+      const n = normalizeForComparison(v);
+      return normalized === n || userNoArticle === n;
+    });
 
     setIsCorrect(correct);
     setAnswers(prev => [...prev, { word: currentWord.word, userAnswer, isCorrect: correct }]);

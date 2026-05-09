@@ -12,7 +12,13 @@ import {
   saveDicteeOverride,
   deleteDicteeOverride,
   updateWordSpellingErrors,
+  updateWordGrammaticalClass,
 } from "@/lib/dictee-service";
+import {
+  classifyWord,
+  GRAMMAR_LABELS,
+  type GrammaticalClass,
+} from "@/lib/grammar-classifier";
 
 const ACTIVITY_LABELS: Record<string, { label: string; icon: string; desc: string; color: string }> = {
   flashcard: { label: "Flashcard", icon: "🃏", desc: "Mémorise l'orthographe de chaque mot", color: "from-blue-400 to-blue-600" },
@@ -23,6 +29,7 @@ const ACTIVITY_LABELS: Record<string, { label: string; icon: string; desc: strin
   audio_word: { label: "Audio mot", icon: "🎧", desc: "Écoute et écris le mot correctement", color: "from-indigo-400 to-indigo-600" },
   fill_blanks: { label: "Texte à trous", icon: "📝", desc: "Complète le texte avec les bons mots", color: "from-orange-400 to-orange-600" },
   audio_dictation: { label: "Dictée audio", icon: "🎙️", desc: "Écoute la dictée phrase par phrase et écris", color: "from-purple-400 to-purple-600" },
+  grammar_class: { label: "Classes grammaticales", icon: "🔤", desc: "Choisis la classe grammaticale du mot", color: "from-cyan-400 to-cyan-600" },
 };
 
 const ALL_ACTIVITIES = Object.keys(ACTIVITY_LABELS);
@@ -66,8 +73,8 @@ export default function ParcoursConfig({
   const [overrides, setOverrides] = useState<Record<string, { activityOrder: string[]; selectedWords: number[] | null }>>({});
   const [overridesDirty, setOverridesDirty] = useState<Set<string>>(new Set());
 
-  // Mots de la dictée sélectionnée (avec leurs distracteurs éditables)
-  const [dicteeWords, setDicteeWords] = useState<{ word: string; position: number; spelling_errors: string[] }[]>([]);
+  // Mots de la dictée sélectionnée (avec leurs distracteurs et classe grammaticale éditables)
+  const [dicteeWords, setDicteeWords] = useState<{ word: string; position: number; spelling_errors: string[]; grammatical_class: string | null }[]>([]);
 
   // État de l'éditeur de distracteurs (un mot à la fois)
   const [editingWordPos, setEditingWordPos] = useState<number | null>(null);
@@ -75,6 +82,10 @@ export default function ParcoursConfig({
   const [newErrorDraft, setNewErrorDraft] = useState("");
   const [savingErrors, setSavingErrors] = useState(false);
   const [highlightWordGrid, setHighlightWordGrid] = useState(false);
+
+  // État de l'éditeur de classe grammaticale (un mot à la fois)
+  const [editingGrammarPos, setEditingGrammarPos] = useState<number | null>(null);
+  const [savingGrammar, setSavingGrammar] = useState(false);
 
   // Total des pièges sur toute la dictée (pour l'indicateur sur le chip Choix orthographique)
   const totalErrors = dicteeWords.reduce((s, w) => s + (w.spelling_errors?.length || 0), 0);
@@ -121,7 +132,7 @@ export default function ParcoursConfig({
       const sb = createClient();
       const { data } = await sb
         .from("dictee_words")
-        .select("word, position, spelling_errors")
+        .select("word, position, spelling_errors, grammatical_class")
         .eq("dictee_id", selectedDicteeId)
         .order("position");
       setDicteeWords(
@@ -129,12 +140,14 @@ export default function ParcoursConfig({
           word: w.word,
           position: w.position,
           spelling_errors: Array.isArray(w.spelling_errors) ? w.spelling_errors : [],
+          grammatical_class: w.grammatical_class || null,
         })),
       );
-      // Reset éditeur de pièges si on change de dictée
+      // Reset éditeurs si on change de dictée
       setEditingWordPos(null);
       setEditingErrors([]);
       setNewErrorDraft("");
+      setEditingGrammarPos(null);
     };
     load();
   }, [selectedDicteeId]);
@@ -167,6 +180,32 @@ export default function ParcoursConfig({
 
   const removeErrorAt = (idx: number) => {
     setEditingErrors(editingErrors.filter((_, i) => i !== idx));
+  };
+
+  // Helpers éditeur classe grammaticale
+  const startEditGrammar = (position: number) => {
+    setEditingGrammarPos(position);
+    // Ferme l'éditeur de pièges si ouvert
+    if (editingWordPos !== null) {
+      setEditingWordPos(null);
+      setEditingErrors([]);
+      setNewErrorDraft("");
+    }
+  };
+  const cancelEditGrammar = () => setEditingGrammarPos(null);
+  const setGrammarFor = async (position: number, gc: GrammaticalClass | null) => {
+    if (!selectedDicteeId) return;
+    setSavingGrammar(true);
+    try {
+      await updateWordGrammaticalClass(selectedDicteeId, position, gc);
+      setDicteeWords((prev) =>
+        prev.map((w) => (w.position === position ? { ...w, grammatical_class: gc } : w)),
+      );
+      toast.success(gc ? `Classe : ${GRAMMAR_LABELS[gc]}` : "Retour à l'auto-détection");
+    } catch (e: any) {
+      toast.error(`Erreur : ${e?.message || "sauvegarde impossible"}`);
+    }
+    setSavingGrammar(false);
   };
 
   const saveErrors = async () => {
@@ -747,6 +786,23 @@ export default function ParcoursConfig({
                                     </span>
                                   )}
                                 </button>
+                                <button
+                                  onClick={() => (editingGrammarPos === w.position ? cancelEditGrammar() : startEditGrammar(w.position))}
+                                  className={`px-2 py-2 border-l text-base transition-colors ${
+                                    editingGrammarPos === w.position
+                                      ? "bg-cyan-100 border-cyan-300 text-cyan-700 hover:bg-cyan-200"
+                                      : w.grammatical_class
+                                      ? "bg-cyan-50 border-gray-200 text-cyan-700 hover:bg-cyan-100"
+                                      : "bg-white border-gray-200 text-gray-400 hover:bg-cyan-50 hover:text-cyan-700"
+                                  }`}
+                                  title={
+                                    w.grammatical_class
+                                      ? `Classe : ${GRAMMAR_LABELS[w.grammatical_class as GrammaticalClass]} (édité)`
+                                      : `Classe auto : ${GRAMMAR_LABELS[classifyWord(w.word)]}`
+                                  }
+                                >
+                                  🔤
+                                </button>
                               </div>
                             );
                           })}
@@ -848,6 +904,80 @@ export default function ParcoursConfig({
                                   )}
                                 </button>
                               </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Éditeur de classe grammaticale pour le mot sélectionné */}
+                        {editingGrammarPos !== null && (() => {
+                          const w = dicteeWords.find((x) => x.position === editingGrammarPos);
+                          if (!w) return null;
+                          const auto = classifyWord(w.word);
+                          const current = (w.grammatical_class as GrammaticalClass | null) || auto;
+                          const allClasses: GrammaticalClass[] = [
+                            "nom", "nom_propre", "verbe", "adjectif",
+                            "determinant", "pronom", "adverbe", "preposition", "conjonction",
+                          ];
+                          return (
+                            <div className="mt-4 p-4 bg-cyan-50 border-2 border-cyan-200 rounded-xl">
+                              <div className="flex items-center justify-between mb-3">
+                                <div>
+                                  <h6 className="text-sm font-bold text-cyan-900">
+                                    🔤 Classe grammaticale pour « {w.word} »
+                                  </h6>
+                                  <p className="text-xs text-cyan-800 mt-0.5">
+                                    Auto-détection : <strong>{GRAMMAR_LABELS[auto]}</strong>
+                                    {w.grammatical_class && (
+                                      <span className="ml-2">
+                                        — édité : <strong>{GRAMMAR_LABELS[w.grammatical_class as GrammaticalClass]}</strong>
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={cancelEditGrammar}
+                                  className="p-1 rounded hover:bg-cyan-200 transition-colors text-cyan-800"
+                                  title="Fermer"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+
+                              <div className="flex flex-wrap gap-2 mb-3">
+                                {allClasses.map((gc) => {
+                                  const active = current === gc;
+                                  const isManual = w.grammatical_class === gc;
+                                  return (
+                                    <button
+                                      key={gc}
+                                      onClick={() => setGrammarFor(w.position, gc)}
+                                      disabled={savingGrammar}
+                                      className={`px-3 py-1.5 rounded-lg text-sm font-semibold border-2 transition-colors disabled:opacity-50 ${
+                                        active
+                                          ? isManual
+                                            ? "bg-cyan-600 border-cyan-700 text-white"
+                                            : "bg-cyan-100 border-cyan-400 text-cyan-900"
+                                          : "bg-white border-gray-200 text-gray-700 hover:border-cyan-400 hover:bg-cyan-50"
+                                      }`}
+                                      title={active && isManual ? "Choix actuel (édité)" : active ? "Choix actuel (auto)" : ""}
+                                    >
+                                      {GRAMMAR_LABELS[gc]}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
+                              {w.grammatical_class && (
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={() => setGrammarFor(w.position, null)}
+                                    disabled={savingGrammar}
+                                    className="px-3 py-1.5 text-xs font-semibold text-cyan-700 hover:bg-cyan-200 rounded-lg transition-colors disabled:opacity-50"
+                                  >
+                                    Revenir à l'auto-détection
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           );
                         })()}

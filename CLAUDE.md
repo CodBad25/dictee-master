@@ -25,7 +25,7 @@ Le compte Lambda est partagé par tous les profs (test) et les visiteurs (démo)
 
 Le visiteur a `user.id === "visitor"` et était auparavant exposé à toutes les vraies classes Hub avec les vrais prénoms d'élèves. **Garde-fou actuel** : `loadHub()` dans `src/app/teacher/page.tsx` filtre les classes Hub pour ne garder que `"6T"` quand `user.id === "visitor"`. Seule 6T contient des élèves démo (ceux dont le `student_id` commence par `6t-`, cf. `teacher/page.tsx:326-332`).
 
-**TODO** : refonte propre du mode Visiteur avec un dataset complètement fictif (court-circuiter les appels Hub et Supabase). À faire en même temps que la migration VPS OVH pour ne pas refondre la couche data deux fois.
+**TODO** : refonte propre du mode Visiteur avec un dataset complètement fictif (court-circuiter les appels Hub et Supabase). À faire en même temps que la migration vers le VPS Oracle Cloud (cf. section Infra DB).
 
 ## Bouton 🧪 Tester (header prof)
 
@@ -84,7 +84,13 @@ DictéeMaster pointe sur Supabase project `szlsapcumkldapomrsqn` (org **Foollmuu
 
 **Symptôme typique de projet pausé** : Lambda voit du vide partout, l'app affiche une grille à zéro. Les `try/catch` silencieux masquent l'erreur réseau. Vérifier d'abord le statut Supabase avant de chercher un bug code.
 
-**Plan validé** : migration vers le **VPS OVH `vps-4560c090.vps.ovh.net`** (déjà payé ~12 €/mois TTC, 6 vCPU + 12 Go RAM + 100 Go SSD, Ubuntu 24.04, IPv4 91.134.135.96). Sur ce VPS : Coolify + Postgres unifié (1 schéma par projet) + Soketi (Realtime pour la vue live élèves) + Caddy + backups Backblaze B2. À faire en une session de ~4 h. Réversible (résiliation OVH possible à anniversaire mensuel).
+**Migration cible : VPS Oracle Cloud** (abonnement déjà existant) — c'est le serveur qui héberge déjà le **Hub Beltools** (`hub.beltools.fr`). Détails confirmés côté Hub (`~/Dev/chaissac-hub/CLAUDE.md`) :
+- IP : `89.168.61.230`, ARM64 Ampere, Ubuntu, user SSH `ubuntu`, clé `~/Downloads/ssh-key-2026-02-22.key`
+- Le Hub tourne en **Docker** sur port 3004, exposé via **Nginx reverse proxy** + **Let's Encrypt** (auto-renew)
+- DB du Hub : **Neon Postgres** (serverless), via Prisma 7
+- Domaine `hub.beltools.fr` géré sur **DNS OVH** → 89.168.61.230
+
+Le plan VPS OVH évoqué dans une ancienne version de cette doc est **abandonné** : on consolide tout sur le VPS Oracle existant. Pour DictéeMaster, options à trancher : (a) lui ajouter un container Docker à côté du Hub (port libre + nouveau bloc Nginx + sous-domaine), (b) utiliser Neon Postgres au lieu de Supabase pour la DB. Pas encore fait — DictéeMaster pointe toujours sur Supabase free pour aujourd'hui.
 
 ## Conventions UI
 

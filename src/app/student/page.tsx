@@ -18,6 +18,7 @@ import GenreMode from "@/components/genre-mode";
 import DictionaryMode from "@/components/dictionary-mode";
 import AudioWordMode from "@/components/audio-word-mode";
 import AudioDictationMode from "@/components/audio-dictation-mode";
+import GrammarClassMode from "@/components/grammar-class-mode";
 import type { WordList, Word } from "@/types/database";
 import {
   saveResult,
@@ -31,6 +32,7 @@ import { pingPresence } from "@/lib/presence";
 const DEFAULT_ACTIVITY_ORDER = [
   "flashcard",
   "genre",
+  "grammar_class",
   "spelling_choice",
   "definitions",
   "dictionary",
@@ -168,6 +170,7 @@ export default function StudentPage() {
       audio_word: "audio-word",
       fill_blanks: "fill-blanks",
       audio_dictation: "audio-dictation",
+      grammar_class: "grammar-class",
     };
 
     const v1Mode = modeMap[mode] || "flashcard";
@@ -250,6 +253,9 @@ export default function StudentPage() {
     }
     if (currentList.mode === "audio-dictation") {
       return <AudioDictationMode />;
+    }
+    if (currentList.mode === "grammar-class") {
+      return <GrammarClassMode />;
     }
     return <TrainingMode />;
   }

@@ -69,6 +69,21 @@ export async function updateWordSpellingErrors(
   if (error) throw new Error(error.message);
 }
 
+// Met à jour la classe grammaticale d'un mot donné. null = retour à l'auto-détection.
+export async function updateWordGrammaticalClass(
+  dicteeId: string,
+  position: number,
+  grammaticalClass: string | null,
+): Promise<void> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dictee_words")
+    .update({ grammatical_class: grammaticalClass })
+    .eq("dictee_id", dicteeId)
+    .eq("position", position);
+  if (error) throw new Error(error.message);
+}
+
 // === RÉSULTATS ===
 
 // Résout l'UUID interne dm_classes.id à partir du classeId Hub.
@@ -257,7 +272,7 @@ export async function loadClassDefaultOrder(classId: string): Promise<string[] |
     .select("default_activity_order")
     .eq("id", classId)
     .single();
-  return data?.default_activity_order || null;
+  return mergeWithCanonical(data?.default_activity_order);
 }
 
 export async function loadAllDicteeOverrides(classId: string, studentId?: string | null): Promise<
@@ -347,9 +362,27 @@ export async function loadStudentsWithOverrides(classId: string): Promise<Set<st
 }
 
 const DEFAULT_ACTIVITY_ORDER_FALLBACK = [
-  "flashcard", "genre", "spelling_choice", "definitions",
+  "flashcard", "genre", "grammar_class", "spelling_choice", "definitions",
   "dictionary", "audio_word", "fill_blanks", "audio_dictation",
 ];
+
+// Liste canonique de toutes les activités existantes — source de vérité.
+// Ajoute ici toute nouvelle activité pour qu'elle apparaisse automatiquement
+// dans les ordres déjà stockés en DB (sans avoir à les réécrire).
+const ALL_ACTIVITIES_CANONICAL = [
+  "flashcard", "genre", "grammar_class", "spelling_choice", "definitions",
+  "dictionary", "audio_word", "fill_blanks", "audio_dictation",
+];
+
+// Merge un ordre stocké avec la liste canonique : préserve l'ordre choisi par
+// le prof, et ajoute en queue toute activité nouvelle qui n'était pas connue
+// au moment où l'ordre a été enregistré.
+function mergeWithCanonical(stored: string[] | null | undefined): string[] {
+  if (!stored || stored.length === 0) return ALL_ACTIVITIES_CANONICAL;
+  const known = new Set(stored);
+  const missing = ALL_ACTIVITIES_CANONICAL.filter(a => !known.has(a));
+  return [...stored, ...missing];
+}
 
 export async function loadActivityConfig(
   className: string,
@@ -381,7 +414,7 @@ export async function loadActivityConfig(
 
     if (studentOverride) {
       return {
-        activityOrder: studentOverride.activity_order,
+        activityOrder: mergeWithCanonical(studentOverride.activity_order),
         selectedWords: studentOverride.selected_words,
       };
     }
@@ -398,14 +431,14 @@ export async function loadActivityConfig(
 
   if (override) {
     return {
-      activityOrder: override.activity_order,
+      activityOrder: mergeWithCanonical(override.activity_order),
       selectedWords: override.selected_words,
     };
   }
 
   // Priorité 3 : défaut de la classe
   return {
-    activityOrder: cls.default_activity_order || DEFAULT_ACTIVITY_ORDER_FALLBACK,
+    activityOrder: mergeWithCanonical(cls.default_activity_order),
     selectedWords: null,
   };
 }

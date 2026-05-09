@@ -32,6 +32,7 @@ import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import DicteeResults from "@/components/dictee-results";
 import confetti from "canvas-confetti";
 import { playWordAudio } from "@/lib/audio";
+import { expandParentheticalVariants } from "@/lib/word-variants";
 
 type Phase = "setup" | "memorize" | "write" | "result";
 
@@ -239,25 +240,27 @@ export default function TrainingMode() {
 
   const compareWords = (userAnswer: string, correctWord: string): boolean => {
     const normalizedUser = normalizeWord(userAnswer);
-    const normalizedCorrect = normalizeWord(correctWord);
-
-    // Comparaison stricte : accents, casse et tout
-    if (normalizedUser === normalizedCorrect) return true;
-
-    // Accepter aussi juste le mot sans article
-    const { base: correctBase } = splitArticle(correctWord);
-    const normalizedCorrectBase = normalizeWord(correctBase);
-    if (normalizedUser === normalizedCorrectBase) return true;
-
-    // Tolérance : casse seulement si le mot correct n'a pas de majuscule (pas un nom propre)
     const isProperNoun = /^[A-ZÀ-Ÿ]/.test(correctWord.trim());
-    if (!isProperNoun && normalizedUser.toLowerCase() === normalizedCorrect.toLowerCase()) return true;
-    if (!isProperNoun && normalizedUser.toLowerCase() === normalizedCorrectBase.toLowerCase()) return true;
 
-    // Tolérance article : "l'épaule" vs "l' épaule" (espace après apostrophe)
-    const cleanUser = normalizedUser.replace(/'\s*/g, "'").toLowerCase();
-    const cleanCorrect = normalizedCorrect.replace(/'\s*/g, "'").toLowerCase();
-    if (!isProperNoun && cleanUser === cleanCorrect) return true;
+    // Variantes parenthétiques ("flou (e)" → "flou", "floue", "flou e", "flou (e)"...)
+    const variants = expandParentheticalVariants(correctWord);
+
+    for (const variant of variants) {
+      const normalizedCorrect = normalizeWord(variant);
+      const { base: correctBase } = splitArticle(variant);
+      const normalizedCorrectBase = normalizeWord(correctBase);
+
+      if (normalizedUser === normalizedCorrect) return true;
+      if (normalizedUser === normalizedCorrectBase) return true;
+
+      if (!isProperNoun && normalizedUser.toLowerCase() === normalizedCorrect.toLowerCase()) return true;
+      if (!isProperNoun && normalizedUser.toLowerCase() === normalizedCorrectBase.toLowerCase()) return true;
+
+      // Tolérance article : "l'épaule" vs "l' épaule"
+      const cleanUser = normalizedUser.replace(/'\s*/g, "'").toLowerCase();
+      const cleanCorrect = normalizedCorrect.replace(/'\s*/g, "'").toLowerCase();
+      if (!isProperNoun && cleanUser === cleanCorrect) return true;
+    }
 
     return false;
   };
