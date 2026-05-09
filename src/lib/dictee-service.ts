@@ -362,7 +362,7 @@ export async function loadStudentsWithOverrides(classId: string): Promise<Set<st
 }
 
 const DEFAULT_ACTIVITY_ORDER_FALLBACK = [
-  "flashcard", "genre", "grammar_class", "spelling_choice", "definitions",
+  "flashcard", "genre", "spelling_choice", "definitions",
   "dictionary", "audio_word", "fill_blanks", "audio_dictation",
 ];
 
@@ -374,14 +374,23 @@ const ALL_ACTIVITIES_CANONICAL = [
   "dictionary", "audio_word", "fill_blanks", "audio_dictation",
 ];
 
+// Activités temporairement désactivées (cachées partout côté élève + prof).
+// Pour réactiver : retirer de cet ensemble. Le code et la DB restent en place.
+// 2026-05-09 : grammar_class désactivé sur recommandation de Nadia — l'article
+// stocké avec le mot ("le prochain", "l'épaule") induit le classifieur en erreur.
+const DISABLED_ACTIVITIES = new Set(["grammar_class"]);
+
 // Merge un ordre stocké avec la liste canonique : préserve l'ordre choisi par
-// le prof, et ajoute en queue toute activité nouvelle qui n'était pas connue
-// au moment où l'ordre a été enregistré.
+// le prof, ajoute en queue toute activité nouvelle, et filtre les activités
+// désactivées (DISABLED_ACTIVITIES).
 function mergeWithCanonical(stored: string[] | null | undefined): string[] {
-  if (!stored || stored.length === 0) return ALL_ACTIVITIES_CANONICAL;
-  const known = new Set(stored);
-  const missing = ALL_ACTIVITIES_CANONICAL.filter(a => !known.has(a));
-  return [...stored, ...missing];
+  const merged = (() => {
+    if (!stored || stored.length === 0) return ALL_ACTIVITIES_CANONICAL;
+    const known = new Set(stored);
+    const missing = ALL_ACTIVITIES_CANONICAL.filter(a => !known.has(a));
+    return [...stored, ...missing];
+  })();
+  return merged.filter(a => !DISABLED_ACTIVITIES.has(a));
 }
 
 export async function loadActivityConfig(
