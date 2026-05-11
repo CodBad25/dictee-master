@@ -804,7 +804,7 @@ export default function ParcoursConfig({
                                 }`}
                               >
                                 <button
-                                  onClick={() => setModalWordPos(w.position)}
+                                  onClick={() => setShowWordConfigSection(true)}
                                   className={`px-3 py-2 text-sm font-semibold transition-colors ${
                                     isActive
                                       ? "text-purple-800"
