@@ -39,9 +39,10 @@ interface LoginEnseignantProps {
   onClose: () => void;
 }
 
+const isRawId = (c: string) => /^cm[a-z0-9]{10,}$/i.test(c);
+
 function classScore(classes: string[]): number {
-  // Plus le score est élevé, plus les classes ressemblent à de vrais noms (6A, 6T…)
-  return classes.filter((c) => c.length <= 6).length;
+  return classes.filter((c) => !isRawId(c)).length;
 }
 
 async function getEnseignants(): Promise<TeacherEntry[]> {
@@ -264,7 +265,7 @@ export default function LoginEnseignant({ onLogin, onClose }: LoginEnseignantPro
                           {t.prenom} {t.nom}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {t.matiere} — {t.classes.filter((c) => c.length <= 6).join(", ") || "—"}
+                          {t.matiere} — {t.classes.filter((c) => !/^cm[a-z0-9]{10,}$/i.test(c)).join(", ") || "—"}
                         </p>
                       </button>
                     ))}
