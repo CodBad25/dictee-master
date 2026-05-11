@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   updateWordSpellingErrors,
@@ -8,6 +8,8 @@ import {
   updateWordDefinition,
 } from "@/lib/dictee-service";
 import { classifyWord, GRAMMAR_LABELS, type GrammaticalClass } from "@/lib/grammar-classifier";
+import { playWordAudio } from "@/lib/audio";
+import AudioRecorder from "@/components/audio-recorder";
 import type { WordConfigRow } from "@/components/word-config-modal";
 
 type TabId = "spelling_choice" | "grammar_class" | "definitions" | "audio_word" | "genre";
@@ -293,9 +295,26 @@ export default function WordConfigSection({ dicteeId, dicteePosition, words, onB
 
     if (activeTab === "audio_word") {
       return (
-        <span className={`inline-flex items-center gap-1 text-xs ${w.audio_url ? "text-indigo-600 font-medium" : "text-gray-300"}`}>
-          {w.audio_url ? "🎧 Audio personnalisé" : "— synthèse vocale"}
-        </span>
+        <div className="flex items-start gap-3 py-1 w-full">
+          <button
+            onClick={() => playWordAudio(w.word, undefined, undefined, w.audio_url)}
+            title="Écouter"
+            className="shrink-0 mt-1 w-7 h-7 rounded-full bg-indigo-100 hover:bg-indigo-200 text-indigo-700 flex items-center justify-center transition"
+          >
+            <Volume2 className="w-3.5 h-3.5" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <AudioRecorder
+              dicteeId={dicteeId}
+              position={w.position}
+              initialAudioUrl={w.audio_url ?? null}
+              onUpdated={(url) => {
+                patchWord(w.position, { audio_url: url });
+                onUpdated({ ...w, audio_url: url });
+              }}
+            />
+          </div>
+        </div>
       );
     }
 
@@ -348,21 +367,18 @@ export default function WordConfigSection({ dicteeId, dicteePosition, words, onB
           const isActive = tab.id === activeTab;
           const c = TAB_COLORS[tab.id];
           const cnt = count(tab.id);
-          const isDisabled = tab.id === "audio_word";
           return (
             <button
               key={tab.id}
-              onClick={() => !isDisabled && setActiveTab(tab.id)}
-              disabled={isDisabled}
+              onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 transition border-b-[3px] flex-shrink-0 text-left
-                ${isActive ? c.active : "border-transparent text-gray-500 hover:bg-gray-100"}
-                ${isDisabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                ${isActive ? c.active : "border-transparent text-gray-500 hover:bg-gray-100"}`}
             >
               <span className="text-base">{tab.icon}</span>
               <div>
                 <div className="text-xs font-semibold">{tab.short}</div>
                 <div className={`text-[10px] ${isActive ? "" : "text-gray-400"}`}>
-                  {isDisabled ? "via modale" : `${cnt}/${n}`}
+                  {`${cnt}/${n}`}
                   {isActive && cnt > 0 && <span className="ml-1">●</span>}
                 </div>
               </div>
@@ -386,7 +402,7 @@ export default function WordConfigSection({ dicteeId, dicteePosition, words, onB
           {activeTab === "spelling_choice" && "· Saisissez les orthographes erronées que l'élève verra comme distracteurs."}
           {activeTab === "grammar_class"   && "· Cliquez sur un mot pour choisir sa classe grammaticale."}
           {activeTab === "definitions"     && "· Saisissez une définition courte. Validation sur Entrée ou perte de focus."}
-          {activeTab === "audio_word"      && "· L'audio personnalisé se configure mot par mot via la modale individuelle."}
+          {activeTab === "audio_word"      && "· Clique sur ▶ pour écouter la prononciation actuelle. Utilise le micro pour enregistrer ta propre voix."}
           {activeTab === "genre"           && "· Article issu du fichier source. Non modifiable ici."}
         </span>
         <span className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full ${colors.chip}`}>
@@ -428,7 +444,8 @@ export default function WordConfigSection({ dicteeId, dicteePosition, words, onB
           return (
             <div
               key={w.position}
-              className={`grid items-center px-5 py-1 border-b border-gray-100 transition-colors
+              className={`grid px-5 py-1 border-b border-gray-100 transition-colors
+                ${activeTab === "audio_word" ? "items-start" : "items-center"}
                 ${idx % 2 === 1 ? "bg-gray-50" : "bg-white"} hover:bg-blue-50`}
               style={{ gridTemplateColumns: "28px 48px 150px 1fr 80px", minHeight: "36px" }}
             >

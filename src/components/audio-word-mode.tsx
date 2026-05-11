@@ -79,7 +79,8 @@ export default function AudioWordMode() {
     playWordAudio(
       word.word,
       () => setIsPlaying(true),
-      () => setIsPlaying(false)
+      () => setIsPlaying(false),
+      word.audio_url,
     );
   }, []);
 

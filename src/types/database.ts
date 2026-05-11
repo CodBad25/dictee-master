@@ -30,6 +30,7 @@ export interface Word {
   word: string;
   hint?: string;
   order: number;
+  audio_url?: string | null;
 }
 
 export interface ClassGroup {

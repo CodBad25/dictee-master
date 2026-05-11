@@ -126,7 +126,7 @@ export default function TrainingMode() {
   // Audio du mot (fichier MP3, fallback Web Speech)
   const speakWord = useCallback(() => {
     if (!currentWord) return;
-    playWordAudio(currentWord.word);
+    playWordAudio(currentWord.word, undefined, undefined, currentWord.audio_url);
   }, [currentWord]);
 
   // Auto-speak in audio mode

@@ -1,5 +1,3 @@
-// Lecture audio des mots — fichiers MP3 pré-générés avec fallback Web Speech API
-
 let currentAudio: HTMLAudioElement | null = null;
 let isAudioPlaying = false;
 let lastPlayedWord: string | null = null;
@@ -58,13 +56,11 @@ export function playWordAudio(
   word: string,
   onStart?: () => void,
   onEnd?: () => void,
+  audioUrl?: string | null,
 ): void {
-  console.trace(`[audio] playWordAudio("${word}") — isAudioPlaying=${isAudioPlaying}`);
-
   // Bloquer les rejeux du même mot dans les 1.5s (protection contre les boucles infinies)
   const now = Date.now();
   if (lastPlayedWord === word && (now - lastPlayTime) < 1500) {
-    console.warn(`[audio] Ignoring duplicate play of "${word}" (last played ${now - lastPlayTime}ms ago)`);
     return;
   }
 
@@ -90,6 +86,18 @@ export function playWordAudio(
     onEnd?.();
   };
 
+  // Si une URL personnalisée est fournie, la jouer directement
+  if (audioUrl) {
+    const audio = new Audio(audioUrl);
+    audio.playbackRate = 0.9;
+    currentAudio = audio;
+    onStart?.();
+    audio.onended = () => { currentAudio = null; wrappedOnEnd(); };
+    audio.onerror = () => { currentAudio = null; wrappedOnEnd(); };
+    audio.play().catch(() => wrappedOnEnd());
+    return;
+  }
+
   const candidates = wordToFileName(word);
   tryPlayAudio(candidates, word, onStart, wrappedOnEnd);
 }
@@ -103,24 +111,17 @@ async function tryPlayAudio(
   for (const fileName of candidates) {
     const url = `/audio/${fileName}.mp3`;
     try {
-      // Vérifier si le fichier existe avant de créer l'Audio
       const res = await fetch(url, { method: "HEAD" });
       if (!res.ok) continue;
 
       const audio = new Audio(url);
+      audio.playbackRate = 0.85;
       currentAudio = audio;
 
       return new Promise<void>((resolve) => {
-        audio.onplay = () => onStart?.();
-        audio.onended = () => {
-          currentAudio = null;
-          onEnd?.();
-          resolve();
-        };
-        audio.onerror = () => {
-          currentAudio = null;
-          resolve(); // passer au fallback
-        };
+        audio.onplay = () => { onStart?.(); };
+        audio.onended = () => { currentAudio = null; onEnd?.(); resolve(); };
+        audio.onerror = () => { currentAudio = null; resolve(); };
         audio.play().catch(() => resolve());
       });
     } catch {
@@ -128,7 +129,6 @@ async function tryPlayAudio(
     }
   }
 
-  // Aucun fichier trouvé → fallback Web Speech API
   fallbackSpeak(word, onStart, onEnd);
 }
 
