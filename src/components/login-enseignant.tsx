@@ -264,7 +264,7 @@ export default function LoginEnseignant({ onLogin, onClose }: LoginEnseignantPro
                           {t.prenom} {t.nom}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {t.matiere} — {t.classes.join(", ")}
+                          {t.matiere} — {t.classes.filter((c) => c.length <= 6).join(", ") || "—"}
                         </p>
                       </button>
                     ))}
