@@ -225,7 +225,7 @@ export default function WordConfigSection({ dicteeId, dicteePosition, words, onB
     if (activeTab === "grammar_class") {
       const gc = w.grammatical_class as GrammaticalClass | null;
       const manualLabel = gc ? (GRAMMAR_LABELS[gc] ?? gc) : null;
-      const suggested = classifyWord(w.word, w.article ?? undefined) as GrammaticalClass | null;
+      const suggested = classifyWord(w.word) as GrammaticalClass | null;
       const suggestedLabel = suggested ? (GRAMMAR_LABELS[suggested] ?? suggested) : null;
       return (
         <div className="flex flex-wrap items-center gap-1">

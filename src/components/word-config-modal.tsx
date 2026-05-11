@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Loader2, Trash2 } from "lucide-react";
+import { X, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   updateWordSpellingErrors,
@@ -54,15 +54,15 @@ type ExoDef = {
 };
 
 const EXOS: ExoDef[] = [
-  { id: "flashcard", icon: "🃏", label: "Flashcard", perWord: false },
-  { id: "genre", icon: "🏷️", label: "Genre", perWord: true },
-  { id: "spelling_choice", icon: "✏️", label: "Choix orthographique", perWord: true },
-  { id: "definitions", icon: "📖", label: "Définitions", perWord: true },
-  { id: "dictionary", icon: "📚", label: "Dictionnaire", perWord: false },
-  { id: "audio_word", icon: "🎧", label: "Audio mot", perWord: true },
-  { id: "fill_blanks", icon: "📝", label: "Texte à trous", perWord: false },
-  { id: "audio_dictation", icon: "🎙️", label: "Dictée audio", perWord: false },
-  { id: "grammar_class", icon: "🔤", label: "Classes grammaticales", perWord: true },
+  { id: "flashcard",       icon: "🃏", label: "Flashcard",            perWord: false },
+  { id: "genre",           icon: "🏷️", label: "Genre",               perWord: true  },
+  { id: "spelling_choice", icon: "✏️", label: "Choix orthographique", perWord: true  },
+  { id: "definitions",     icon: "📖", label: "Définitions",          perWord: true  },
+  { id: "dictionary",      icon: "📚", label: "Dictionnaire",         perWord: false },
+  { id: "audio_word",      icon: "🎧", label: "Audio mot",            perWord: true  },
+  { id: "fill_blanks",     icon: "📝", label: "Texte à trous",        perWord: false },
+  { id: "audio_dictation", icon: "🎙️", label: "Dictée audio",        perWord: false },
+  { id: "grammar_class",   icon: "🔤", label: "Classes gram.",        perWord: true  },
 ];
 
 export default function WordConfigModal({
@@ -86,17 +86,15 @@ export default function WordConfigModal({
   const w = localWord;
   const lemma = w.lemma || w.word;
 
-  // Calcul "exo a une perso pour ce mot"
   const hasCustom = (exoId: ExoId): boolean => {
     if (exoId === "spelling_choice") return (w.spelling_errors?.length ?? 0) > 0;
-    if (exoId === "grammar_class") return !!w.grammatical_class;
-    if (exoId === "definitions") return !!w.definition;
-    if (exoId === "audio_word") return !!w.audio_url;
-    if (exoId === "genre") return !!w.article;
+    if (exoId === "grammar_class")   return !!w.grammatical_class;
+    if (exoId === "definitions")     return !!w.definition;
+    if (exoId === "audio_word")      return !!w.audio_url;
+    if (exoId === "genre")           return !!w.article;
     return false;
   };
 
-  // Helper pour propager la modif locale + parent
   const updateLocal = (patch: Partial<WordConfigRow>) => {
     const next = { ...w, ...patch };
     setLocalWord(next);
@@ -115,29 +113,28 @@ export default function WordConfigModal({
             onClick={onClose}
           />
           <motion.div
-            className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 pointer-events-none"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              initial={{ scale: 0.95, y: 20 }}
+              initial={{ scale: 0.95, y: 16 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full pointer-events-auto max-h-[88vh] overflow-y-auto"
+              exit={{ scale: 0.95, y: 16 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl pointer-events-auto flex flex-col max-h-[90vh]"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header purple/indigo */}
-              <header className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-t-2xl flex items-start justify-between sticky top-0 z-10">
-                <div className="flex-1">
-                  <p className="text-xs text-purple-100 uppercase tracking-wide">
+              {/* Header */}
+              <header className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-5 py-3 rounded-t-2xl flex items-center justify-between shrink-0">
+                <div>
+                  <p className="text-[11px] text-purple-200 uppercase tracking-wide">
                     Dictée n°{dicteePosition} · mot n°{w.position + 1}
                   </p>
-                  <h2 className="text-2xl font-black mt-0.5">{w.word}</h2>
-                  <p className="text-xs text-purple-100 mt-1">
-                    Lemma : <strong>{lemma}</strong>
+                  <h2 className="text-xl font-black leading-tight">{w.word}</h2>
+                  <p className="text-[11px] text-purple-200 mt-0.5">
+                    Lemme : <strong>{lemma}</strong>
                     {w.article && <> · Article : <strong>{w.article}</strong></>}
-                    {w.definition && <> · « {w.definition} »</>}
                   </p>
                 </div>
                 <button
@@ -149,14 +146,13 @@ export default function WordConfigModal({
                 </button>
               </header>
 
-              {/* Body */}
-              <div className="p-5">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
-                  Personnalisation pour ce mot — clique sur un exercice
-                </h3>
-
-                {/* Grille 3×3 */}
-                <div className="grid grid-cols-3 gap-3 mb-5">
+              {/* Corps : 2 colonnes */}
+              <div className="flex flex-1 min-h-0">
+                {/* Colonne gauche — liste des exercices */}
+                <nav className="w-52 shrink-0 border-r bg-gray-50 rounded-bl-2xl overflow-y-auto">
+                  <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    Exercices
+                  </p>
                   {EXOS.map((exo) => {
                     const customized = hasCustom(exo.id);
                     const isActive = activeExo === exo.id;
@@ -164,49 +160,63 @@ export default function WordConfigModal({
                       <button
                         key={exo.id}
                         onClick={() => setActiveExo(isActive ? null : exo.id)}
-                        className={`relative p-4 rounded-xl border-2 text-center transition ${
+                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition text-sm font-medium relative ${
                           isActive
-                            ? "border-purple-600 bg-purple-50 shadow-md"
+                            ? "bg-purple-100 text-purple-900 border-r-2 border-purple-600"
                             : exo.perWord
-                            ? "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50 cursor-pointer"
-                            : "border-gray-100 bg-gray-50 text-gray-400 cursor-pointer"
+                            ? "text-gray-700 hover:bg-gray-100"
+                            : "text-gray-400 hover:bg-gray-100"
                         }`}
                       >
+                        <span className="text-base shrink-0">{exo.icon}</span>
+                        <span className="flex-1 leading-tight">{exo.label}</span>
                         {customized && (
-                          <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow">
-                            ✓
-                          </span>
+                          <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
                         )}
-                        <div className="text-3xl mb-1">{exo.icon}</div>
-                        <div className="text-xs font-semibold leading-tight">{exo.label}</div>
-                        {!exo.perWord && (
-                          <div className="text-[10px] text-gray-400 mt-1">rien à personnaliser</div>
+                        {!exo.perWord && !isActive && (
+                          <span className="text-[10px] text-gray-300 shrink-0">—</span>
                         )}
                       </button>
                     );
                   })}
-                </div>
+                </nav>
 
-                {/* Panneau d'édition */}
-                <AnimatePresence mode="wait">
-                  {activeExo && (
-                    <motion.div
-                      key={activeExo}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.15 }}
-                      className="border-t pt-4"
-                    >
-                      <ExoPanel
-                        exoId={activeExo}
-                        word={w}
-                        dicteeId={dicteeId}
-                        onUpdate={updateLocal}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {/* Colonne droite — éditeur */}
+                <div className="flex-1 overflow-y-auto p-5 rounded-br-2xl">
+                  <AnimatePresence mode="wait">
+                    {activeExo ? (
+                      <motion.div
+                        key={activeExo}
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        transition={{ duration: 0.12 }}
+                      >
+                        <ExoPanel
+                          exoId={activeExo}
+                          word={w}
+                          dicteeId={dicteeId}
+                          onUpdate={updateLocal}
+                        />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="placeholder"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="h-full flex flex-col items-center justify-center text-gray-400 gap-3 py-8"
+                      >
+                        <span className="text-5xl">👈</span>
+                        <p className="text-sm text-center">
+                          Clique sur un exercice<br />pour le personnaliser
+                        </p>
+                        <p className="text-xs text-center text-gray-300">
+                          Les exercices marqués <span className="inline-block w-2 h-2 rounded-full bg-purple-400 align-middle" /> ont déjà une personnalisation
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -243,7 +253,7 @@ function ExoPanel({
             🎧 Audio personnalisé
           </h4>
           <p className="text-xs text-indigo-700 mb-3">
-            Enregistre ta voix pour remplacer la synthèse vocale du navigateur. L'élève entendra ton enregistrement quand il fera ce mot dans le mode Audio.
+            Enregistre ta voix pour remplacer la synthèse vocale. L'élève entendra ton enregistrement dans le mode Audio mot.
           </p>
           <AudioRecorder
             dicteeId={dicteeId}
@@ -265,9 +275,7 @@ function ExoPanel({
               </div>
             </>
           ) : (
-            <p className="text-sm text-pink-900">
-              Ce mot n'a pas d'article. Le mode Genre l'ignorera.
-            </p>
+            <p className="text-sm text-pink-900">Ce mot n'a pas d'article. Le mode Genre l'ignorera.</p>
           )}
           <p className="text-xs text-pink-700 mt-3">
             Pour modifier l'article, il faut renommer le mot via une migration en base.
@@ -276,7 +284,7 @@ function ExoPanel({
       );
     default:
       return (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-gray-600 text-sm">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-gray-500 text-sm">
           Cet exercice n'a pas de personnalisation au niveau du mot.
         </div>
       );
@@ -303,10 +311,7 @@ function TrapsEditor({
   const add = () => {
     const v = draft.trim();
     if (!v) return;
-    if (errors.includes(v)) {
-      toast.error("Ce piège existe déjà");
-      return;
-    }
+    if (errors.includes(v)) { toast.error("Ce piège existe déjà"); return; }
     setErrors([...errors, v]);
     setDraft("");
   };
@@ -326,27 +331,16 @@ function TrapsEditor({
 
   return (
     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-      <h4 className="font-bold text-amber-900 mb-2">🪤 Pièges du mode Choix orthographique</h4>
-      <p className="text-xs text-amber-800 mb-3">
-        Orthographes fausses proposées comme distracteurs à l'élève.
-      </p>
+      <h4 className="font-bold text-amber-900 mb-1">🪤 Pièges — Choix orthographique</h4>
+      <p className="text-xs text-amber-800 mb-3">Orthographes fausses proposées comme distracteurs.</p>
       <div className="flex flex-wrap gap-2 mb-3 min-h-[32px]">
         {errors.length === 0 && (
-          <span className="text-xs italic text-amber-700">
-            Aucun piège — ajoute-en au moins 2 pour que ce mode fonctionne bien.
-          </span>
+          <span className="text-xs italic text-amber-700">Aucun piège — ajoute-en au moins 2.</span>
         )}
         {errors.map((e, i) => (
-          <span
-            key={i}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-amber-300 rounded-lg text-sm"
-          >
+          <span key={i} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-amber-300 rounded-lg text-sm">
             {e}
-            <button
-              onClick={() => remove(i)}
-              className="text-red-500 hover:text-red-700"
-              title="Supprimer"
-            >
+            <button onClick={() => remove(i)} className="text-red-500 hover:text-red-700" title="Supprimer">
               <X className="w-3 h-3" />
             </button>
           </span>
@@ -356,41 +350,20 @@ function TrapsEditor({
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              add();
-            }
-          }}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
           placeholder="Ajouter un piège…"
           className="flex-1 px-3 py-2 text-sm border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
           autoComplete="off"
           autoCapitalize="off"
           spellCheck={false}
         />
-        <button
-          onClick={add}
-          disabled={!draft.trim()}
-          className="px-3 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700 disabled:opacity-40"
-        >
+        <button onClick={add} disabled={!draft.trim()} className="px-3 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700 disabled:opacity-40">
           Ajouter
         </button>
       </div>
       <div className="flex justify-end">
-        <button
-          onClick={save}
-          disabled={saving}
-          className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center gap-1.5"
-        >
-          {saving ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" /> Enregistrement…
-            </>
-          ) : (
-            <>
-              <Check className="w-4 h-4" /> Enregistrer
-            </>
-          )}
+        <button onClick={save} disabled={saving} className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center gap-1.5">
+          {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Enregistrement…</> : <><Check className="w-4 h-4" /> Enregistrer</>}
         </button>
       </div>
     </div>
@@ -459,11 +432,7 @@ function GrammarEditor({
         })}
       </div>
       {word.grammatical_class && (
-        <button
-          onClick={() => setClass(null)}
-          disabled={saving}
-          className="text-xs text-cyan-700 hover:underline disabled:opacity-50 mt-2"
-        >
+        <button onClick={() => setClass(null)} disabled={saving} className="text-xs text-cyan-700 hover:underline disabled:opacity-50 mt-2">
           ↺ Revenir à l'auto-détection
         </button>
       )}
@@ -503,25 +472,13 @@ function DefinitionEditor({
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        rows={3}
+        rows={4}
         className="w-full px-3 py-2 border border-emerald-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
         placeholder="Ce qui définit ce mot, à associer côté élève…"
       />
       <div className="flex justify-end mt-2">
-        <button
-          onClick={save}
-          disabled={saving}
-          className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center gap-1.5"
-        >
-          {saving ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" /> Enregistrement…
-            </>
-          ) : (
-            <>
-              <Check className="w-4 h-4" /> Enregistrer
-            </>
-          )}
+        <button onClick={save} disabled={saving} className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 inline-flex items-center gap-1.5">
+          {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Enregistrement…</> : <><Check className="w-4 h-4" /> Enregistrer</>}
         </button>
       </div>
     </div>
