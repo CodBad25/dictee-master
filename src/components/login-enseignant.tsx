@@ -39,15 +39,31 @@ interface LoginEnseignantProps {
   onClose: () => void;
 }
 
+function classScore(classes: string[]): number {
+  // Plus le score est élevé, plus les classes ressemblent à de vrais noms (6A, 6T…)
+  return classes.filter((c) => c.length <= 6).length;
+}
+
 async function getEnseignants(): Promise<TeacherEntry[]> {
   const data = await hubFetch("/enseignants");
-  return (data.enseignants || []).map((e: any) => ({
+  const entries: TeacherEntry[] = (data.enseignants || []).map((e: any) => ({
     id: e.id,
     prenom: e.prenom || "",
     nom: e.nom || "",
     matiere: e.matiere || "",
     classes: e.classes || [],
   }));
+
+  // Dédupliquer par (prenom + nom) : garder l'entrée avec les meilleurs noms de classes
+  const byName = new Map<string, TeacherEntry>();
+  for (const entry of entries) {
+    const key = `${entry.prenom}|${entry.nom}`.toLowerCase();
+    const existing = byName.get(key);
+    if (!existing || classScore(entry.classes) > classScore(existing.classes)) {
+      byName.set(key, entry);
+    }
+  }
+  return Array.from(byName.values());
 }
 
 async function checkPinEnseignant(enseignantId: string): Promise<{ hasPin: boolean }> {
