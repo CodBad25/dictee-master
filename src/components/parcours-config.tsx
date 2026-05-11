@@ -19,6 +19,8 @@ import {
   GRAMMAR_LABELS,
   type GrammaticalClass,
 } from "@/lib/grammar-classifier";
+import WordConfigModal, { type WordConfigRow } from "@/components/word-config-modal";
+import WordConfigSection from "@/components/word-config-section";
 
 const ACTIVITY_LABELS: Record<string, { label: string; icon: string; desc: string; color: string }> = {
   flashcard: { label: "Flashcard", icon: "🃏", desc: "Mémorise l'orthographe de chaque mot", color: "from-blue-400 to-blue-600" },
@@ -74,18 +76,25 @@ export default function ParcoursConfig({
   const [overridesDirty, setOverridesDirty] = useState<Set<string>>(new Set());
 
   // Mots de la dictée sélectionnée (avec leurs distracteurs et classe grammaticale éditables)
-  const [dicteeWords, setDicteeWords] = useState<{ word: string; position: number; spelling_errors: string[]; grammatical_class: string | null }[]>([]);
+  const [dicteeWords, setDicteeWords] = useState<WordConfigRow[]>([]);
 
-  // État de l'éditeur de distracteurs (un mot à la fois)
+  // État de l'éditeur de distracteurs (un mot à la fois) — conservé pour compat,
+  // mais l'édition se fait maintenant via la nouvelle modale WordConfigModal.
   const [editingWordPos, setEditingWordPos] = useState<number | null>(null);
   const [editingErrors, setEditingErrors] = useState<string[]>([]);
   const [newErrorDraft, setNewErrorDraft] = useState("");
   const [savingErrors, setSavingErrors] = useState(false);
   const [highlightWordGrid, setHighlightWordGrid] = useState(false);
 
-  // État de l'éditeur de classe grammaticale (un mot à la fois)
+  // État de l'éditeur de classe grammaticale (un mot à la fois) — idem, hérité.
   const [editingGrammarPos, setEditingGrammarPos] = useState<number | null>(null);
   const [savingGrammar, setSavingGrammar] = useState(false);
+
+  // Nouvelle modale unifiée par mot
+  const [modalWordPos, setModalWordPos] = useState<number | null>(null);
+
+  // Section « Personnaliser les mots » (Variante 2 — tabs horizontales)
+  const [showWordConfigSection, setShowWordConfigSection] = useState(false);
 
   // Total des pièges sur toute la dictée (pour l'indicateur sur le chip Choix orthographique)
   const totalErrors = dicteeWords.reduce((s, w) => s + (w.spelling_errors?.length || 0), 0);
@@ -132,7 +141,7 @@ export default function ParcoursConfig({
       const sb = createClient();
       const { data } = await sb
         .from("dictee_words")
-        .select("word, position, spelling_errors, grammatical_class")
+        .select("word, position, spelling_errors, grammatical_class, lemma, article, definition, audio_url")
         .eq("dictee_id", selectedDicteeId)
         .order("position");
       setDicteeWords(
@@ -141,6 +150,10 @@ export default function ParcoursConfig({
           position: w.position,
           spelling_errors: Array.isArray(w.spelling_errors) ? w.spelling_errors : [],
           grammatical_class: w.grammatical_class || null,
+          lemma: w.lemma || null,
+          article: w.article || null,
+          definition: w.definition || null,
+          audio_url: w.audio_url || null,
         })),
       );
       // Reset éditeurs si on change de dictée
@@ -587,7 +600,22 @@ export default function ParcoursConfig({
 
               {/* Section 3 — Détail dictée */}
               <AnimatePresence mode="popLayout">
-                {selectedDicteeId && (
+                {selectedDicteeId && showWordConfigSection && dicteeWords.length > 0 && (
+                  <div className="border-t pt-4" style={{ minHeight: 600 }}>
+                    <WordConfigSection
+                      dicteeId={selectedDicteeId}
+                      dicteePosition={selectedDicteePos!}
+                      words={dicteeWords}
+                      onBack={() => setShowWordConfigSection(false)}
+                      onUpdated={(updated) =>
+                        setDicteeWords((ws) =>
+                          ws.map((w) => (w.position === updated.position ? updated : w))
+                        )
+                      }
+                    />
+                  </div>
+                )}
+                {selectedDicteeId && !showWordConfigSection && (
                   <motion.div
                     id="dictee-detail-section"
                     key={selectedDicteeId}
@@ -609,18 +637,30 @@ export default function ParcoursConfig({
                           </span>
                         )}
                       </div>
-                      {overrides[selectedDicteeId] && (
-                        <motion.button
-                          onClick={() => handleResetOverride(selectedDicteeId)}
-                          disabled={saving}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
-                        >
-                          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
-                          Utiliser le défaut
-                        </motion.button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {dicteeWords.length > 0 && (
+                          <motion.button
+                            onClick={() => setShowWordConfigSection(true)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-xl font-semibold text-sm shadow hover:opacity-90 transition"
+                          >
+                            🎯 Personnaliser les mots
+                          </motion.button>
+                        )}
+                        {overrides[selectedDicteeId] && (
+                          <motion.button
+                            onClick={() => handleResetOverride(selectedDicteeId)}
+                            disabled={saving}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
+                          >
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                            Utiliser le défaut
+                          </motion.button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Parcours de la dictée */}
@@ -743,244 +783,61 @@ export default function ParcoursConfig({
                             </div>
                           </div>
                         </div>
+                        <p className="text-xs text-gray-500 mb-2">
+                          <strong>Clique sur un mot</strong> pour configurer ses exercices · le ⊘ au survol l'exclut du parcours.
+                        </p>
                         <div data-tour="word-toggle-grid" className="flex flex-wrap gap-2">
                           {dicteeWords.map((w) => {
                             const selected = getSelectedWords(selectedDicteeId);
                             const isActive = selected === null || selected.includes(w.position);
-                            const isEditing = editingWordPos === w.position;
+                            const customCount =
+                              (w.spelling_errors?.length > 0 ? 1 : 0) +
+                              (w.grammatical_class ? 1 : 0) +
+                              (w.audio_url ? 1 : 0);
                             return (
                               <div
                                 key={w.position}
-                                className={`inline-flex rounded-xl overflow-hidden border-2 transition-all ${
-                                  isEditing
-                                    ? "border-amber-400 shadow-md"
-                                    : isActive
-                                    ? "border-purple-300 shadow-sm"
-                                    : "border-gray-200"
+                                className={`group relative inline-flex items-center rounded-xl border-2 transition-all overflow-hidden ${
+                                  isActive
+                                    ? "border-purple-300 bg-purple-50 shadow-sm hover:border-purple-500 hover:shadow-md"
+                                    : "border-gray-200 bg-gray-50"
                                 }`}
                               >
                                 <button
-                                  onClick={() => toggleWord(selectedDicteeId, w.position)}
+                                  onClick={() => setModalWordPos(w.position)}
                                   className={`px-3 py-2 text-sm font-semibold transition-colors ${
                                     isActive
-                                      ? "bg-purple-50 text-purple-800 hover:bg-purple-100"
-                                      : "bg-gray-50 text-gray-400 line-through hover:bg-gray-100"
+                                      ? "text-purple-800"
+                                      : "text-gray-400 line-through"
                                   }`}
-                                  title={isActive ? "Désactiver pour ce parcours" : "Activer pour ce parcours"}
+                                  title="Configurer les exercices pour ce mot"
                                 >
                                   {w.word}
-                                </button>
-                                <button
-                                  onClick={() => (isEditing ? cancelEditErrors() : startEditErrors(w.position))}
-                                  className={`px-2 py-2 border-l text-base transition-colors ${
-                                    isEditing
-                                      ? "bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200"
-                                      : "bg-white border-gray-200 text-gray-500 hover:bg-amber-50 hover:text-amber-700"
-                                  }`}
-                                  title={`Éditer les pièges (${w.spelling_errors.length})`}
-                                >
-                                  🪤
-                                  {w.spelling_errors.length > 0 && (
-                                    <span className="ml-0.5 text-[10px] font-bold align-top">
-                                      {w.spelling_errors.length}
+                                  {customCount > 0 && (
+                                    <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-600 text-white text-[10px] font-bold align-middle">
+                                      {customCount}
                                     </span>
                                   )}
                                 </button>
                                 <button
-                                  onClick={() => (editingGrammarPos === w.position ? cancelEditGrammar() : startEditGrammar(w.position))}
-                                  className={`px-2 py-2 border-l text-base transition-colors ${
-                                    editingGrammarPos === w.position
-                                      ? "bg-cyan-100 border-cyan-300 text-cyan-700 hover:bg-cyan-200"
-                                      : w.grammatical_class
-                                      ? "bg-cyan-50 border-gray-200 text-cyan-700 hover:bg-cyan-100"
-                                      : "bg-white border-gray-200 text-gray-400 hover:bg-cyan-50 hover:text-cyan-700"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleWord(selectedDicteeId, w.position);
+                                  }}
+                                  className={`opacity-0 group-hover:opacity-100 transition-opacity ml-0 mr-1.5 w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                                    isActive
+                                      ? "text-red-500 hover:bg-red-100"
+                                      : "text-emerald-600 hover:bg-emerald-100"
                                   }`}
-                                  title={
-                                    w.grammatical_class
-                                      ? `Classe : ${GRAMMAR_LABELS[w.grammatical_class as GrammaticalClass]} (édité)`
-                                      : `Classe auto : ${GRAMMAR_LABELS[classifyWord(w.word)]}`
-                                  }
+                                  title={isActive ? "Exclure ce mot du parcours" : "Inclure ce mot dans le parcours"}
                                 >
-                                  🔤
+                                  {isActive ? "⊘" : "✓"}
                                 </button>
                               </div>
                             );
                           })}
                         </div>
 
-                        {/* Éditeur de distracteurs pour le mot sélectionné */}
-                        {editingWordPos !== null && (() => {
-                          const w = dicteeWords.find((x) => x.position === editingWordPos);
-                          if (!w) return null;
-                          return (
-                            <div className="mt-4 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
-                              <div className="flex items-center justify-between mb-3">
-                                <div>
-                                  <h6 className="text-sm font-bold text-amber-900">
-                                    🪤 Pièges pour « {w.word} »
-                                  </h6>
-                                  <p className="text-xs text-amber-800 mt-0.5">
-                                    Ces orthographes fausses seront proposées comme distracteurs dans le mode « Choix orthographique ». Édition partagée entre tous les enseignants.
-                                  </p>
-                                </div>
-                                <button
-                                  onClick={cancelEditErrors}
-                                  className="p-1 rounded hover:bg-amber-200 transition-colors text-amber-800"
-                                  title="Fermer"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-
-                              <div className="flex flex-wrap gap-2 mb-3">
-                                {editingErrors.length === 0 && (
-                                  <span className="text-xs italic text-amber-700">
-                                    Aucun piège pour l'instant. Ajoute-en au moins 2 pour que le mode « Choix orthographique » fonctionne bien.
-                                  </span>
-                                )}
-                                {editingErrors.map((err, idx) => (
-                                  <span
-                                    key={idx}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-amber-300 rounded-lg text-sm font-medium text-gray-800"
-                                  >
-                                    {err}
-                                    <button
-                                      onClick={() => removeErrorAt(idx)}
-                                      className="text-red-500 hover:text-red-700"
-                                      title="Supprimer ce piège"
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </button>
-                                  </span>
-                                ))}
-                              </div>
-
-                              <div className="flex gap-2 mb-3">
-                                <input
-                                  type="text"
-                                  value={newErrorDraft}
-                                  onChange={(e) => setNewErrorDraft(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      e.preventDefault();
-                                      addErrorDraft();
-                                    }
-                                  }}
-                                  placeholder="Ajouter un piège (ex: « flu (e) »)"
-                                  className="flex-1 px-3 py-2 text-sm border border-amber-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
-                                  autoComplete="off"
-                                  autoCapitalize="off"
-                                  spellCheck={false}
-                                />
-                                <button
-                                  onClick={addErrorDraft}
-                                  disabled={!newErrorDraft.trim()}
-                                  className="px-3 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700 transition-colors disabled:opacity-40"
-                                >
-                                  Ajouter
-                                </button>
-                              </div>
-
-                              <div className="flex justify-end gap-2">
-                                <button
-                                  onClick={cancelEditErrors}
-                                  className="px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
-                                >
-                                  Annuler
-                                </button>
-                                <button
-                                  onClick={saveErrors}
-                                  disabled={savingErrors}
-                                  className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
-                                >
-                                  {savingErrors ? (
-                                    <>
-                                      <Loader2 className="w-4 h-4 animate-spin" /> Enregistrement…
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Check className="w-4 h-4" /> Enregistrer
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })()}
-
-                        {/* Éditeur de classe grammaticale pour le mot sélectionné */}
-                        {editingGrammarPos !== null && (() => {
-                          const w = dicteeWords.find((x) => x.position === editingGrammarPos);
-                          if (!w) return null;
-                          const auto = classifyWord(w.word);
-                          const current = (w.grammatical_class as GrammaticalClass | null) || auto;
-                          const allClasses: GrammaticalClass[] = [
-                            "nom", "nom_propre", "verbe", "adjectif",
-                            "determinant", "pronom", "adverbe", "preposition", "conjonction",
-                          ];
-                          return (
-                            <div className="mt-4 p-4 bg-cyan-50 border-2 border-cyan-200 rounded-xl">
-                              <div className="flex items-center justify-between mb-3">
-                                <div>
-                                  <h6 className="text-sm font-bold text-cyan-900">
-                                    🔤 Classe grammaticale pour « {w.word} »
-                                  </h6>
-                                  <p className="text-xs text-cyan-800 mt-0.5">
-                                    Auto-détection : <strong>{GRAMMAR_LABELS[auto]}</strong>
-                                    {w.grammatical_class && (
-                                      <span className="ml-2">
-                                        — édité : <strong>{GRAMMAR_LABELS[w.grammatical_class as GrammaticalClass]}</strong>
-                                      </span>
-                                    )}
-                                  </p>
-                                </div>
-                                <button
-                                  onClick={cancelEditGrammar}
-                                  className="p-1 rounded hover:bg-cyan-200 transition-colors text-cyan-800"
-                                  title="Fermer"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-
-                              <div className="flex flex-wrap gap-2 mb-3">
-                                {allClasses.map((gc) => {
-                                  const active = current === gc;
-                                  const isManual = w.grammatical_class === gc;
-                                  return (
-                                    <button
-                                      key={gc}
-                                      onClick={() => setGrammarFor(w.position, gc)}
-                                      disabled={savingGrammar}
-                                      className={`px-3 py-1.5 rounded-lg text-sm font-semibold border-2 transition-colors disabled:opacity-50 ${
-                                        active
-                                          ? isManual
-                                            ? "bg-cyan-600 border-cyan-700 text-white"
-                                            : "bg-cyan-100 border-cyan-400 text-cyan-900"
-                                          : "bg-white border-gray-200 text-gray-700 hover:border-cyan-400 hover:bg-cyan-50"
-                                      }`}
-                                      title={active && isManual ? "Choix actuel (édité)" : active ? "Choix actuel (auto)" : ""}
-                                    >
-                                      {GRAMMAR_LABELS[gc]}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-
-                              {w.grammatical_class && (
-                                <div className="flex justify-end">
-                                  <button
-                                    onClick={() => setGrammarFor(w.position, null)}
-                                    disabled={savingGrammar}
-                                    className="px-3 py-1.5 text-xs font-semibold text-cyan-700 hover:bg-cyan-200 rounded-lg transition-colors disabled:opacity-50"
-                                  >
-                                    Revenir à l'auto-détection
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
                       </div>
                     )}
 
@@ -1004,6 +861,26 @@ export default function ParcoursConfig({
           )}
         </div>
       </div>
+
+      {/* Modale unifiée : configuration d'un mot pour tous les exercices */}
+      <WordConfigModal
+        open={modalWordPos !== null}
+        onClose={() => setModalWordPos(null)}
+        dicteeId={selectedDicteeId || ""}
+        dicteePosition={
+          dictees.find((d) => d.id === selectedDicteeId)?.position ?? 0
+        }
+        word={
+          modalWordPos !== null
+            ? dicteeWords.find((w) => w.position === modalWordPos) || null
+            : null
+        }
+        onUpdated={(updated) => {
+          setDicteeWords((prev) =>
+            prev.map((w) => (w.position === updated.position ? { ...w, ...updated } : w)),
+          );
+        }}
+      />
     </div>
   );
 }

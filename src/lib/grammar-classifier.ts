@@ -152,6 +152,20 @@ const ADJECTIFS_FREQ = new Set([
   "gentil", "gentille", "gentils", "gentilles",
   "méchant", "méchante", "méchants", "méchantes",
   "drôle", "drôles",
+  // Participes présents fréquemment substantivés / adjectivés
+  "suivant", "suivante", "suivants", "suivantes",
+  "vivant", "vivante", "vivants", "vivantes",
+  "charmant", "charmante", "charmants", "charmantes",
+  "étonnant", "étonnante", "étonnants", "étonnantes",
+  "surprenant", "surprenante", "surprenants", "surprenantes",
+  "ravissant", "ravissante", "ravissants", "ravissantes",
+  "brillant", "brillante", "brillants", "brillantes",
+  "intéressant", "intéressante", "intéressants", "intéressantes",
+  "fatigant", "fatigante", "fatigants", "fatigantes",
+  "amusant", "amusante", "amusants", "amusantes",
+  "apaisant", "apaisante", "apaisants", "apaisantes",
+  "puissant", "puissante", "puissants", "puissantes",
+  "vivace", "vivaces",
 ]);
 
 // Sépare l'article d'un mot stocké comme "le chien"

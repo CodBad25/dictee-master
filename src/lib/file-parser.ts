@@ -483,6 +483,154 @@ export async function extractTextFromWord(file: File): Promise<string> {
 }
 
 /**
+ * Parse le XML OOXML d'un .docx et extrait les tableaux avec leurs gridSpan.
+ * Format : <w:tbl> → <w:tr> → <w:tc> avec <w:gridSpan w:val="N"> pour les fusions.
+ * Analogue à parseODTXml mais pour le format Word Open XML.
+ */
+function parseDOCXXml(xmlString: string): { tables: string[][][]; tableSpans: Map<number, Map<number, number>> } {
+  const tables: string[][][] = [];
+  const tableSpans = new Map<number, Map<number, number>>();
+
+  const tableRegex = /<w:tbl>([\s\S]*?)<\/w:tbl>/g;
+  const rowRegex = /<w:tr[ >]([\s\S]*?)<\/w:tr>/g;
+  const cellRegex = /<w:tc>([\s\S]*?)<\/w:tc>/g;
+
+  let tableMatch;
+  let tableIndex = 0;
+
+  while ((tableMatch = tableRegex.exec(xmlString)) !== null) {
+    const tableContent = tableMatch[1];
+    const tableData: string[][] = [];
+    const firstRowSpans = new Map<number, number>();
+
+    let rowMatch;
+    let rowIndex = 0;
+    rowRegex.lastIndex = 0;
+
+    while ((rowMatch = rowRegex.exec(tableContent)) !== null) {
+      const rowContent = rowMatch[1];
+      const rowData: string[] = [];
+      let logicalColIndex = 0;
+
+      let cellMatch;
+      cellRegex.lastIndex = 0;
+
+      while ((cellMatch = cellRegex.exec(rowContent)) !== null) {
+        const cellContent = cellMatch[1];
+
+        // Extraire le gridSpan (fusion horizontale)
+        const gridSpanMatch = cellContent.match(/<w:gridSpan w:val="(\d+)"/);
+        const gridSpan = gridSpanMatch ? parseInt(gridSpanMatch[1], 10) : 1;
+
+        // Extraire le texte de la cellule (concaténer tous les <w:t>)
+        const textParts: string[] = [];
+        const textRegex = /<w:t[^>]*>([^<]*)<\/w:t>/g;
+        let textMatch;
+        while ((textMatch = textRegex.exec(cellContent)) !== null) {
+          if (textMatch[1].trim()) textParts.push(textMatch[1]);
+        }
+        const cellText = textParts.join('').trim();
+
+        // Stocker le span pour la première ligne (en-têtes)
+        if (rowIndex === 0 && gridSpan > 1) {
+          firstRowSpans.set(logicalColIndex, gridSpan);
+        }
+
+        // Ajouter la cellule principale + cellules vides pour les colonnes fusionnées
+        rowData.push(cellText);
+        logicalColIndex++;
+
+        // Les cellules fusionnées occupent gridSpan colonnes virtuelles :
+        // on remplit les colonnes suivantes avec __COVERED__ pour maintenir l'alignement
+        for (let extra = 1; extra < gridSpan; extra++) {
+          rowData.push('__COVERED__');
+          logicalColIndex++;
+        }
+      }
+
+      if (rowData.length > 0) {
+        tableData.push(rowData);
+      }
+      rowIndex++;
+    }
+
+    if (tableData.length > 0) {
+      tables.push(tableData);
+      tableSpans.set(tableIndex, firstRowSpans);
+    }
+    tableIndex++;
+  }
+
+  return { tables, tableSpans };
+}
+
+/**
+ * Extrait les sections structurées d'un fichier DOCX (.docx) en parsant
+ * directement le XML OOXML via JSZip — conserve la structure en tableau
+ * (colonnes gauche/droite) contrairement à mammoth qui aplatit le texte.
+ */
+export async function extractFromDOCX(file: File): Promise<{
+  text: string;
+  sections: DetectedSection[];
+}> {
+  const arrayBuffer = await file.arrayBuffer();
+  const zip = await JSZip.loadAsync(arrayBuffer);
+
+  const documentXml = await zip.file('word/document.xml')?.async('string');
+  if (!documentXml) {
+    // Fallback sur mammoth si le XML est introuvable
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return { text: result.value, sections: [] };
+  }
+
+  const { tables, tableSpans } = parseDOCXXml(documentXml);
+
+  let allSections: DetectedSection[] = [];
+
+  if (tables.length > 0) {
+    // Chercher le tableau principal avec au moins 2 en-têtes de listes
+    for (let tableIndex = 0; tableIndex < tables.length; tableIndex++) {
+      const tableData = tables[tableIndex];
+      const spans = tableSpans.get(tableIndex);
+
+      if (tableData.length > 0) {
+        let maxHeaders = 0;
+        for (let rowIdx = 0; rowIdx < Math.min(3, tableData.length); rowIdx++) {
+          const rowSpans = rowIdx === 0 ? spans : undefined;
+          const headers = detectListHeaders(tableData[rowIdx], rowSpans);
+          maxHeaders = Math.max(maxHeaders, headers.size);
+        }
+
+        if (maxHeaders >= 2) {
+          const tableSections = extractListsFromTable(tableData, spans);
+          if (tableSections.length >= 2) {
+            allSections = tableSections;
+            break;
+          }
+        }
+      }
+    }
+
+    // Fallback : une seule liste détectée
+    if (allSections.length === 0) {
+      for (let tableIndex = 0; tableIndex < tables.length; tableIndex++) {
+        const tableData = tables[tableIndex];
+        const spans = tableSpans.get(tableIndex);
+        const tableSections = extractListsFromTable(tableData, spans);
+        if (tableSections.length >= 1 && tableSections[0].words.length > 0) {
+          allSections = tableSections;
+          break;
+        }
+      }
+    }
+  }
+
+  // Texte brut via mammoth pour usage éventuel en fallback
+  const mammothResult = await mammoth.extractRawText({ arrayBuffer });
+  return { text: mammothResult.value, sections: allSections };
+}
+
+/**
  * Extrait le texte d'un fichier PDF
  */
 export async function extractTextFromPDF(file: File): Promise<string> {
@@ -640,7 +788,28 @@ export async function extractWordsFromFile(file: File): Promise<{
     };
   }
 
-  // Traitement standard pour les autres formats
+  // Traitement structuré pour DOCX (parse le XML OOXML, préserve les colonnes)
+  if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
+    const { text, sections } = await extractFromDOCX(file);
+
+    if (sections.length > 0) {
+      return {
+        words: sections.length === 1 ? sections[0].words : sections.flatMap(s => s.words),
+        sections,
+        hasMultipleSections: sections.length > 1,
+      };
+    }
+
+    // Fallback sur détection texte brut
+    const textSections = detectSections(text);
+    return {
+      words: textSections.length === 1 ? textSections[0].words : extractWordsFromSection(text),
+      sections: textSections,
+      hasMultipleSections: textSections.length > 1,
+    };
+  }
+
+  // Traitement standard pour les autres formats (PDF, txt)
   const text = await extractTextFromFile(file);
   const sections = detectSections(text);
 

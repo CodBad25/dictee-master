@@ -18,12 +18,20 @@ type Row = {
   word: string;
   position: number;
   grammatical_class: GrammaticalClass | null;
+  lemma: string | null;
 };
 
-// Affichage : retire les parenthèses et l'article pour ne montrer que le mot principal
-function displayWord(raw: string): string {
-  const noParens = raw.replace(/\s*\([^)]*\)\s*/g, " ").replace(/\s+/g, " ").trim();
-  return noParens.replace(/^(le |la |les |l['’]|un |une |des |du )/i, "").trim();
+// Lemma utilisé pour la classification ET l'affichage : on préfère la colonne
+// `lemma` quand elle est renseignée (suite à la migration migration-article-lemma.sql),
+// sinon on reconstruit depuis `word` (cas pré-migration).
+function lemmaOf(row: Row): string {
+  if (row.lemma) return row.lemma;
+  // Fallback pré-migration : retire l'article + parens
+  return row.word
+    .replace(/\s*\([^)]*\)\s*/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/^(le |la |les |l['’]|un |une |des |du )/i, "")
+    .trim();
 }
 
 export default function GrammarClassMode() {
@@ -41,7 +49,7 @@ export default function GrammarClassMode() {
     const sb = createClient();
     const selectedPositions = useAppStore.getState().selectedWordPositions;
     sb.from("dictee_words")
-      .select("word, position, grammatical_class")
+      .select("word, position, grammatical_class, lemma")
       .eq("dictee_id", currentList.id)
       .order("position")
       .then(({ data }) => {
@@ -57,7 +65,9 @@ export default function GrammarClassMode() {
   const current = rows[currentIndex];
   const correctClass: GrammaticalClass | null = useMemo(() => {
     if (!current) return null;
-    return current.grammatical_class ?? classifyWord(current.word);
+    // On classifie le LEMMA (sans article), pour ne pas biaiser le classifieur :
+    // "le prochain" → on classifie "prochain" → adjectif.
+    return current.grammatical_class ?? classifyWord(lemmaOf(current));
   }, [current]);
 
   const choices = useMemo(() => {
@@ -144,7 +154,7 @@ export default function GrammarClassMode() {
   }
 
   const progress = ((currentIndex + 1) / rows.length) * 100;
-  const display = displayWord(current.word);
+  const display = lemmaOf(current);
 
   return (
     <main className="min-h-dvh bg-gradient-to-br from-cyan-50 via-white to-sky-50 flex flex-col">

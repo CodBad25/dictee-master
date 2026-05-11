@@ -84,6 +84,36 @@ export async function updateWordGrammaticalClass(
   if (error) throw new Error(error.message);
 }
 
+// Met à jour l'URL de l'audio personnalisé pour un mot. null = retour à la synthèse vocale.
+export async function updateWordAudioUrl(
+  dicteeId: string,
+  position: number,
+  audioUrl: string | null,
+): Promise<void> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dictee_words")
+    .update({ audio_url: audioUrl })
+    .eq("dictee_id", dicteeId)
+    .eq("position", position);
+  if (error) throw new Error(error.message);
+}
+
+// Met à jour la définition d'un mot (pour le mode Définitions).
+export async function updateWordDefinition(
+  dicteeId: string,
+  position: number,
+  definition: string,
+): Promise<void> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dictee_words")
+    .update({ definition })
+    .eq("dictee_id", dicteeId)
+    .eq("position", position);
+  if (error) throw new Error(error.message);
+}
+
 // === RÉSULTATS ===
 
 // Résout l'UUID interne dm_classes.id à partir du classeId Hub.
@@ -362,7 +392,7 @@ export async function loadStudentsWithOverrides(classId: string): Promise<Set<st
 }
 
 const DEFAULT_ACTIVITY_ORDER_FALLBACK = [
-  "flashcard", "genre", "spelling_choice", "definitions",
+  "flashcard", "genre", "grammar_class", "spelling_choice", "definitions",
   "dictionary", "audio_word", "fill_blanks", "audio_dictation",
 ];
 
@@ -392,20 +422,23 @@ function mergeWithCanonical(stored: string[] | null | undefined): string[] {
 }
 
 export async function loadActivityConfig(
-  className: string,
+  hubClassId: string,
   dicteeId: string,
   studentId?: string | null,
 ): Promise<{ activityOrder: string[]; selectedWords: number[] | null }> {
   const sb = createClient();
 
-  // Trouver la classe par nom
+  // Trouver la classe par hub_class_id (clé universelle — jamais par name)
   const { data: cls } = await sb
     .from("dm_classes")
     .select("id, default_activity_order")
-    .eq("name", className)
+    .eq("hub_class_id", hubClassId)
     .maybeSingle();
 
   if (!cls) {
+    console.warn(
+      `[loadActivityConfig] Classe introuvable pour hub_class_id="${hubClassId}". Fallback activé.`
+    );
     return { activityOrder: DEFAULT_ACTIVITY_ORDER_FALLBACK, selectedWords: null };
   }
 

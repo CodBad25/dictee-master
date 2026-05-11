@@ -146,7 +146,7 @@ export default function StudentPage() {
     // Charger la config du parcours pour cette dictée
     try {
       const config = await loadActivityConfig(
-        connectedEleve?.classe || "",
+        connectedEleve?.classeId || "",
         dictee.id,
         connectedEleve?.eleveId || null,
       );
