@@ -13,9 +13,9 @@ export interface TtsConfig {
 // Clé localStorage pour persister la config TTS du prof.
 export const TTS_CONFIG_KEY = "dictee-master-tts-config";
 
-// Voix Rachel — voix par défaut gratuite ElevenLabs (compatible free tier).
-// Modèle multilingual_v2 pour bonne prononciation française.
-const ELEVENLABS_DEFAULT_VOICE = "21m00Tcm4TlvDq8ikWAM";
+// Voix Matilda — déjà utilisée par le script regenerate-word-mp3.py qui a généré
+// les 514 MP3 des mots de DictéeMaster. Compatible avec le compte ElevenLabs de Badri.
+const ELEVENLABS_DEFAULT_VOICE = "XrExE9yKIg1WjnnlVkGX";
 
 // ── Persistance localStorage ───────────────────────────────────────────────
 
