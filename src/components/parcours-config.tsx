@@ -13,6 +13,8 @@ import {
   deleteDicteeOverride,
   updateWordSpellingErrors,
   updateWordGrammaticalClass,
+  loadFillBlanksVariants,
+  type FillBlanksVariant,
 } from "@/lib/dictee-service";
 import {
   classifyWord,
@@ -96,6 +98,10 @@ export default function ParcoursConfig({
   // Section « Personnaliser les mots » (Variante 2 — tabs horizontales)
   const [showWordConfigSection, setShowWordConfigSection] = useState(false);
 
+  // Variantes du texte à trous (onglet Variantes dans WordConfigSection)
+  const [variants, setVariants] = useState<FillBlanksVariant[]>([]);
+  const teacherPassword = process.env.NEXT_PUBLIC_TEACHER_PASSWORD || "";
+
   // Total des pièges sur toute la dictée (pour l'indicateur sur le chip Choix orthographique)
   const totalErrors = dicteeWords.reduce((s, w) => s + (w.spelling_errors?.length || 0), 0);
 
@@ -131,21 +137,25 @@ export default function ParcoursConfig({
     }
   }, [open, dmClassId, selectedStudentId]);
 
-  // Chargement des mots quand on sélectionne une dictée
+  // Chargement des mots et des variantes quand on sélectionne une dictée
   useEffect(() => {
     if (!selectedDicteeId) {
       setDicteeWords([]);
+      setVariants([]);
       return;
     }
     const load = async () => {
       const sb = createClient();
-      const { data } = await sb
-        .from("dictee_words")
-        .select("word, position, spelling_errors, grammatical_class, lemma, article, definition, audio_url")
-        .eq("dictee_id", selectedDicteeId)
-        .order("position");
+      const [wordsData, loadedVariants] = await Promise.all([
+        sb
+          .from("dictee_words")
+          .select("word, position, spelling_errors, grammatical_class, lemma, article, definition, audio_url")
+          .eq("dictee_id", selectedDicteeId)
+          .order("position"),
+        loadFillBlanksVariants(selectedDicteeId),
+      ]);
       setDicteeWords(
-        (data || []).map((w: any) => ({
+        (wordsData.data || []).map((w: any) => ({
           word: w.word,
           position: w.position,
           spelling_errors: Array.isArray(w.spelling_errors) ? w.spelling_errors : [],
@@ -156,6 +166,7 @@ export default function ParcoursConfig({
           audio_url: w.audio_url || null,
         })),
       );
+      setVariants(loadedVariants);
       // Reset éditeurs si on change de dictée
       setEditingWordPos(null);
       setEditingErrors([]);
@@ -612,6 +623,9 @@ export default function ParcoursConfig({
                           ws.map((w) => (w.position === updated.position ? updated : w))
                         )
                       }
+                      variants={variants}
+                      teacherPassword={teacherPassword}
+                      onVariantsChange={setVariants}
                     />
                   </div>
                 )}

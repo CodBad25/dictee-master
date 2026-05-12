@@ -32,6 +32,21 @@ export interface DicteeWord {
   position: number;
 }
 
+import type { VariantType } from "./variant-types";
+
+export type { VariantType };
+
+export interface FillBlanksVariant {
+  id: string;
+  label: string; // "Variante pluriel", "Variante imparfait", "Variante passé composé"…
+  variant_type: VariantType;
+  fill_blanks_text: string; // texte avec ___ pour les blancs
+  full_text: string;        // texte complet sans blancs (pour la lecture audio)
+  audio_url?: string;       // URL du MP3 généré (optionnel)
+  status: "draft" | "validated" | "rejected";
+  created_at: string;
+}
+
 // === DICTÉES ===
 
 export async function loadAllDictees(): Promise<Dictee[]> {
@@ -614,4 +629,34 @@ export async function rejectUnlockRequest(requestId: string): Promise<boolean> {
     return false;
   }
   return true;
+}
+
+// === VARIANTES ADAPTATIVES (texte à trous) ===
+
+// Charger les variantes stockées en JSONB pour une dictée.
+export async function loadFillBlanksVariants(dicteeId: string): Promise<FillBlanksVariant[]> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from("dictees")
+    .select("fill_blanks_variants")
+    .eq("id", dicteeId)
+    .maybeSingle();
+  if (error) {
+    console.error("loadFillBlanksVariants:", error.message);
+    return [];
+  }
+  return (data?.fill_blanks_variants as FillBlanksVariant[]) || [];
+}
+
+// Sauvegarder (écraser) toutes les variantes d'une dictée.
+export async function saveFillBlanksVariants(
+  dicteeId: string,
+  variants: FillBlanksVariant[],
+): Promise<void> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dictees")
+    .update({ fill_blanks_variants: variants })
+    .eq("id", dicteeId);
+  if (error) throw new Error(error.message);
 }

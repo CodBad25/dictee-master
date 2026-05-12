@@ -49,6 +49,16 @@ export default function FillBlanksMode() {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // Map originalWord → audio_url pour le bouton 🔊 de chaque trou
+  const wordAudioMap = useRef<Map<string, string | null | undefined>>(new Map());
+  useEffect(() => {
+    const map = new Map<string, string | null | undefined>();
+    for (const w of currentWords) {
+      map.set(w.word, w.audio_url);
+    }
+    wordAudioMap.current = map;
+  }, [currentWords]);
+
   // Charger le texte depuis Supabase, fallback sur le générateur
   const generateText = useCallback(async () => {
     if (!currentWords.length || !currentList) return;
@@ -531,7 +541,15 @@ export default function FillBlanksMode() {
         <span key={`blank-${index}`} className="inline-flex items-center mx-1 align-middle gap-0.5">
           <button
             type="button"
-            onClick={() => playWordAudio(blank.originalWord)}
+            onClick={() => {
+              // Lire le mot SANS article (ex : "forêt" et non "la forêt")
+              const wordWithoutArticle = blank.originalWord.replace(
+                /^(le |la |l'|l’|un |une |les |des |du )/i,
+                ""
+              );
+              const audioUrl = wordAudioMap.current.get(blank.originalWord);
+              playWordAudio(wordWithoutArticle, undefined, undefined, audioUrl ?? null);
+            }}
             className="w-6 h-6 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 flex items-center justify-center flex-shrink-0 transition-colors"
             title="Écouter le mot"
           >

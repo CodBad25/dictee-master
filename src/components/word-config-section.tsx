@@ -6,20 +6,23 @@ import {
   updateWordSpellingErrors,
   updateWordGrammaticalClass,
   updateWordDefinition,
+  type FillBlanksVariant,
 } from "@/lib/dictee-service";
 import { classifyWord, GRAMMAR_LABELS, type GrammaticalClass } from "@/lib/grammar-classifier";
 import { playWordAudio } from "@/lib/audio";
 import AudioRecorder from "@/components/audio-recorder";
 import type { WordConfigRow } from "@/components/word-config-modal";
+import VariantesTab from "@/components/variantes-tab";
 
-type TabId = "spelling_choice" | "grammar_class" | "definitions" | "audio_word" | "genre";
+type TabId = "spelling_choice" | "grammar_class" | "definitions" | "audio_word" | "genre" | "variantes";
 
 const TABS: { id: TabId; icon: string; label: string; short: string }[] = [
-  { id: "spelling_choice", icon: "✏️", label: "Choix orthographique", short: "Pièges" },
+  { id: "spelling_choice", icon: "✏️", label: "Choix orthographique",  short: "Pièges" },
   { id: "grammar_class",   icon: "🔤", label: "Classes grammaticales", short: "Classe gram." },
   { id: "definitions",     icon: "📖", label: "Définitions",           short: "Définitions" },
   { id: "audio_word",      icon: "🎧", label: "Audio mot",             short: "Audio mot" },
   { id: "genre",           icon: "🏷️", label: "Genre",                 short: "Genre" },
+  { id: "variantes",       icon: "📝", label: "Variantes texte à trous", short: "Variantes" },
 ];
 
 const FIXED_EXOS = [
@@ -55,6 +58,11 @@ const TAB_COLORS: Record<TabId, { active: string; banner: string; chip: string }
     banner: "bg-rose-50 border-rose-100 text-rose-800",
     chip: "bg-rose-100 text-rose-700 border border-rose-300",
   },
+  variantes: {
+    active: "border-b-[3px] border-orange-400 bg-orange-50 text-orange-900",
+    banner: "bg-orange-50 border-orange-100 text-orange-800",
+    chip: "bg-orange-100 text-orange-700 border border-orange-300",
+  },
 };
 
 const ARTICLE_OPTIONS = ["le", "la", "l'", "les", "un", "une", "des", ""];
@@ -65,9 +73,22 @@ interface Props {
   words: WordConfigRow[];
   onBack: () => void;
   onUpdated: (updated: WordConfigRow) => void;
+  // Onglet Variantes
+  variants?: FillBlanksVariant[];
+  teacherPassword?: string;
+  onVariantsChange?: (variants: FillBlanksVariant[]) => void;
 }
 
-export default function WordConfigSection({ dicteeId, dicteePosition, words, onBack, onUpdated }: Props) {
+export default function WordConfigSection({
+  dicteeId,
+  dicteePosition,
+  words,
+  onBack,
+  onUpdated,
+  variants = [],
+  teacherPassword = "",
+  onVariantsChange,
+}: Props) {
   const [activeTab, setActiveTab] = useState<TabId>("spelling_choice");
   const [localWords, setLocalWords] = useState<WordConfigRow[]>(words);
   const [saving, setSaving] = useState<Record<number, boolean>>({});
@@ -174,6 +195,7 @@ export default function WordConfigSection({ dicteeId, dicteePosition, words, onB
       case "definitions":     return localWords.filter((w) => w.definition).length;
       case "audio_word":      return localWords.filter((w) => w.audio_url).length;
       case "genre":           return localWords.filter((w) => w.article).length;
+      case "variantes":       return variants.filter((v) => v.status === "validated").length;
     }
   };
 
@@ -404,13 +426,29 @@ export default function WordConfigSection({ dicteeId, dicteePosition, words, onB
           {activeTab === "definitions"     && "· Saisissez une définition courte. Validation sur Entrée ou perte de focus."}
           {activeTab === "audio_word"      && "· Clique sur ▶ pour écouter la prononciation actuelle. Utilise le micro pour enregistrer ta propre voix."}
           {activeTab === "genre"           && "· Article issu du fichier source. Non modifiable ici."}
+          {activeTab === "variantes"       && "· Générez et validez des variantes du texte à trous (pluriel, imparfait)."}
         </span>
         <span className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full ${colors.chip}`}>
-          {count(activeTab)} / {n} mots configurés
+          {activeTab === "variantes"
+            ? `${count("variantes")} / ${variants.length} validée${variants.length !== 1 ? "s" : ""}`
+            : `${count(activeTab)} / ${n} mots configurés`}
         </span>
       </div>
 
-      {/* En-tête tableau */}
+      {/* Onglet Variantes — rendu propre sans le tableau de mots */}
+      {activeTab === "variantes" && (
+        <div className="flex-1 overflow-y-auto">
+          <VariantesTab
+            dicteeId={dicteeId}
+            teacherPassword={teacherPassword}
+            variants={variants}
+            onVariantsChange={onVariantsChange ?? (() => {})}
+          />
+        </div>
+      )}
+
+      {/* En-tête tableau (masqué sur l'onglet Variantes) */}
+      {activeTab !== "variantes" && (
       <div className="flex-shrink-0 bg-gray-50 border-b border-gray-200">
         <div className="grid px-5 py-1.5" style={{ gridTemplateColumns: "28px 48px 150px 1fr 80px" }}>
           <span className="text-[10px] font-semibold uppercase text-gray-400">#</span>
@@ -426,8 +464,10 @@ export default function WordConfigSection({ dicteeId, dicteePosition, words, onB
           <span className="text-[10px] font-semibold uppercase text-gray-400 text-center">Statut</span>
         </div>
       </div>
+      )}
 
-      {/* Corps du tableau */}
+      {/* Corps du tableau (masqué sur l'onglet Variantes) */}
+      {activeTab !== "variantes" && (
       <div className="flex-1 overflow-y-auto">
         {localWords.map((w, idx) => {
           const hasValue =
@@ -472,6 +512,7 @@ export default function WordConfigSection({ dicteeId, dicteePosition, words, onB
           );
         })}
       </div>
+      )}
     </div>
   );
 }

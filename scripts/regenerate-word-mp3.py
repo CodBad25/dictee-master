@@ -5,7 +5,7 @@ Les fichiers sont dans /public/audio/*.mp3 (hors sous-dossier dictees/).
 Un fichier est régénéré si sa taille est < 50 Ko (signe de mauvaise qualité).
 """
 
-import os, sys, time, requests
+import os, re, sys, time, requests
 
 # Clé active (2e clé, quota 1ère épuisé)
 ELEVENLABS_KEY = "sk_cf6be57ae995d02bb3ec79d7fc4d0350a1150d87f94820ae"
@@ -28,14 +28,20 @@ VARIANT_SUFFIXES = {
 }
 
 
+ARTICLE_RE = re.compile(
+    r"^(le |la |l'|l'|les |un |une |des |du )",
+    re.IGNORECASE,
+)
+
 def filename_to_text(fname: str) -> str:
-    """Convertit un nom de fichier MP3 en texte à prononcer."""
+    """Convertit un nom de fichier MP3 en texte à prononcer (sans article)."""
     name = fname.replace(".mp3", "")
 
     # Double underscore → variante parenthétique : "scellé__ée" → "scellé"
     if "__" in name:
         name = name.split("__")[0]
-        return name.replace("_", " ").strip()
+        text = name.replace("_", " ").strip()
+        return ARTICLE_RE.sub("", text).strip()
 
     # Single underscore : détecter les suffixes de variante (absent_e → absent)
     parts = name.split("_")
@@ -48,6 +54,9 @@ def filename_to_text(fname: str) -> str:
     # Apostrophe : "l épaule" → "l'épaule"
     if name.startswith("l "):
         name = "l'" + name[2:]
+
+    # Supprimer l'article en début ("la forêt" → "forêt", "l'épaule" → "épaule")
+    name = ARTICLE_RE.sub("", name).strip()
 
     return name.strip()
 
@@ -63,6 +72,7 @@ def generate_mp3(text: str, dest: str, retries: int = 3) -> bool:
     body = {
         "text": text,
         "model_id": MODEL_ID,
+        "language_code": "fr",
         "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
     }
     for attempt in range(retries):
