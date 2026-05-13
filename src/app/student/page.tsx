@@ -263,15 +263,15 @@ export default function StudentPage() {
   return (
     <main className="min-h-dvh bg-[#f5f3ff] flex flex-col">
       {/* Header compact */}
-      <header className="bg-white border-b-2 border-purple-100 px-4 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
+      <header className="bg-white border-b-2 border-purple-100 px-3 sm:px-4 py-2 flex items-center justify-between gap-2 shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-base font-extrabold text-purple-600">
               DictéeMaster
             </span>
             <VersionBadge />
           </div>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 truncate">
             <strong className="text-gray-800">
               {connectedEleve
                 ? `${connectedEleve.prenom} ${connectedEleve.nom}`
@@ -280,7 +280,7 @@ export default function StudentPage() {
             {connectedEleve && ` — ${connectedEleve.classe}`}
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="flex items-center gap-1 text-[13px] font-bold text-amber-500">
             <Flame className="w-4 h-4" /> {streak}
           </div>
@@ -292,9 +292,11 @@ export default function StudentPage() {
               variant="ghost"
               size="sm"
               onClick={() => router.push("/teacher")}
-              className="text-xs text-purple-600 hover:bg-purple-50"
+              className="text-xs text-purple-600 hover:bg-purple-50 px-2 sm:px-3"
+              title="Retour prof"
             >
-              ← Retour prof
+              <span className="sm:hidden">←</span>
+              <span className="hidden sm:inline">← Retour prof</span>
             </Button>
           )}
           <Button
