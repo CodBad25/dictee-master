@@ -31,6 +31,7 @@ import ErrorTabs from "@/components/error-tabs";
 import EvalPreviewModal from "@/components/eval-preview-modal";
 import UnlockRequestsPanel from "@/components/unlock-requests-panel";
 import LambdaResetModal from "@/components/lambda-reset-modal";
+import StudentDetailDrawer from "@/components/student-detail-drawer";
 import type { DicteeResult } from "@/lib/dictee-service";
 import { loadStudentsWithOverrides } from "@/lib/dictee-service";
 
@@ -155,6 +156,7 @@ export default function TeacherPage() {
   const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
     null
   );
+  const [drawerStudent, setDrawerStudent] = useState<StudentRow | null>(null);
 
   // Load data from Supabase
   const loadData = async () => {
@@ -585,7 +587,10 @@ export default function TeacherPage() {
                   {studentRows.map((row, idx) => (
                     <tr
                       key={row.id}
-                      onClick={() => setSelectedStudent(row)}
+                      onClick={() => {
+                        setSelectedStudent(row);
+                        setDrawerStudent(row);
+                      }}
                       className={`cursor-pointer hover:bg-purple-100 transition-colors ${
                         idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                       }`}
@@ -825,6 +830,18 @@ export default function TeacherPage() {
           dictees={dictees.map(d => ({ id: d.id, title: d.title, position: d.position }))}
           students={studentRows.map(s => ({ id: s.id, name: s.name }))}
           displayName={dn}
+        />
+      )}
+
+      {/* Fiche élève — drawer latéral (ouvert au clic sur une ligne) */}
+      {drawerStudent && dmClassId && (
+        <StudentDetailDrawer
+          isOpen={!!drawerStudent}
+          onClose={() => setDrawerStudent(null)}
+          studentId={drawerStudent.id}
+          studentName={drawerStudent.name}
+          classId={dmClassId}
+          teacherPassword={process.env.NEXT_PUBLIC_TEACHER_PASSWORD || ""}
         />
       )}
 
