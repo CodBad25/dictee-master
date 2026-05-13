@@ -31,34 +31,58 @@ export default function LambdaResetModal({ isOpen, onClose }: LambdaResetModalPr
     setLoading(true);
     try {
       const sb = createClient();
-      const { data } = await sb
+      // 1) Récupérer tous les résultats Lambda
+      const { data: rows, error: rowsErr } = await sb
         .from("dm_results")
-        .select("dictee_id, percentage, dictees(id, title, position)")
+        .select("dictee_id, percentage")
         .eq("student_id", LAMBDA_ID_6T);
 
-      if (!data || data.length === 0) {
+      if (rowsErr) {
+        console.error("[lambda-reset] dm_results:", rowsErr);
+        toast.error(`Erreur dm_results : ${rowsErr.message}`);
+        return;
+      }
+
+      if (!rows || rows.length === 0) {
         setResults([]);
         return;
       }
 
-      // Grouper par dictée
+      // 2) Récupérer les infos des dictées concernées
+      const dicteeIds = Array.from(new Set(rows.map((r) => r.dictee_id)));
+      const { data: dictees, error: dErr } = await sb
+        .from("dictees")
+        .select("id, title, position")
+        .in("id", dicteeIds);
+
+      if (dErr) {
+        console.error("[lambda-reset] dictees:", dErr);
+        toast.error(`Erreur dictees : ${dErr.message}`);
+        return;
+      }
+
+      const dicteeMap = new Map<string, { title: string; position: number }>();
+      for (const d of dictees || []) {
+        dicteeMap.set(d.id, { title: d.title, position: d.position });
+      }
+
+      // 3) Grouper les résultats par dictée
       const grouped = new Map<string, DicteeResults>();
-      for (const row of data) {
-        const dictee = (row as { dictees: { id: string; title: string; position: number } | { id: string; title: string; position: number }[] | null }).dictees;
-        const d = Array.isArray(dictee) ? dictee[0] : dictee;
-        if (!d) continue;
-        const existing = grouped.get(d.id);
-        const pct = (row as { percentage: number }).percentage;
+      for (const row of rows) {
+        const meta = dicteeMap.get(row.dictee_id);
+        const title = meta?.title || `Dictée ${row.dictee_id}`;
+        const position = meta?.position ?? 999;
+        const existing = grouped.get(row.dictee_id);
         if (existing) {
           existing.exerciseCount++;
-          if (pct > existing.bestScore) existing.bestScore = pct;
+          if (row.percentage > existing.bestScore) existing.bestScore = row.percentage;
         } else {
-          grouped.set(d.id, {
-            dicteeId: d.id,
-            title: d.title,
-            position: d.position,
+          grouped.set(row.dictee_id, {
+            dicteeId: row.dictee_id,
+            title,
+            position,
             exerciseCount: 1,
-            bestScore: pct,
+            bestScore: row.percentage,
           });
         }
       }
