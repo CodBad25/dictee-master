@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store";
-import { ArrowLeft, Check, ChevronRight, Loader2, Lock } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Loader2, Lock, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { findMnemonicForError, summarizeErrors } from "@/lib/mnemonics";
 
@@ -53,6 +54,10 @@ export default function DicteeDetail({
   const [allSessions, setAllSessions] = useState<any[]>([]);
   const [sessionAttempts, setSessionAttempts] = useState<Record<string, any[]>>({});
   const [persistentErrors, setPersistentErrors] = useState<{ word: string; count: number; lastAnswer: string }[]>([]);
+  // État de confirmation/loading pour les boutons reset (prof uniquement)
+  const [confirmResetAll, setConfirmResetAll] = useState(false);
+  const [confirmResetSession, setConfirmResetSession] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -92,50 +97,90 @@ export default function DicteeDetail({
   }, [dicteeId, connectedEleve, activityOrder]);
 
   // Charger TOUTES les sessions pour cette dictée
-  useEffect(() => {
-    const loadHistory = async () => {
-      if (!connectedEleve) return;
-      const sb = createClient();
+  const loadHistory = useCallback(async () => {
+    if (!connectedEleve) return;
+    const sb = createClient();
 
-      // Toutes les sessions
-      const { data: results } = await sb.from("dm_results")
+    // Toutes les sessions
+    const { data: results } = await sb.from("dm_results")
+      .select("*")
+      .eq("student_id", connectedEleve.eleveId)
+      .eq("dictee_id", dicteeId)
+      .order("created_at", { ascending: true });
+
+    if (!results || results.length === 0) {
+      setAllSessions([]);
+      setSessionAttempts({});
+      setPersistentErrors([]);
+      return;
+    }
+    setAllSessions(results);
+
+    // Charger les tentatives pour chaque session
+    const attemptsMap: Record<string, any[]> = {};
+    const errorCount: Record<string, { count: number; lastAnswer: string }> = {};
+
+    for (const r of results) {
+      const { data: att } = await sb.from("dm_word_attempts")
         .select("*")
-        .eq("student_id", connectedEleve.eleveId)
-        .eq("dictee_id", dicteeId)
-        .order("created_at", { ascending: true });
-
-      if (!results || results.length === 0) return;
-      setAllSessions(results);
-
-      // Charger les tentatives pour chaque session
-      const attemptsMap: Record<string, any[]> = {};
-      const errorCount: Record<string, { count: number; lastAnswer: string }> = {};
-
-      for (const r of results) {
-        const { data: att } = await sb.from("dm_word_attempts")
-          .select("*")
-          .eq("result_id", r.id);
-        if (att) {
-          attemptsMap[r.id] = att;
-          // Compter les erreurs persistantes
-          att.filter((a: any) => !a.is_correct).forEach((a: any) => {
-            if (!errorCount[a.word]) errorCount[a.word] = { count: 0, lastAnswer: "" };
-            errorCount[a.word].count++;
-            errorCount[a.word].lastAnswer = a.user_answer;
-          });
-        }
+        .eq("result_id", r.id);
+      if (att) {
+        attemptsMap[r.id] = att;
+        // Compter les erreurs persistantes
+        att.filter((a: any) => !a.is_correct).forEach((a: any) => {
+          if (!errorCount[a.word]) errorCount[a.word] = { count: 0, lastAnswer: "" };
+          errorCount[a.word].count++;
+          errorCount[a.word].lastAnswer = a.user_answer;
+        });
       }
-      setSessionAttempts(attemptsMap);
+    }
+    setSessionAttempts(attemptsMap);
 
-      // Mots avec erreurs dans 2+ sessions
-      const persistent = Object.entries(errorCount)
-        .filter(([_, v]) => v.count >= 2)
-        .map(([word, v]) => ({ word, count: v.count, lastAnswer: v.lastAnswer }))
-        .sort((a, b) => b.count - a.count);
-      setPersistentErrors(persistent);
-    };
-    loadHistory();
+    // Mots avec erreurs dans 2+ sessions
+    const persistent = Object.entries(errorCount)
+      .filter(([_, v]) => v.count >= 2)
+      .map(([word, v]) => ({ word, count: v.count, lastAnswer: v.lastAnswer }))
+      .sort((a, b) => b.count - a.count);
+    setPersistentErrors(persistent);
   }, [dicteeId, connectedEleve]);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
+
+  // Reset des résultats (prof uniquement) — appelle l'API et recharge l'historique.
+  const callReset = async (payload: { dicteeId?: string; activityMode?: string }) => {
+    if (!connectedEleve) return;
+    const teacherPassword = process.env.NEXT_PUBLIC_TEACHER_PASSWORD || "";
+    setResetting(true);
+    try {
+      const res = await fetch("/api/student-results/reset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-teacher-password": teacherPassword,
+        },
+        body: JSON.stringify({
+          studentId: connectedEleve.eleveId,
+          ...payload,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        toast.error(json?.error || "Erreur lors de la réinitialisation");
+        return;
+      }
+      toast.success(`${json.deletedCount} résultat${json.deletedCount > 1 ? "s" : ""} supprimé${json.deletedCount > 1 ? "s" : ""}`);
+      await loadHistory();
+    } catch (err) {
+      console.error("[reset] ", err);
+      toast.error("Erreur réseau");
+    } finally {
+      setResetting(false);
+      setConfirmResetAll(false);
+      setConfirmResetSession(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -267,9 +312,46 @@ export default function DicteeDetail({
         {/* HISTORIQUE COMPLET */}
         {allSessions.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wide">
-              📊 Historique — {allSessions.length} session{allSessions.length > 1 ? "s" : ""}
-            </h2>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wide">
+                📊 Historique — {allSessions.length} session{allSessions.length > 1 ? "s" : ""}
+              </h2>
+              {isTeacher && (
+                <div className="flex items-center gap-2">
+                  {!confirmResetAll ? (
+                    <button
+                      onClick={() => setConfirmResetAll(true)}
+                      disabled={resetting}
+                      className="text-xs px-2 py-1 rounded border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 flex items-center gap-1 disabled:opacity-50"
+                      title="Supprime toutes les sessions de cet élève sur cette dictée"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      🔄 Tout réinitialiser pour cet élève sur cette dictée
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2 px-2 py-1 rounded border border-red-300 bg-red-50">
+                      <span className="text-xs text-red-700 font-semibold">
+                        Supprimer les {allSessions.length} session{allSessions.length > 1 ? "s" : ""} ?
+                      </span>
+                      <button
+                        onClick={() => callReset({ dicteeId })}
+                        disabled={resetting}
+                        className="text-xs px-2 py-0.5 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {resetting ? "…" : "✓"}
+                      </button>
+                      <button
+                        onClick={() => setConfirmResetAll(false)}
+                        disabled={resetting}
+                        className="text-xs px-2 py-0.5 rounded bg-gray-200 hover:bg-gray-300"
+                      >
+                        ✗
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Courbe de progression */}
             <div className="bg-white rounded-xl border p-3">
@@ -349,6 +431,41 @@ export default function DicteeDetail({
                     )}
                   </summary>
                   <div className="px-3 pb-3 space-y-2">
+                    {isTeacher && (
+                      <div className="flex items-center justify-end">
+                        {confirmResetSession !== session.id ? (
+                          <button
+                            onClick={() => setConfirmResetSession(session.id)}
+                            disabled={resetting}
+                            className="text-[10px] px-2 py-0.5 rounded border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 flex items-center gap-1 disabled:opacity-50"
+                            title={`Supprime uniquement cette session (${session.activity_mode})`}
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            🔄 Réinitialiser cet exercice
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded border border-red-300 bg-red-50">
+                            <span className="text-[10px] text-red-700 font-semibold">
+                              Supprimer cette session ({session.activity_mode}) ?
+                            </span>
+                            <button
+                              onClick={() => callReset({ dicteeId, activityMode: session.activity_mode })}
+                              disabled={resetting}
+                              className="text-[10px] px-1.5 py-0.5 rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                            >
+                              {resetting ? "…" : "✓"}
+                            </button>
+                            <button
+                              onClick={() => setConfirmResetSession(null)}
+                              disabled={resetting}
+                              className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 hover:bg-gray-300"
+                            >
+                              ✗
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {errors.length > 0 && (
                       <div className="grid gap-1.5 grid-cols-2">
                         {errors.map((a: any, i: number) => {

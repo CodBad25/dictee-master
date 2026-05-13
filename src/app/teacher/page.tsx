@@ -148,6 +148,8 @@ export default function TeacherPage() {
   const [showBugs, setShowBugs] = useState(false);
   const [showParcours, setShowParcours] = useState(false);
   const [showEvalPreview, setShowEvalPreview] = useState(false);
+  const [confirmResetLambda, setConfirmResetLambda] = useState(false);
+  const [resettingLambda, setResettingLambda] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [studentsWithOverrides, setStudentsWithOverrides] = useState<Set<string>>(new Set());
   const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
@@ -444,6 +446,67 @@ export default function TeacherPage() {
           >
             🧪 Tester
           </button>
+          {/* Reset Lambda — compte partagé entre tous les profs (avertissement sous le bouton via title) */}
+          {!confirmResetLambda ? (
+            <button
+              onClick={() => setConfirmResetLambda(true)}
+              disabled={resettingLambda}
+              className="px-3 py-1 rounded text-sm bg-red-500 hover:bg-red-600 disabled:opacity-50"
+              title="Lambda est un compte partagé entre tous les profs — sa réinitialisation affecte tout le monde."
+            >
+              🗑️ Reset Lambda
+            </button>
+          ) : (
+            <div
+              className="flex items-center gap-2 px-2 py-1 rounded bg-red-600"
+              title="Lambda est un compte partagé entre tous les profs — sa réinitialisation affecte tout le monde."
+            >
+              <span className="text-xs">
+                Effacer TOUS les résultats de Lambda 6T ? (compte partagé)
+              </span>
+              <button
+                disabled={resettingLambda}
+                onClick={async () => {
+                  setResettingLambda(true);
+                  try {
+                    const teacherPassword = process.env.NEXT_PUBLIC_TEACHER_PASSWORD || "";
+                    const res = await fetch("/api/student-results/reset", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        "x-teacher-password": teacherPassword,
+                      },
+                      body: JSON.stringify({
+                        studentId: "cmn2ca8bp00rt01rx2gxh72nw",
+                      }),
+                    });
+                    const json = await res.json();
+                    if (!res.ok) {
+                      toast.error(json?.error || "Erreur lors de la réinitialisation");
+                      return;
+                    }
+                    toast.success(`${json.deletedCount} exercice${json.deletedCount > 1 ? "s" : ""} Lambda réinitialisé${json.deletedCount > 1 ? "s" : ""} ✓`);
+                  } catch (err) {
+                    console.error("[reset-lambda]", err);
+                    toast.error("Erreur réseau");
+                  } finally {
+                    setResettingLambda(false);
+                    setConfirmResetLambda(false);
+                  }
+                }}
+                className="text-xs px-2 py-0.5 rounded bg-white text-red-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                {resettingLambda ? "…" : "✓ Oui"}
+              </button>
+              <button
+                onClick={() => setConfirmResetLambda(false)}
+                disabled={resettingLambda}
+                className="text-xs px-2 py-0.5 rounded bg-white/20 hover:bg-white/30"
+              >
+                ✗
+              </button>
+            </div>
+          )}
           <button
             onClick={() => setShowBugs(true)}
             className="px-3 py-1 rounded text-sm hover:bg-white/10"
