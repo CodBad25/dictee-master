@@ -8,6 +8,9 @@ interface Answer {
   word: string;
   userAnswer: string;
   isCorrect: boolean;
+  // Pour le mode "classe grammaticale" : la bonne réponse n'est pas le mot,
+  // mais sa classe (ex : word="amazonien", correctAnswer="Adjectif").
+  correctAnswer?: string;
 }
 
 interface DicteeResultsProps {
@@ -119,15 +122,23 @@ export default function DicteeResults({
                 }}
               >
                 {errors.map((a, i) => {
-                  const mnemonic = findMnemonicForError(
-                    a.word,
-                    a.userAnswer
-                  );
+                  // Mode classe grammaticale : afficher la bonne classe + le mot en contexte
+                  const isGrammarMode = !!a.correctAnswer;
+                  const correctDisplay = a.correctAnswer ?? a.word;
+                  // Pas de mnémonique orthographique en mode classe grammaticale
+                  const mnemonic = isGrammarMode
+                    ? null
+                    : findMnemonicForError(a.word, a.userAnswer);
                   return (
                     <div
                       key={i}
                       className="bg-white rounded-xl border border-red-100 p-3 space-y-1"
                     >
+                      {isGrammarMode && (
+                        <div className="text-[11px] font-semibold text-gray-500 mb-1">
+                          Mot : <span className="text-gray-800">{a.word}</span>
+                        </div>
+                      )}
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
@@ -139,7 +150,7 @@ export default function DicteeResults({
                           <div className="flex items-center gap-2 mt-0.5">
                             <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             <span className="text-sm font-bold text-emerald-700 truncate">
-                              {a.word}
+                              {correctDisplay}
                             </span>
                           </div>
                         </div>

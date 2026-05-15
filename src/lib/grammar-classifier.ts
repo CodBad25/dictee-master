@@ -59,6 +59,49 @@ const CONJONCTIONS = new Set([
   "parce", "pendant", "tandis", "quoique", "bien",
 ]);
 
+// Noms communs se terminant par -ment (formés sur un verbe).
+// Ces mots seraient sinon classés comme adverbes par la règle générale.
+// Liste centrée sur le vocabulaire collège 6e.
+const NOMS_EN_MENT = new Set([
+  "amusement", "jugement", "mouvement", "gouvernement", "logement",
+  "équipement", "événement", "evenement", "paiement", "changement",
+  "sentiment", "traitement", "vêtement", "vetement", "instrument",
+  "monument", "document", "moment", "ciment", "ornement",
+  "complément", "complement", "fragment", "segment", "abonnement",
+  "raisonnement", "encouragement", "environnement", "comportement",
+  "appartement", "département", "departement", "déménagement", "demenagement",
+  "divertissement", "applaudissement", "étonnement", "etonnement",
+  "enseignement", "renseignement", "élément", "element",
+  "remerciement", "stationnement", "rangement", "classement",
+  "compartiment", "régiment", "regiment", "supplément", "supplement",
+  "déguisement", "deguisement", "rugissement", "frémissement", "fremissement",
+  "argument", "testament", "armement", "bâtiment", "batiment",
+  "campement", "couronnement", "déplacement", "deplacement",
+  "engagement", "enregistrement", "épanouissement", "epanouissement",
+  "événement", "investissement", "lancement", "moment", "passement",
+  "placement", "rassemblement", "règlement", "reglement",
+  "soulagement", "tremblement", "vieillissement", "vrombissement",
+  "aboutissement", "accompagnement", "accroissement", "acharnement",
+  "achèvement", "achevement", "agissement", "agrandissement",
+  "ajustement", "allègement", "allegement", "alourdissement",
+  "amincissement", "ancrage", "anéantissement", "aneantissement",
+  "appauvrissement", "approfondissement", "arrangement",
+  "assouplissement", "attachement", "attroupement", "avènement", "avenement",
+  // Plus rares mais 6e/cycle 3
+  "armement", "battement", "claquement", "craquement",
+  "écartement", "ecartement", "écoulement", "ecoulement",
+  "éloignement", "eloignement", "embarquement", "empoisonnement",
+  "encombrement", "enfoncement", "ensoleillement", "entêtement",
+  "entetement", "envahissement", "épuisement", "epuisement",
+  "étourdissement", "etourdissement", "évanouissement", "evanouissement",
+  "frottement", "gémissement", "gemissement", "glissement",
+  "grognement", "grondement", "hennissement", "hurlement",
+  "miaulement", "murmurement", "ralentissement", "renversement",
+  "rétablissement", "retablissement", "ronflement", "rugissement",
+  "scintillement", "sifflement", "soupirement", "sourcillement",
+  "surgissement", "vacillement", "vrombissement",
+]);
+
 const ADVERBES = new Set([
   "très", "trop", "peu", "beaucoup", "assez", "plus", "moins", "tant", "autant", "si",
   "bien", "mal", "mieux", "pire",
@@ -215,12 +258,22 @@ export function classifyWord(rawWord: string): GrammaticalClass {
   // 5) Nom propre : commence par une majuscule
   if (/^[A-ZÀ-Ÿ]/.test(w)) return "nom_propre";
 
-  // 6) Adverbes en -ment (rapidement, doucement…)
-  if (lwNa.endsWith("ment") && lwNa.length > 5) return "adverbe";
-
-  // 7) Adjectifs : terminaisons typiques
+  // 6) Adjectifs : terminaisons typiques (placé AVANT la règle -ment car
+  //    certains adjectifs en -ien/-ais/... peuvent se terminer par "ment"
+  //    par hasard ? Non — mais surtout -ien/-ais sont des adjectifs fréquents
+  //    en 6e : italien, parisien, français, anglais, chinois, etc.)
+  if (/(ien|ienne|iens|iennes|ais|aise|aises|ois|oise|oises|ain|aine|ains|aines)$/.test(lwNa)) {
+    return "adjectif";
+  }
   if (/(eux|euse|euses|if|ive|ives|ifs|able|ible|ique|iques|al|ale|aux|ales|el|elle|elles|els)$/.test(lwNa)) {
     return "adjectif";
+  }
+
+  // 7) Mots en -ment : nom commun si dans la whitelist (amusement, jugement…),
+  //    sinon adverbe (rapidement, doucement, vraiment, lentement…)
+  if (lwNa.endsWith("ment") && lwNa.length > 5) {
+    if (NOMS_EN_MENT.has(lw) || NOMS_EN_MENT.has(lwNa)) return "nom";
+    return "adverbe";
   }
 
   // 8) Verbes à l'infinitif : -er / -ir / -re / -oir

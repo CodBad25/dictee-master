@@ -42,6 +42,7 @@ export default function FillBlanksMode() {
   const [phase, setPhase] = useState<Phase>("setup");
   const [generatedText, setGeneratedText] = useState<GeneratedText | null>(null);
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
+  const [checkedAnswers, setCheckedAnswers] = useState<Record<number, boolean>>({});
   const [showResults, setShowResults] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -129,6 +130,7 @@ export default function FillBlanksMode() {
           blanks: blanks.sort((a, b) => a.position - b.position),
         });
         setUserAnswers({});
+        setCheckedAnswers({});
         setIsGenerating(false);
         return;
       }
@@ -137,6 +139,7 @@ export default function FillBlanksMode() {
       const text = generateTextWithBlanks(words);
       setGeneratedText(text);
       setUserAnswers({});
+      setCheckedAnswers({});
     } catch (error) {
       console.error("Error generating text:", error);
       toast.error("Erreur lors de la génération du texte");
@@ -196,12 +199,27 @@ export default function FillBlanksMode() {
 
   const handleInputChange = (index: number, value: string) => {
     setUserAnswers(prev => ({ ...prev, [index]: value }));
+    // Retirer le feedback dès que l'élève retape : il pourra revalider au blur
+    if (checkedAnswers[index]) {
+      setCheckedAnswers(prev => {
+        const next = { ...prev };
+        delete next[index];
+        return next;
+      });
+    }
+  };
+
+  const handleBlur = (index: number) => {
+    const value = (userAnswers[index] || "").trim();
+    if (!value) return; // Ne pas marquer une case vide comme vérifiée
+    setCheckedAnswers(prev => ({ ...prev, [index]: true }));
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === "Tab") {
       e.preventDefault();
-      // Passer au champ suivant
+      // Marquer la case courante comme vérifiée avant de passer à la suivante
+      handleBlur(index);
       const nextIndex = index + 1;
       if (nextIndex < (generatedText?.blanks.length || 0)) {
         inputRefs.current[nextIndex]?.focus();
@@ -216,8 +234,8 @@ export default function FillBlanksMode() {
 
     // Calculer le score
     const results = generatedText.blanks.map((blank, index) => {
-      const userAnswer = (userAnswers[index] || "").trim().toLowerCase();
-      const correctAnswer = blank.word.toLowerCase();
+      const userAnswer = (userAnswers[index] || "").trim();
+      const correctAnswer = blank.word;
       return {
         word: blank.word,
         userAnswer: userAnswers[index] || "",
@@ -264,6 +282,7 @@ export default function FillBlanksMode() {
   const handleRetry = async () => {
     setShowResults(false);
     setUserAnswers({});
+    setCheckedAnswers({});
     await generateText();
     setStartTime(Date.now());
     setPhase("dictation");
@@ -290,8 +309,8 @@ export default function FillBlanksMode() {
     if (!generatedText) return { correctCount: 0, totalWords: 0, percentage: 0, results: [] };
 
     const results = generatedText.blanks.map((blank, index) => {
-      const userAnswer = (userAnswers[index] || "").trim().toLowerCase();
-      const correctAnswer = blank.word.toLowerCase();
+      const userAnswer = (userAnswers[index] || "").trim();
+      const correctAnswer = blank.word;
       return {
         word: blank.word,
         userAnswer: userAnswers[index] || "",
@@ -533,9 +552,11 @@ export default function FillBlanksMode() {
         );
       }
 
-      // Champ de saisie pour le trou
-      const isCorrect = showResults && (userAnswers[index] || "").trim().toLowerCase() === blank.word.toLowerCase();
-      const isWrong = showResults && !isCorrect;
+      // Feedback live au blur OU à la validation finale
+      const isChecked = checkedAnswers[index] || showResults;
+      const userValue = (userAnswers[index] || "").trim();
+      const isCorrect = isChecked && userValue === blank.word;
+      const isWrong = isChecked && !isCorrect;
 
       parts.push(
         <span key={`blank-${index}`} className="inline-flex items-center mx-1 align-middle gap-0.5">
@@ -561,10 +582,11 @@ export default function FillBlanksMode() {
             value={userAnswers[index] || ""}
             onChange={(e) => handleInputChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
+            onBlur={() => handleBlur(index)}
             disabled={showResults}
             style={{ width: `${Math.max(8, blank.word.length + 2)}ch` }}
             className={`h-8 px-2 text-center font-bold rounded-lg border-2 outline-none transition-all ${
-              showResults
+              isChecked
                 ? isCorrect
                   ? "border-green-400 bg-green-50 text-green-700"
                   : "border-red-400 bg-red-50 text-red-700"

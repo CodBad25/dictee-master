@@ -41,7 +41,7 @@ export default function GrammarClassMode() {
   const [selected, setSelected] = useState<GrammaticalClass | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
-  const [answers, setAnswers] = useState<{ word: string; userAnswer: string; isCorrect: boolean }[]>([]);
+  const [answers, setAnswers] = useState<{ word: string; userAnswer: string; correctAnswer: string; isCorrect: boolean }[]>([]);
   const [phase, setPhase] = useState<"playing" | "done">("playing");
 
   useEffect(() => {
@@ -84,6 +84,7 @@ export default function GrammarClassMode() {
     setAnswers(prev => [...prev, {
       word: current.word,
       userAnswer: GRAMMAR_LABELS[choice],
+      correctAnswer: GRAMMAR_LABELS[correctClass],
       isCorrect: correct,
     }]);
 
