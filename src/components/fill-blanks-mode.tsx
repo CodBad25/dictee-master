@@ -88,16 +88,19 @@ export default function FillBlanksMode() {
         const usedRanges: { start: number; end: number }[] = [];
 
         for (const originalWord of words) {
-          // Essayer le mot complet d'abord, puis sans article
+          // L'élève tape le mot SANS déterminant : on cherche d'abord la
+          // version courte (sans article), pour ne mettre que le nom dans
+          // le trou et laisser l'article visible dans le texte.
           const stripped = originalWord.replace(/^(le |la |l'|l\u2019|un |une |les |des |du )/i, "");
-          const candidates = [originalWord];
-          if (stripped !== originalWord) candidates.push(stripped);
+          const candidates = stripped !== originalWord
+            ? [stripped, originalWord]
+            : [originalWord];
 
           let found = false;
           for (const candidate of candidates) {
             const escaped = candidate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-            // Chercher avec frontière de mot pour éviter les faux positifs
-            const regex = new RegExp(escaped, "gi");
+            // Frontières de mot pour éviter "héros" qui matcherait dans "héroïque"
+            const regex = new RegExp(`\\b${escaped}\\b`, "gi");
             let match;
             while ((match = regex.exec(fullText)) !== null) {
               // Vérifier que cette position n'est pas déjà prise
