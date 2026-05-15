@@ -22,10 +22,13 @@ type Phase = "listening" | "feedback" | "result";
 function normalizeForComparison(text: string): string {
   return text
     .trim()
-    .replace(/[^a-zA-Z\u00C0-\u00FF\u0153\u00E6\u0152\u00C60-9\s''-]+$/, "")
+    .replace(/[^a-zA-Z\u00C0-\u00FF\u0153\u00E6\u0152\u00C60-9\s''()-]+$/, "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ")
+    // Retirer les espaces autour des parenthèses : "flou ( e )" → "flou(e)"
+    .replace(/\s*\(\s*/g, "(")
+    .replace(/\s*\)\s*/g, ")")
     .replace(/[\u2018\u2019\u02BC]/g, "'")
     .replace(/œ/g, "oe")
     .replace(/æ/g, "ae")

@@ -224,10 +224,13 @@ export default function TrainingMode() {
     return word
       .trim()
       // Ignorer les symboles parasites en fin de saisie (ex: "soirée$" → "soirée")
-      .replace(/[^a-zA-ZÀ-ÿœæŒÆ0-9\s''-]+$/, "")
+      .replace(/[^a-zA-ZÀ-ÿœæŒÆ0-9\s''()-]+$/, "")
       .trim()
       // Normaliser les espaces multiples
       .replace(/\s+/g, " ")
+      // Retirer les espaces autour des parenthèses : "flou ( e )" → "flou(e)"
+      .replace(/\s*\(\s*/g, "(")
+      .replace(/\s*\)\s*/g, ")")
       // Normaliser les apostrophes (typographiques → droites)
       .replace(/[\u2018\u2019\u02BC]/g, "'");
   };
