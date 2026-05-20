@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getDmClassIdByHub } from "@/lib/dictee-service";
 import { useAppStore } from "@/lib/store";
+import { generateDistractors } from "@/lib/distractor-generator";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { toast } from "sonner";
@@ -55,17 +56,8 @@ export default function SpellingChoiceMode() {
 
     let errors = (w.spelling_errors || []).filter(e => e && e.trim() !== w.word);
 
-    // Fallback: if no errors, generate a simple one
     if (errors.length === 0) {
-      const base = w.word.replace(/^(le |la |l'|un |une |les |des |du )/i, "");
-      // Simple accent removal as fallback
-      const fallback = w.word.replace(/[éèê]/g, "e").replace(/[àâ]/g, "a").replace(/[ùû]/g, "u").replace(/ç/g, "c").replace(/[ôö]/g, "o").replace(/[îï]/g, "i");
-      if (fallback !== w.word) {
-        errors = [fallback];
-      } else {
-        // Double a consonant or remove last letter
-        errors = [w.word + w.word[w.word.length - 2]];
-      }
+      errors = generateDistractors(w.word);
     }
 
     // Take 1-2 wrong choices
