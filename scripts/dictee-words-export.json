@@ -1,0 +1,3702 @@
+[
+  {
+    "id": "dictee-1",
+    "position": 1,
+    "title": "Dictée n°1",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "67280035-2b39-4049-b457-49b25f33372a",
+        "dictee_id": "dictee-1",
+        "word": "le héros",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "0fc9c613-141e-44b2-81a0-9ab321bfccb1",
+        "dictee_id": "dictee-1",
+        "word": "une allée",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "7ffa068a-1667-47ff-92d7-656f083f09c3",
+        "dictee_id": "dictee-1",
+        "word": "dangereux",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "be549931-5bca-415a-abfe-f7001932b06b",
+        "dictee_id": "dictee-1",
+        "word": "un aliment",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "c903cc78-a421-4e17-89ab-9731c63f3902",
+        "dictee_id": "dictee-1",
+        "word": "la soirée",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "4b2973da-6045-4682-88ae-5ab7c3fe4e9f",
+        "dictee_id": "dictee-1",
+        "word": "le cortège",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "f05f1912-8ab9-44a6-8877-48d4fdcbb137",
+        "dictee_id": "dictee-1",
+        "word": "un canif",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "bb7dd8e5-0100-442c-960b-0d1d4a5fbec0",
+        "dictee_id": "dictee-1",
+        "word": "la vague",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "92fd7787-e71f-4db4-9006-5903450827c5",
+        "dictee_id": "dictee-1",
+        "word": "une pensée",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "df64c2a3-040e-4a73-9e8b-41a213fcd0a5",
+        "dictee_id": "dictee-1",
+        "word": "un amusement",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "c2a772d0-3407-40a0-96a6-b990f6ca0856",
+        "dictee_id": "dictee-1",
+        "word": "le particulier",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "9eb66ccf-2da0-4e44-bb85-f3392d8367a1",
+        "dictee_id": "dictee-1",
+        "word": "la jungle",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "8e5c7469-a083-486b-811b-9f60512ce9b8",
+        "dictee_id": "dictee-1",
+        "word": "le marteau",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "59f22258-7256-40ed-b699-63e166443ec2",
+        "dictee_id": "dictee-1",
+        "word": "amazonien",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "ed9835c3-4ce4-4020-8677-230b191a32dc",
+        "dictee_id": "dictee-1",
+        "word": "le prochain",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "8bfc8ca5-013e-4167-9043-37268ba1629b",
+        "dictee_id": "dictee-1",
+        "word": "méchant",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "bc7fef35-8099-4cd6-ac07-30273bd55dcd",
+        "dictee_id": "dictee-1",
+        "word": "s'évanouir",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "8f934196-6835-4895-be3b-889fa16da06c",
+        "dictee_id": "dictee-1",
+        "word": "parcourir",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "94fd9e90-c19a-4d0c-bb3b-cc6c1142cadc",
+        "dictee_id": "dictee-1",
+        "word": "le cadeau",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "00b4d2da-a4b1-4fa7-a9e5-f0457a9c80a4",
+        "dictee_id": "dictee-1",
+        "word": "un but",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-2",
+    "position": 2,
+    "title": "Dictée n°2",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "bfed0d58-2adf-46b1-baed-f99ae8bd23d3",
+        "dictee_id": "dictee-2",
+        "word": "l'épaule",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "f7e7ef43-a498-4c92-bf67-69c586b01312",
+        "dictee_id": "dictee-2",
+        "word": "d’abord",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "72726fbd-e2ee-43ef-9109-70a17ec12cac",
+        "dictee_id": "dictee-2",
+        "word": "sept",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "7804d5b8-bad1-4feb-9ee9-a417eff0657c",
+        "dictee_id": "dictee-2",
+        "word": "le corps",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "6480f7e7-b6a3-4a05-aef2-c29c83060bde",
+        "dictee_id": "dictee-2",
+        "word": "une statue",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "0b30ba53-b4d3-4382-a144-65031dccfd72",
+        "dictee_id": "dictee-2",
+        "word": "électrique",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "758f2464-98b1-42cd-9933-a3f0bbbe61a3",
+        "dictee_id": "dictee-2",
+        "word": "une trappe",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "1a547f03-862c-4471-93f9-d2a78775c4f7",
+        "dictee_id": "dictee-2",
+        "word": "ouvrir",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "3d2634ce-81a0-4dc3-a71e-6a5553d3e4f8",
+        "dictee_id": "dictee-2",
+        "word": "tendrement",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "b3c495e3-a3f4-4ed7-83f6-8f10b726ff5b",
+        "dictee_id": "dictee-2",
+        "word": "l’aventure",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "3c51a2fa-088b-4355-a170-679a06ce5095",
+        "dictee_id": "dictee-2",
+        "word": "ronger",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "ad0a9f4a-acf6-4008-bb3e-1105049b62a0",
+        "dictee_id": "dictee-2",
+        "word": "un berger",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "75d92963-29c7-41c1-9818-6aca3b4185c9",
+        "dictee_id": "dictee-2",
+        "word": "le dos",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "2551d70e-178d-4d9f-bd70-4148c92560b4",
+        "dictee_id": "dictee-2",
+        "word": "le suivant",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "1f7d37fc-2984-45a5-8207-2fe475636b61",
+        "dictee_id": "dictee-2",
+        "word": "voltiger",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "adb1d049-bb00-4b1a-90eb-43ca01b0942b",
+        "dictee_id": "dictee-2",
+        "word": "la gelée",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "d1219014-a9e5-4259-bb07-a69a8eedbab3",
+        "dictee_id": "dictee-2",
+        "word": "une invitation",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "7de7be62-c194-446f-beff-3e2c54643705",
+        "dictee_id": "dictee-2",
+        "word": "un morceau",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "9d33c057-660b-4912-8afd-7c85cad55ac5",
+        "dictee_id": "dictee-2",
+        "word": "un clairon",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "c86d6428-01d5-477b-81d5-6f74b2468c47",
+        "dictee_id": "dictee-2",
+        "word": "le pied",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-3",
+    "position": 3,
+    "title": "Dictée n°3",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "3d5e2ca5-2067-4c0a-b5d7-23922e25f076",
+        "dictee_id": "dictee-3",
+        "word": "le repos",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "0cf78102-d7ac-4e03-8261-8782c348be10",
+        "dictee_id": "dictee-3",
+        "word": "une hirondelle",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "05bb7a9f-b0a9-412a-b674-55bdd3ba9646",
+        "dictee_id": "dictee-3",
+        "word": "réfléchir",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "d88b6631-0362-449d-9ac9-fab608b45d0c",
+        "dictee_id": "dictee-3",
+        "word": "le désordre",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "c175b31c-a5c9-40ef-aa8d-b7f5f5c5d5d1",
+        "dictee_id": "dictee-3",
+        "word": "septembre",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "c8abe256-1c0a-4e6e-89cc-0ff51f90051a",
+        "dictee_id": "dictee-3",
+        "word": "le bœuf",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "5b793810-d6b9-4938-8a99-219dc3a34ff6",
+        "dictee_id": "dictee-3",
+        "word": "également",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "facaa34d-5157-4b22-8c92-ce288e15bbeb",
+        "dictee_id": "dictee-3",
+        "word": "relativement",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "99cc8d1d-d487-490a-88b2-dbbab50b8000",
+        "dictee_id": "dictee-3",
+        "word": "une explication",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "c76b4e56-ac13-4f81-a608-83054203e08c",
+        "dictee_id": "dictee-3",
+        "word": "la jeunesse",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "76b7a97c-7d7d-4641-b789-2bb828d41582",
+        "dictee_id": "dictee-3",
+        "word": "le champ",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "87a23993-1eef-432f-8617-7c4a8bfb786c",
+        "dictee_id": "dictee-3",
+        "word": "un spectacle",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "667c5385-ecc0-4262-a00d-36b9ab2b75eb",
+        "dictee_id": "dictee-3",
+        "word": "le souper",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "0fef9159-4ee3-4add-ab79-a5b097e85786",
+        "dictee_id": "dictee-3",
+        "word": "un menuisier",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "cb46eb6f-c6bb-4802-b295-ad100b5ddab6",
+        "dictee_id": "dictee-3",
+        "word": "le cultivateur",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "ac73698f-24c4-438e-9ba4-9064cda228a6",
+        "dictee_id": "dictee-3",
+        "word": "digne",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "b060aebc-da69-47b6-936b-1e6a93dddbb6",
+        "dictee_id": "dictee-3",
+        "word": "le calme",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "11f9e44c-05c8-4c75-bd31-bda5da52bbc0",
+        "dictee_id": "dictee-3",
+        "word": "un veau",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "99dab153-273e-4d6f-a8f0-b4f67cf76f4b",
+        "dictee_id": "dictee-3",
+        "word": "la marchandise",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "1f2d4235-b1a6-4f70-a0c9-af7a5656e4c4",
+        "dictee_id": "dictee-3",
+        "word": "le vol",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-4",
+    "position": 4,
+    "title": "Dictée n°4",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "0bc656ac-5cc1-497d-ab70-684c5ae1fa0e",
+        "dictee_id": "dictee-4",
+        "word": "un muscle",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "2a7479b6-0a56-41c3-8c25-943fafd98996",
+        "dictee_id": "dictee-4",
+        "word": "la surface",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "b6325608-9969-49d4-8be1-bfc07495a3bf",
+        "dictee_id": "dictee-4",
+        "word": "l’hiver",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "ce2b906e-61b1-44d4-bbac-fe851e77ce85",
+        "dictee_id": "dictee-4",
+        "word": "admirable",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "da70d721-f5e8-4518-ab18-58147d056916",
+        "dictee_id": "dictee-4",
+        "word": "rustique",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "b827a230-9cca-4421-8d5d-0011b83e9287",
+        "dictee_id": "dictee-4",
+        "word": "un veston",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "9b545ee9-24c4-40c0-a8e8-28649a49bcaf",
+        "dictee_id": "dictee-4",
+        "word": "mordre",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "0de1c165-0e14-4bca-8d9d-5487e08fd3cc",
+        "dictee_id": "dictee-4",
+        "word": "les yeux",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "4a2729df-0653-461d-9213-87bfaa87852a",
+        "dictee_id": "dictee-4",
+        "word": "une mélodie",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "322d1edf-9161-49cb-9d04-6d2c5b7fa9c4",
+        "dictee_id": "dictee-4",
+        "word": "secourir",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "46044638-f7a8-41aa-8cef-fa00426ced6b",
+        "dictee_id": "dictee-4",
+        "word": "l'infirmier",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "befc4370-9fb8-4321-93ca-d2893074c9e2",
+        "dictee_id": "dictee-4",
+        "word": "une fonction",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "df937fe2-03f0-42c0-9ce1-e8e612b1c50d",
+        "dictee_id": "dictee-4",
+        "word": "la perfection",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "b2dd129d-f1a2-44c8-aa43-168155dc44f5",
+        "dictee_id": "dictee-4",
+        "word": "le faucheur",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "db49ff3b-c0dd-48fe-b9ad-6486c8303e2e",
+        "dictee_id": "dictee-4",
+        "word": "un promeneur",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "7051afa0-dd96-4bbb-9c82-bef3051e2ca7",
+        "dictee_id": "dictee-4",
+        "word": "Une grenouille",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "d02e67ba-3c0b-4b4d-a139-23de2312bd3b",
+        "dictee_id": "dictee-4",
+        "word": "un tableau",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "d8ca5161-5b3a-4a3b-ab6e-3806e2461d13",
+        "dictee_id": "dictee-4",
+        "word": "une mare",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "5288238e-06f8-45a3-bb56-1769a030c72a",
+        "dictee_id": "dictee-4",
+        "word": "redouter",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "a5ee14ba-5566-4c87-940c-efafb34f4605",
+        "dictee_id": "dictee-4",
+        "word": "le temps",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-5",
+    "position": 5,
+    "title": "Dictée n°5",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "41da3c2e-2113-434f-b38f-8bb7705e9320",
+        "dictee_id": "dictee-5",
+        "word": "un meurtre",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "df634e83-3474-483c-87d9-1557aeefd51f",
+        "dictee_id": "dictee-5",
+        "word": "une pièce",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "135076a3-2c82-4b4a-838c-fa5ca8e89ce5",
+        "dictee_id": "dictee-5",
+        "word": "la médaille",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "59667f88-18fa-4e67-b703-eee21d437984",
+        "dictee_id": "dictee-5",
+        "word": "taire (se)",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "c4141c76-e1cb-46bf-b653-40acdc64486a",
+        "dictee_id": "dictee-5",
+        "word": "bête",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "49db5ef3-07e2-485e-a716-d8b430e28159",
+        "dictee_id": "dictee-5",
+        "word": "redire",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "2f5e8ff2-76c5-4a2b-8eb3-42af4ef6175e",
+        "dictee_id": "dictee-5",
+        "word": "la morale",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "bcbb9cb8-7b72-489d-a84a-942b53436383",
+        "dictee_id": "dictee-5",
+        "word": "habituellement",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "8dbd76b6-8ef2-4e41-ad26-4bbcfb53cbbd",
+        "dictee_id": "dictee-5",
+        "word": "drôle",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "e5579718-655a-41c7-a0d2-97ecaca82a3a",
+        "dictee_id": "dictee-5",
+        "word": "un grain",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "e26a537f-e827-4383-be25-01dec53168cf",
+        "dictee_id": "dictee-5",
+        "word": "accrocher",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "ec7d845a-cd83-4d10-b589-7c3a710cf106",
+        "dictee_id": "dictee-5",
+        "word": "l'huile",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "627df75a-0594-49ae-9737-46abeae560f5",
+        "dictee_id": "dictee-5",
+        "word": "flou (e)",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "f06a6b5a-bc01-4c02-a055-caa8be5e09cd",
+        "dictee_id": "dictee-5",
+        "word": "la police",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "1bc1db4c-1948-414e-ae94-2f6685696d07",
+        "dictee_id": "dictee-5",
+        "word": "coucher (se)",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "f93f5581-ede3-4481-823d-31bf8cd254d7",
+        "dictee_id": "dictee-5",
+        "word": "la queue",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "369efedf-b596-4b64-9b06-ee4314f7b07b",
+        "dictee_id": "dictee-5",
+        "word": "le piano",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "578e10d8-62a7-4942-b2fe-c17f512e42a5",
+        "dictee_id": "dictee-5",
+        "word": "l’effroi",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "b26ae560-6a45-4e54-a4f1-9cacbecdb269",
+        "dictee_id": "dictee-5",
+        "word": "répartir",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "0b239811-1bbf-4e0b-94bd-17516717ab55",
+        "dictee_id": "dictee-5",
+        "word": "un mobile",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-6",
+    "position": 6,
+    "title": "Dictée n°6",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "40881dc0-c7a8-4b0c-938f-8412308c53ef",
+        "dictee_id": "dictee-6",
+        "word": "la vertu",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "7c5520a3-7687-4af9-9f81-f5d291b4a25f",
+        "dictee_id": "dictee-6",
+        "word": "la propriété",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "9c2dd98b-42b1-48b0-83b7-01ca8c86998c",
+        "dictee_id": "dictee-6",
+        "word": "la propreté",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "17e07147-19e8-4e04-930f-4103880b9de9",
+        "dictee_id": "dictee-6",
+        "word": "le duvet",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "3a2a6594-5aa6-4315-8a9e-87399ec2af08",
+        "dictee_id": "dictee-6",
+        "word": "un pinson",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "11b75a6e-770e-4828-ac77-2cf890df61af",
+        "dictee_id": "dictee-6",
+        "word": "gentil (ille)",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "de35a752-58e2-408d-988b-63190737f284",
+        "dictee_id": "dictee-6",
+        "word": "le renouvellement",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "958d16b5-6900-4df8-99c8-21b8fdd87bba",
+        "dictee_id": "dictee-6",
+        "word": "le pelage",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "b23a3b68-bf91-4a75-89f4-dc904c7969f2",
+        "dictee_id": "dictee-6",
+        "word": "une dette",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "85ba0dd9-293e-4fbc-a760-10f99e477ccb",
+        "dictee_id": "dictee-6",
+        "word": "le manque",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "0d87026a-0c09-4808-8b87-ad08ce62e06f",
+        "dictee_id": "dictee-6",
+        "word": "un propriétaire",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "c0e433c8-6b34-47c3-8c81-ea4c4fb1e467",
+        "dictee_id": "dictee-6",
+        "word": "la fureur",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "bf5678df-abc5-4f7d-bb10-113e617ab870",
+        "dictee_id": "dictee-6",
+        "word": "le poumon",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "a431544b-d568-42e0-8862-2cf8aecc5651",
+        "dictee_id": "dictee-6",
+        "word": "plaire",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "96257881-802a-4ffe-99c8-eb9c3031bdd9",
+        "dictee_id": "dictee-6",
+        "word": "le domicile",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "2c1ee9ea-8092-411c-ac7f-b026f7d1eab1",
+        "dictee_id": "dictee-6",
+        "word": "à merveille",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "f9a630ab-5df4-4e4a-af3d-33c24a4bbc84",
+        "dictee_id": "dictee-6",
+        "word": "le témoin",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "662e0edb-a8cc-4697-803c-fc6421319ec6",
+        "dictee_id": "dictee-6",
+        "word": "une démarche",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "d6854b3c-0ddd-4a73-8a3d-a67095100a3a",
+        "dictee_id": "dictee-6",
+        "word": "approcher",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "93720c6f-1c4b-4775-a589-9209ddeaf19d",
+        "dictee_id": "dictee-6",
+        "word": "un régiment",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-7",
+    "position": 7,
+    "title": "Dictée n°7",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "17875c52-b438-41bc-8f97-ee8972b9cdf3",
+        "dictee_id": "dictee-7",
+        "word": "absent(e)",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "88603324-1f23-423f-8ff1-367df6f97497",
+        "dictee_id": "dictee-7",
+        "word": "courageusement",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "d1415f63-d304-4d90-a3c8-ce5009859926",
+        "dictee_id": "dictee-7",
+        "word": "la boîte",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "a33f06be-fcdc-47f4-a7a5-0d802c883557",
+        "dictee_id": "dictee-7",
+        "word": "moindre",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "47a9119a-3118-414c-9351-c4b8905df950",
+        "dictee_id": "dictee-7",
+        "word": "actif (ve)",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "15378d08-70b0-4d34-b1e3-428990671e49",
+        "dictee_id": "dictee-7",
+        "word": "le valet",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "664b0734-b771-412e-aeb7-ea467b2fd181",
+        "dictee_id": "dictee-7",
+        "word": "le lendemain",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "45d0436a-627c-48e8-9a75-e828a25bab8a",
+        "dictee_id": "dictee-7",
+        "word": "le milieu",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "b3dcaa2f-bcf9-4ea6-8030-72232adb4b3e",
+        "dictee_id": "dictee-7",
+        "word": "lourd (e)",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "7832d989-30ea-40a4-ac94-3a3665758e0c",
+        "dictee_id": "dictee-7",
+        "word": "semer",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "57febea7-3977-4b8a-ba15-11cc927790df",
+        "dictee_id": "dictee-7",
+        "word": "scellé (ée)",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "3de73e0d-7093-42d5-8807-80447c3260e1",
+        "dictee_id": "dictee-7",
+        "word": "le drap",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "0c1fd46a-5051-4891-8310-4abef7597698",
+        "dictee_id": "dictee-7",
+        "word": "sinistre",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "eb684a73-122a-4378-b1a7-e314f8454428",
+        "dictee_id": "dictee-7",
+        "word": "un soupir",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "23c77bdd-22bc-46a0-96e2-41bf076081d8",
+        "dictee_id": "dictee-7",
+        "word": "le pont",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "bde8c626-9401-4c66-883a-7a3fcc9ef00a",
+        "dictee_id": "dictee-7",
+        "word": "remonter",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "31811fd9-e16a-40a1-801b-e34a1cd61289",
+        "dictee_id": "dictee-7",
+        "word": "mieux",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "c54c8f86-1bd5-4488-8c70-9d3bbccd5a09",
+        "dictee_id": "dictee-7",
+        "word": "secret",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "9029c893-b8c5-4407-8326-feddbaabfcf3",
+        "dictee_id": "dictee-7",
+        "word": "l'enfance",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "1b152eb1-a7b5-4479-a772-741b2b955e64",
+        "dictee_id": "dictee-7",
+        "word": "un personnage",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-8",
+    "position": 8,
+    "title": "Dictée n°8",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "3bfb17f9-03b3-4b44-a8fa-fdc02e7987fb",
+        "dictee_id": "dictee-8",
+        "word": "le jardinier",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "df03154d-5459-46fa-8bea-e3c80b85d18c",
+        "dictee_id": "dictee-8",
+        "word": "contempler",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "2a615d12-56b8-49c0-a04f-0a0862886fb9",
+        "dictee_id": "dictee-8",
+        "word": "un secret",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "c81b2fcc-a358-43f4-9ca5-05b255d147a2",
+        "dictee_id": "dictee-8",
+        "word": "un soupirail",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "ead9b1ee-e311-4fd3-a6d3-bb7955d4e285",
+        "dictee_id": "dictee-8",
+        "word": "une terreur",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "4ccc35f0-fb59-4588-b256-e5a675144e4f",
+        "dictee_id": "dictee-8",
+        "word": "l’étui",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "235ef74e-64b8-4e51-b573-bf23373b4f97",
+        "dictee_id": "dictee-8",
+        "word": "étudier",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "829db83c-72d6-4740-b1a4-069c2c377deb",
+        "dictee_id": "dictee-8",
+        "word": "lourd",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "6e0cac97-4ac9-401b-b84c-ee6b55d405f2",
+        "dictee_id": "dictee-8",
+        "word": "le parc",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "e0ba49d0-09e9-4a72-9d5b-3b4a33279102",
+        "dictee_id": "dictee-8",
+        "word": "fendre",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "3af77cb9-8e75-45da-9342-14de82dcc5aa",
+        "dictee_id": "dictee-8",
+        "word": "vivant",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "3f2af7f9-e6de-4722-a2f4-e89b5873160b",
+        "dictee_id": "dictee-8",
+        "word": "un gosse",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "2bc00715-c1ab-45e7-af97-af5a12858310",
+        "dictee_id": "dictee-8",
+        "word": "un orage",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "a7cbf966-6b21-426f-8aef-fafc98d6e4ee",
+        "dictee_id": "dictee-8",
+        "word": "mener",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "bbfab688-9b7c-42bc-8539-c649eec02c8d",
+        "dictee_id": "dictee-8",
+        "word": "un peuplier",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "83b24885-e21b-4ab9-b596-bbbb51730be8",
+        "dictee_id": "dictee-8",
+        "word": "diviser",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "71ad0500-6230-4a02-bb27-5aa4a3b1c69e",
+        "dictee_id": "dictee-8",
+        "word": "une meule",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "4b6f3633-4d75-4adc-8960-9914019ad79b",
+        "dictee_id": "dictee-8",
+        "word": "détruire",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "c37ac018-a7a7-440b-914e-d8922c43574a",
+        "dictee_id": "dictee-8",
+        "word": "un centime",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "b1132de5-cd1a-4c85-bf36-2a9c1a5013a2",
+        "dictee_id": "dictee-8",
+        "word": "une graine",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-11",
+    "position": 11,
+    "title": "Dictée n°11",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "d0daa1d2-44a1-41d3-9fed-65ce5f2c2069",
+        "dictee_id": "dictee-11",
+        "word": "ardent(e)",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "32ecce0f-cb41-4d46-9e54-32cd7334819d",
+        "dictee_id": "dictee-11",
+        "word": "l’attention",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "00471947-36d0-41f7-a02c-abfaf23c8ab2",
+        "dictee_id": "dictee-11",
+        "word": "une créature",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "0f94f897-a96f-41c8-813b-a86b37f07a28",
+        "dictee_id": "dictee-11",
+        "word": "merveilleux (se)",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "7c00926e-24d5-45d9-8d68-b1e1512183b4",
+        "dictee_id": "dictee-11",
+        "word": "hybride",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "b258cdfc-d4f5-414c-83c6-4a737ba6b2bc",
+        "dictee_id": "dictee-11",
+        "word": "délicat",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "1753fea0-3df4-4c3c-909a-d2818a989c61",
+        "dictee_id": "dictee-11",
+        "word": "redoubler",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "8671c2d7-3e0b-4cdf-8e96-0b0592174921",
+        "dictee_id": "dictee-11",
+        "word": "un film",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "5c6dd770-9b2f-4d56-936e-6c004a85d0ea",
+        "dictee_id": "dictee-11",
+        "word": "graver",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "24c9a507-5606-430e-955e-36b4ad8ba6b6",
+        "dictee_id": "dictee-11",
+        "word": "scolaire",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "c210a678-1d4a-44fe-bc15-00041a708008",
+        "dictee_id": "dictee-11",
+        "word": "une thématique",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "29e9fe9a-13b3-4464-aec4-022206ba2b3e",
+        "dictee_id": "dictee-11",
+        "word": "partager",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "000fe98d-f586-4ef0-915e-c79c7ab4711d",
+        "dictee_id": "dictee-11",
+        "word": "ramener",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "72721a8d-0696-4434-97fc-7aa471581ce6",
+        "dictee_id": "dictee-11",
+        "word": "étroit(e)",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "647c944e-1407-4693-ba77-677b7ff17556",
+        "dictee_id": "dictee-11",
+        "word": "un talent",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "8e79d4b8-8a9e-4d5d-88e9-4afa213dc224",
+        "dictee_id": "dictee-11",
+        "word": "déborder",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "cae999ad-2509-4e83-86f9-3f49213cf58e",
+        "dictee_id": "dictee-11",
+        "word": "gravir",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "6ece04af-7d74-4145-b9e5-567e9f303aaa",
+        "dictee_id": "dictee-11",
+        "word": "le cinéma",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "bc92bdb2-9161-4910-be86-7a332cc92d5f",
+        "dictee_id": "dictee-11",
+        "word": "le besoin",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "665a7e1f-647f-4467-93a8-4f14246f4987",
+        "dictee_id": "dictee-11",
+        "word": "obéir",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-13",
+    "position": 13,
+    "title": "Dictée n°13",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "cfa135bf-73b4-40f9-94b5-d0d13e869456",
+        "dictee_id": "dictee-13",
+        "word": "dangereux (se)",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "82135179-9bc1-487d-96e9-b25935c67667",
+        "dictee_id": "dictee-13",
+        "word": "le congé",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "dfde81f4-36bf-45af-801d-4babd0816ae5",
+        "dictee_id": "dictee-13",
+        "word": "une ascension",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "ea7d5714-270f-4ae8-a881-e5c4543aaf6a",
+        "dictee_id": "dictee-13",
+        "word": "une femelle",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "c6d26867-1820-434b-b883-eb01cd4e89df",
+        "dictee_id": "dictee-13",
+        "word": "la rentrée",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "b80d225b-f98d-4cd9-baba-eeda00cc97bb",
+        "dictee_id": "dictee-13",
+        "word": "un sommet",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "500be59b-4a58-4d35-8685-4fe2c3ec07af",
+        "dictee_id": "dictee-13",
+        "word": "le principe",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "da122172-c950-4518-8aa5-65b59129cc38",
+        "dictee_id": "dictee-13",
+        "word": "soupirer",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "3c904558-bb33-4a4a-a8ad-14a0168dd7af",
+        "dictee_id": "dictee-13",
+        "word": "le soin",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "5d84f242-6aff-43d6-9f0a-675ca33d3efd",
+        "dictee_id": "dictee-13",
+        "word": "une source",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "9b0a926b-5077-4348-a976-f7e5b4b492b2",
+        "dictee_id": "dictee-13",
+        "word": "le bloc",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "fc875f34-8b21-41db-9f5c-c6f8aa729ee5",
+        "dictee_id": "dictee-13",
+        "word": "généralement",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "98b0d0e5-15f5-4fe2-919f-ef60363d1944",
+        "dictee_id": "dictee-13",
+        "word": "le défenseur",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "5a74a98e-fd53-4219-a118-f679752f1ff5",
+        "dictee_id": "dictee-13",
+        "word": "l’alpiniste",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "a7eb508b-cea2-4597-a00a-269b667929df",
+        "dictee_id": "dictee-13",
+        "word": "chevronné (ée)",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "32d69026-8b26-42e1-abfd-8806929026e8",
+        "dictee_id": "dictee-13",
+        "word": "la chaussée",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "776d42e7-1013-4070-9821-17b0bbea6ed0",
+        "dictee_id": "dictee-13",
+        "word": "l’exploit",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "c8d3758a-ad86-43bb-b215-31853f1b8b2b",
+        "dictee_id": "dictee-13",
+        "word": "épuisé (ée)",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "e98cfc97-972b-44ed-840e-615b545f0973",
+        "dictee_id": "dictee-13",
+        "word": "le cerisier",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "fb634458-bcd4-4283-ba44-c7ef2eb1532b",
+        "dictee_id": "dictee-13",
+        "word": "le lin",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-14",
+    "position": 14,
+    "title": "Dictée n°14",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "55027eee-6070-4735-a982-9f60d86ee629",
+        "dictee_id": "dictee-14",
+        "word": "coûter",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "f163cb7f-e648-4455-aa84-ae664c95e82c",
+        "dictee_id": "dictee-14",
+        "word": "curieux",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "00671f77-4e20-49a0-aa55-1d418328151e",
+        "dictee_id": "dictee-14",
+        "word": "la tempête",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "16ed416e-f07f-49b9-a2fc-840c973ecad1",
+        "dictee_id": "dictee-14",
+        "word": "puissant",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "f035dea7-c39a-4d2b-a68f-4e4ead84bded",
+        "dictee_id": "dictee-14",
+        "word": "dénudé (e)",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "d2951551-b579-4944-a93b-35107249f0ab",
+        "dictee_id": "dictee-14",
+        "word": "une grange",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "91c63f04-a798-4c0e-902c-1c8b3ffff9a9",
+        "dictee_id": "dictee-14",
+        "word": "une falaise",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "cb7ecce6-861e-4a28-9172-d94078f50c87",
+        "dictee_id": "dictee-14",
+        "word": "le noyer",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "c78326f7-ddee-4b4c-9eaa-ef269be4293d",
+        "dictee_id": "dictee-14",
+        "word": "la recherche",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "36ac1eb3-9f11-4606-96a8-6b099e798e87",
+        "dictee_id": "dictee-14",
+        "word": "classique",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "d235a800-cc7f-4238-b4fc-4f63dc9c51eb",
+        "dictee_id": "dictee-14",
+        "word": "un endroit",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "a521d934-04fb-46d2-8d57-5829802c103c",
+        "dictee_id": "dictee-14",
+        "word": "une indication",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "be6664ba-b9dc-4d91-ab82-4b54a11ce025",
+        "dictee_id": "dictee-14",
+        "word": "la position",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "2aa538c9-d497-486b-9ab6-19a8316bfea7",
+        "dictee_id": "dictee-14",
+        "word": "finalement",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "53ef397a-dc75-47ee-bd18-4ce50f4634d5",
+        "dictee_id": "dictee-14",
+        "word": "urgent",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "abbbc2dc-2368-4e40-8047-0642faa077b7",
+        "dictee_id": "dictee-14",
+        "word": "les préparatifs",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "e754d72a-6e9a-437a-9dde-fd8aa152b800",
+        "dictee_id": "dictee-14",
+        "word": "un détour",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "3887da23-b64b-45ec-87d8-a7582eb1e008",
+        "dictee_id": "dictee-14",
+        "word": "abrupt (e)",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "00664742-56a4-4936-a2bf-fc574f325d15",
+        "dictee_id": "dictee-14",
+        "word": "présenter",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "e649c1b3-a038-4e38-8451-8b65efe6f98a",
+        "dictee_id": "dictee-14",
+        "word": "une distraction",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-15",
+    "position": 15,
+    "title": "Dictée n°15",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "9eec7943-dd1a-412c-9da0-25e91af980d7",
+        "dictee_id": "dictee-15",
+        "word": "espiègle",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "49f4ceea-7699-47bb-b2bf-856a8317a54d",
+        "dictee_id": "dictee-15",
+        "word": "narrer",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "616084a0-88b1-4735-beed-9858ad90630f",
+        "dictee_id": "dictee-15",
+        "word": "attendre",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "c605a2b9-87f3-4fb6-8cbe-b6f951a21ab1",
+        "dictee_id": "dictee-15",
+        "word": "une collation",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "d9255f11-fa86-4156-8ef6-4fa322b09eec",
+        "dictee_id": "dictee-15",
+        "word": "luisant",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "a0b09d04-df3e-40fc-ab41-75c901a99ee3",
+        "dictee_id": "dictee-15",
+        "word": "aspirer",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "a9202f8d-15c8-41f6-b4c6-c6dc853e9f1d",
+        "dictee_id": "dictee-15",
+        "word": "une question",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "d58ad9bf-7f05-43e3-905d-64ec8e5e8c11",
+        "dictee_id": "dictee-15",
+        "word": "la feuille",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "0a7f5ed6-4978-4ad4-a49d-4fc38e067720",
+        "dictee_id": "dictee-15",
+        "word": "un loisir",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "b8375d06-0f35-4844-bae5-c72c4daf2dd4",
+        "dictee_id": "dictee-15",
+        "word": "le bénéfice",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "3b4f05c0-9f80-4259-b86b-44673f0bdd2f",
+        "dictee_id": "dictee-15",
+        "word": "le manuel",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "7b1b08b6-f8ac-412b-80a3-1be7f45784f9",
+        "dictee_id": "dictee-15",
+        "word": "un lutin",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "f79bece4-c9a1-4635-8d0b-11feb980f22b",
+        "dictee_id": "dictee-15",
+        "word": "une flaque",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "cf3fb6ce-f65e-4022-95c9-bbf1bb750b2c",
+        "dictee_id": "dictee-15",
+        "word": "le rouleau",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "688f795d-ae50-4a34-a47f-326907a525f7",
+        "dictee_id": "dictee-15",
+        "word": "le caractère",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "22bdd8e8-8a73-4408-bd03-81721cb83172",
+        "dictee_id": "dictee-15",
+        "word": "le chéri",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "0c3faf43-9c55-48bc-a6a0-b228bf5c55c1",
+        "dictee_id": "dictee-15",
+        "word": "le pigeon",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "21f61387-8229-45d5-9ef7-324404ca1d64",
+        "dictee_id": "dictee-15",
+        "word": "le prisonnier",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "13294768-dd63-473d-9b5e-ba917872d0f7",
+        "dictee_id": "dictee-15",
+        "word": "la voix",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "768cdd46-220a-4672-90b5-07114ce5a8b8",
+        "dictee_id": "dictee-15",
+        "word": "précautionneusement",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-16",
+    "position": 16,
+    "title": "Dictée n°16",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "6b0d3fc6-a4ff-4ad2-982a-4904ccce176c",
+        "dictee_id": "dictee-16",
+        "word": "un hautbois",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "de6079c9-afbc-42e0-880f-a0911b702920",
+        "dictee_id": "dictee-16",
+        "word": "rider",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "72037220-f064-49c2-8638-846c0a4b2939",
+        "dictee_id": "dictee-16",
+        "word": "malheureusement",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "7b8cd715-8549-49dd-bf32-646b2e469c68",
+        "dictee_id": "dictee-16",
+        "word": "un royaume",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "ab9a022b-7ec4-4baa-b751-47774386fb7d",
+        "dictee_id": "dictee-16",
+        "word": "écrit",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "32278ca7-fb80-4b60-aa29-061df9d2d29f",
+        "dictee_id": "dictee-16",
+        "word": "le bout",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "2ec9f38c-5081-4e69-b607-d546f6119534",
+        "dictee_id": "dictee-16",
+        "word": "la façon",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "c4593986-9a27-49ab-8f2d-1023b275875c",
+        "dictee_id": "dictee-16",
+        "word": "le montant",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "6fdb8d4f-29f1-4380-a8f7-ada4bd250e08",
+        "dictee_id": "dictee-16",
+        "word": "un bonnet",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "0af3d860-54b5-40b2-a817-8483a622f086",
+        "dictee_id": "dictee-16",
+        "word": "téméraire",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "aa441616-1404-43d5-946b-3f2498170af4",
+        "dictee_id": "dictee-16",
+        "word": "les gens",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "c6b3475b-66c4-4731-a4f7-c951930cfecc",
+        "dictee_id": "dictee-16",
+        "word": "bouder",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "7e95c99c-2a31-47a5-a4b5-05dbb26c7f77",
+        "dictee_id": "dictee-16",
+        "word": "souffrant (e)",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "939fe8e8-13a5-4deb-8ed9-d102048c02df",
+        "dictee_id": "dictee-16",
+        "word": "une causerie",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "e6297cb6-9f63-4d11-9118-a820a8496952",
+        "dictee_id": "dictee-16",
+        "word": "ébahi (e)",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "fed53614-f80e-4ec5-9466-d607268b201f",
+        "dictee_id": "dictee-16",
+        "word": "tarder",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "afe69989-659e-44e1-b7a0-35eae17da3e9",
+        "dictee_id": "dictee-16",
+        "word": "un atelier",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "0c0aeaaa-5915-43a9-accb-55d0f8afc489",
+        "dictee_id": "dictee-16",
+        "word": "la mission",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "79d7e017-3b96-4620-8972-89dd09e5b3e4",
+        "dictee_id": "dictee-16",
+        "word": "enchanté (e)",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "e97e9697-31cc-4e1b-98a5-b4b7a1284f00",
+        "dictee_id": "dictee-16",
+        "word": "fermer",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-17",
+    "position": 17,
+    "title": "Dictée n°17",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "49d61303-0169-4f4f-aaa3-90640e6083a2",
+        "dictee_id": "dictee-17",
+        "word": "la pêche",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "5edb62cc-3b7c-4706-a705-dc97d3f8d469",
+        "dictee_id": "dictee-17",
+        "word": "labourer",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "37f89864-499d-4737-940b-dc2fba3d6d79",
+        "dictee_id": "dictee-17",
+        "word": "déplacer",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "cc648b7a-2bc9-459f-bbdf-e0ff7b3210f9",
+        "dictee_id": "dictee-17",
+        "word": "être prêt",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "473b4533-5acc-4cb9-b929-d95fffe70280",
+        "dictee_id": "dictee-17",
+        "word": "défectueux",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "460c5dce-4060-4fae-a52d-6d9412360b21",
+        "dictee_id": "dictee-17",
+        "word": "religieux",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "abb7d660-30e1-4330-9bbc-4739fdac5232",
+        "dictee_id": "dictee-17",
+        "word": "le filet",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "442e4677-9cef-472b-b51e-1b6cb899afb6",
+        "dictee_id": "dictee-17",
+        "word": "une approche",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "27fe5e09-a48b-43ca-bfc5-4b6ff9338102",
+        "dictee_id": "dictee-17",
+        "word": "un humain",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "968762cf-be3a-4ea7-8166-10857519ab5e",
+        "dictee_id": "dictee-17",
+        "word": "régulier",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "7f16c1b1-46a1-470c-bdcf-6a6611cb9ae6",
+        "dictee_id": "dictee-17",
+        "word": "le flacon",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "cb601814-6826-4918-8d2a-4257f97f3ee1",
+        "dictee_id": "dictee-17",
+        "word": "un brin",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "0e788679-33c2-4877-82fb-fc63384a8fb0",
+        "dictee_id": "dictee-17",
+        "word": "un lien",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "1263ac5f-6c1a-43d8-861e-cb0d4e357961",
+        "dictee_id": "dictee-17",
+        "word": "le pavillon",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "b9cd627e-b309-4c1e-b025-2b2047683a30",
+        "dictee_id": "dictee-17",
+        "word": "surgir",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "63616129-bbb3-4888-91f4-e15630c2feb3",
+        "dictee_id": "dictee-17",
+        "word": "hisser",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "fe3fba31-715b-44f8-a616-0f628a3ab924",
+        "dictee_id": "dictee-17",
+        "word": "vérifier",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "7897d79e-14b3-4336-b23e-8361d12e2488",
+        "dictee_id": "dictee-17",
+        "word": "la température",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "27155134-a23c-4478-93f3-c9a9ee051248",
+        "dictee_id": "dictee-17",
+        "word": "contrôler",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "200fb726-c582-4558-b2dc-410c243cc360",
+        "dictee_id": "dictee-17",
+        "word": "un départ",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-18",
+    "position": 18,
+    "title": "Dictée n°18",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "fdd94dc4-6b8f-476e-a0f9-3a2f382d0fd2",
+        "dictee_id": "dictee-18",
+        "word": "au ralenti",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "df7eae96-3333-4d46-9ec3-c768e52c370e",
+        "dictee_id": "dictee-18",
+        "word": "savourer",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "e376abe1-da6a-4bde-8f2a-ab9959b6cc78",
+        "dictee_id": "dictee-18",
+        "word": "offrir",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "f7fc63c1-ec9d-4dcb-a989-1baf65cf668a",
+        "dictee_id": "dictee-18",
+        "word": "changer",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "618e8582-de98-4540-9877-ad22fa9b3f0c",
+        "dictee_id": "dictee-18",
+        "word": "le casier",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "00877766-30cd-4303-900d-c7fe6c3ef1a8",
+        "dictee_id": "dictee-18",
+        "word": "un président",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "3bf43371-6dac-402f-a196-c7ce3e87c218",
+        "dictee_id": "dictee-18",
+        "word": "la capitainerie",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "22ef18d5-13f0-41d6-9116-93c037e1acfe",
+        "dictee_id": "dictee-18",
+        "word": "nombreux",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "094531af-f66a-4e98-a155-467b16e4125a",
+        "dictee_id": "dictee-18",
+        "word": "le golfe",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "fa217c4e-b946-462a-8eaf-12873e109002",
+        "dictee_id": "dictee-18",
+        "word": "doucement",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "6101ff93-7154-4f16-adaf-6676dfc371fa",
+        "dictee_id": "dictee-18",
+        "word": "deviner",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "1fd4e6e2-782c-4272-8836-52a367cafbcf",
+        "dictee_id": "dictee-18",
+        "word": "le lendemain",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "fa1f6596-2075-4547-bba4-2b37beed2322",
+        "dictee_id": "dictee-18",
+        "word": "une grotte",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "0900bd30-4bef-4b13-9057-98cfdd78415c",
+        "dictee_id": "dictee-18",
+        "word": "le port",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "56e2a1a5-2ffe-4e56-96ee-c61bfe71d234",
+        "dictee_id": "dictee-18",
+        "word": "remercier",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "1c73ad5f-6bbf-4595-8ddc-9934bc6b3217",
+        "dictee_id": "dictee-18",
+        "word": "étendre",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "afb7a0cb-7ab2-482f-9f38-ae32123797ef",
+        "dictee_id": "dictee-18",
+        "word": "recouvrir",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "b6586301-32ce-4875-b433-f0ccbe453805",
+        "dictee_id": "dictee-18",
+        "word": "l'éternité",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "6a4258c3-4d66-4dc4-b285-c59d72c36978",
+        "dictee_id": "dictee-18",
+        "word": "loger",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "821993f1-a56c-4599-a9e8-dc7082164421",
+        "dictee_id": "dictee-18",
+        "word": "piquer",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-19",
+    "position": 19,
+    "title": "Dictée n°19",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "8e3dea88-4e67-49aa-9be4-8818bc875b7d",
+        "dictee_id": "dictee-19",
+        "word": "bonhomme",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "5d9fad83-52c1-4aaf-a5cf-08b3f266d326",
+        "dictee_id": "dictee-19",
+        "word": "couvrir",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "735d3474-4acd-49e2-ba1b-4de79faa6518",
+        "dictee_id": "dictee-19",
+        "word": "surveiller",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "dd37ebe8-8012-4528-9fce-a825cbcd2625",
+        "dictee_id": "dictee-19",
+        "word": "contrarié",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "5a3dc66c-091e-44dc-a7ab-c1274c7cfd6c",
+        "dictee_id": "dictee-19",
+        "word": "le malheur",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "e090b31b-26f0-428a-aab3-c6a2bf737512",
+        "dictee_id": "dictee-19",
+        "word": "terrestre",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "5a20aca4-1dd3-4690-8feb-07170e7fd8a4",
+        "dictee_id": "dictee-19",
+        "word": "l’anniversaire",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "b72e0d9b-40ef-4fbe-acc5-b9ede1781a9e",
+        "dictee_id": "dictee-19",
+        "word": "réellement",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "57be99f7-d5a5-4a9b-8ba0-1a2cce0958fb",
+        "dictee_id": "dictee-19",
+        "word": "conformément",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "27e51d39-3ca3-4003-942c-b0e0324e19b2",
+        "dictee_id": "dictee-19",
+        "word": "l’invité",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "7498820b-d022-438c-8ac5-13c43d03b598",
+        "dictee_id": "dictee-19",
+        "word": "actuellement",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "c38b89ed-07c4-42f0-b448-6a572f2b509c",
+        "dictee_id": "dictee-19",
+        "word": "un présent",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "d414022c-ad1a-45d2-8a0c-25e4a8595ed0",
+        "dictee_id": "dictee-19",
+        "word": "fêter",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "b1d1ae5e-ebeb-4b83-b1c3-f04a35243147",
+        "dictee_id": "dictee-19",
+        "word": "un an",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "27e6e97b-c191-4a93-aa9a-2559db83bc7d",
+        "dictee_id": "dictee-19",
+        "word": "le paquet",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "714a19ba-6daa-4d4a-8759-15612c256ebc",
+        "dictee_id": "dictee-19",
+        "word": "le cadeau",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "64c11ee0-1bf2-454e-bfd7-1f61e01fb14e",
+        "dictee_id": "dictee-19",
+        "word": "précieux (se)",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "b23c6324-50b7-453a-9eed-32147e7f2b1a",
+        "dictee_id": "dictee-19",
+        "word": "le cri",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "7a080724-2b91-4b6b-bc46-b09d9857f379",
+        "dictee_id": "dictee-19",
+        "word": "organiser",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "f0ef8f06-b3f7-479a-be36-1726a94e98e6",
+        "dictee_id": "dictee-19",
+        "word": "maussade",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-20",
+    "position": 20,
+    "title": "Dictée n°20",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "84e5062c-0625-4808-b009-e2b4a0a1a8a2",
+        "dictee_id": "dictee-20",
+        "word": "franchement",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "e8e14eb8-bdb3-4768-81c4-74902c395352",
+        "dictee_id": "dictee-20",
+        "word": "un bruit",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "a1e6860e-0017-4982-8043-02e1af7bd62c",
+        "dictee_id": "dictee-20",
+        "word": "suspendre",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "f341bf4b-998c-4a77-81a7-cc4e94498bb4",
+        "dictee_id": "dictee-20",
+        "word": "un vêtement",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "12bf5379-c254-40f1-a11f-4e49fd93c022",
+        "dictee_id": "dictee-20",
+        "word": "la clé / la clef",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "cebe1012-5e56-40b8-8636-fdd926d9c9cc",
+        "dictee_id": "dictee-20",
+        "word": "la distinction",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "69295c96-b631-4364-b97b-d6c9dd555112",
+        "dictee_id": "dictee-20",
+        "word": "l’ivresse",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "edfbaeab-e074-44ae-8c31-16d2a58ded75",
+        "dictee_id": "dictee-20",
+        "word": "rejoindre",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "0d466d8e-62d5-4854-8a1e-56c6e26ff806",
+        "dictee_id": "dictee-20",
+        "word": "conclure",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "48e0d443-d4cf-4716-8397-2191f9380390",
+        "dictee_id": "dictee-20",
+        "word": "un crayon",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "3411f9a3-1a6f-481c-a9bb-39ca16ccfe53",
+        "dictee_id": "dictee-20",
+        "word": "le vice",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "33a930fa-8b11-4d0e-913e-b8ed8bfb9bc5",
+        "dictee_id": "dictee-20",
+        "word": "plastique",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "c75ece8b-8e09-4ec9-91d3-2e618a1c12fc",
+        "dictee_id": "dictee-20",
+        "word": "roux",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "05eaaab2-9242-4b68-960e-53082fcfa7fe",
+        "dictee_id": "dictee-20",
+        "word": "un euro",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "f2ac701d-f373-45f8-9543-b4005a5b79b1",
+        "dictee_id": "dictee-20",
+        "word": "un fil",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "3e27038d-6b28-40b0-ba45-41495ac04d3c",
+        "dictee_id": "dictee-20",
+        "word": "la colline",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "114089d3-6348-4523-a862-fefe98f8275f",
+        "dictee_id": "dictee-20",
+        "word": "une draisienne",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "b223ac90-1acf-49d8-9cbf-422c3dd24d91",
+        "dictee_id": "dictee-20",
+        "word": "drôle",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "3906a2ee-b93c-4c05-a07e-e8ab4bab3db4",
+        "dictee_id": "dictee-20",
+        "word": "estimer",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "5161d08e-01eb-43dd-89ff-88a9487bb6c9",
+        "dictee_id": "dictee-20",
+        "word": "insulaire",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-21",
+    "position": 21,
+    "title": "Dictée n°21",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "909acde9-3852-44c1-83b6-70a86add314c",
+        "dictee_id": "dictee-21",
+        "word": "bâtir",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "01bcde8b-79d2-40e1-b366-3e42f5296fe2",
+        "dictee_id": "dictee-21",
+        "word": "la flamme",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "746b4f40-a085-4b66-a1e2-5a8b3eb6329e",
+        "dictee_id": "dictee-21",
+        "word": "un massif",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "dd8de1c0-056e-403c-917f-9d4da787cdca",
+        "dictee_id": "dictee-21",
+        "word": "envahir",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "75f755af-a021-468b-ac12-a798ea02505b",
+        "dictee_id": "dictee-21",
+        "word": "orner",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "019a6e59-245e-42d5-b461-3f87e33a4e0f",
+        "dictee_id": "dictee-21",
+        "word": "plier",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "6a38c9e2-4563-4e39-8b81-fd0a28f4f798",
+        "dictee_id": "dictee-21",
+        "word": "épauler",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "6073ed4e-4851-4df3-8a3c-5ca937ca8e96",
+        "dictee_id": "dictee-21",
+        "word": "étourdi",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "5555c7a5-01df-417a-b21f-3043e7702213",
+        "dictee_id": "dictee-21",
+        "word": "un chef-d’œuvre",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "cadc4241-7daf-46ab-8250-223faf399add",
+        "dictee_id": "dictee-21",
+        "word": "agir",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "4f2fd70e-87e5-424d-ab0b-20c36b68e0aa",
+        "dictee_id": "dictee-21",
+        "word": "couver",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "dab0ec8c-b4f3-4a60-8f32-81909ae834dd",
+        "dictee_id": "dictee-21",
+        "word": "frais",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "a3664818-7916-4d93-a188-fc91612456ca",
+        "dictee_id": "dictee-21",
+        "word": "un officier",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "4dd142ba-1cd9-47a7-a5a3-2a195f5d6893",
+        "dictee_id": "dictee-21",
+        "word": "violent",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "3fdf4954-4a62-44cd-b3e0-a90a11149a8b",
+        "dictee_id": "dictee-21",
+        "word": "une tâche",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "7cea2b45-0b6c-49d7-95bb-419f043df4c0",
+        "dictee_id": "dictee-21",
+        "word": "l’œil / les yeux",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "a8cff04f-efe8-42ff-a5d2-3100121f81e8",
+        "dictee_id": "dictee-21",
+        "word": "bossu",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "082fb8ce-675e-4a14-8087-ccfd3eb946b4",
+        "dictee_id": "dictee-21",
+        "word": "l'espace",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "f8c4d5a4-c2df-47f8-866a-953ec95b4b92",
+        "dictee_id": "dictee-21",
+        "word": "la rocaille",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "f67408de-b8f4-460c-99ce-1fd9c43ddb1a",
+        "dictee_id": "dictee-21",
+        "word": "peindre",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-22",
+    "position": 22,
+    "title": "Dictée n°22",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "0b696eec-a068-4917-9613-5c1de4039713",
+        "dictee_id": "dictee-22",
+        "word": "un choix",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "af54eea5-de59-466b-8b78-bebc204f75ef",
+        "dictee_id": "dictee-22",
+        "word": "la facilité",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "a437a191-9e24-4e90-8fe1-c59bc13cc049",
+        "dictee_id": "dictee-22",
+        "word": "procurer",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "d75d0d51-f634-446e-a4e6-0506cdcbd390",
+        "dictee_id": "dictee-22",
+        "word": "fluide",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "9628cc21-263b-4f4b-8582-3f6458f730e7",
+        "dictee_id": "dictee-22",
+        "word": "une grappe",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "fda2e645-602b-4337-beea-aa236939e1d2",
+        "dictee_id": "dictee-22",
+        "word": "constituer",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "7fc7516c-445f-4ea7-8786-7c402e646840",
+        "dictee_id": "dictee-22",
+        "word": "un chevalet",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "71bfd75c-30d4-4e58-a9d4-e14763b08e12",
+        "dictee_id": "dictee-22",
+        "word": "être transporté",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "a0c9c5a8-af56-4813-bb60-bdd0bf89f615",
+        "dictee_id": "dictee-22",
+        "word": "remplacer",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "93fb3f1f-b9d9-4705-be0e-4024fb331f49",
+        "dictee_id": "dictee-22",
+        "word": "la défense",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "5bbfafe5-ab0e-4907-995b-b909da03e731",
+        "dictee_id": "dictee-22",
+        "word": "transporter",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "e67463a9-e2a7-419d-a6ff-ea692bf63677",
+        "dictee_id": "dictee-22",
+        "word": "peindre",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "b458c0de-95aa-4915-86b5-4a5b4b91b967",
+        "dictee_id": "dictee-22",
+        "word": "remuer",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "f703532f-f5e7-47b8-9656-d4386edc3963",
+        "dictee_id": "dictee-22",
+        "word": "fameux",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "e4ba4f1c-e54f-432e-8d1c-61be6c775e03",
+        "dictee_id": "dictee-22",
+        "word": "un pavé",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "8b793a7b-d405-4c95-b234-c6988868ecd8",
+        "dictee_id": "dictee-22",
+        "word": "décorer",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "50e24294-de05-4421-a137-ab26f8ec5ab3",
+        "dictee_id": "dictee-22",
+        "word": "troubler",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "e6656898-85aa-4716-9d5b-6094a6cfdb1d",
+        "dictee_id": "dictee-22",
+        "word": "un parterre",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "9444336f-cd8b-4ece-846c-984475d9ec65",
+        "dictee_id": "dictee-22",
+        "word": "le geste",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "e5413b7d-f9f0-4181-add4-8f127115d690",
+        "dictee_id": "dictee-22",
+        "word": "judicieux (se)",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-23",
+    "position": 23,
+    "title": "Dictée n°23",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "f29eddac-98d2-4915-a5b1-b21e1f5f844f",
+        "dictee_id": "dictee-23",
+        "word": "les vacances",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "3c7ba166-0235-439b-9b6a-479ebf527793",
+        "dictee_id": "dictee-23",
+        "word": "calmer",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "d4279bc0-895e-4784-8833-ce3b999e6797",
+        "dictee_id": "dictee-23",
+        "word": "le collégien",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "cbc3b7a7-dbc1-452d-b9b8-3a281789a513",
+        "dictee_id": "dictee-23",
+        "word": "léger",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "e9a7607f-f4fa-4a44-bf57-a04e89180776",
+        "dictee_id": "dictee-23",
+        "word": "revêtir",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "1ccb2ae2-a967-4edd-bda9-c0da0ca48a61",
+        "dictee_id": "dictee-23",
+        "word": "répéter",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "980b51e1-e4f3-44b2-9300-56fb87a349ec",
+        "dictee_id": "dictee-23",
+        "word": "solitaire",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "0540276d-39c2-4c9c-aa56-3975f4459b22",
+        "dictee_id": "dictee-23",
+        "word": "le printemps",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "eabe2891-ac37-4215-8d40-a7eff485200d",
+        "dictee_id": "dictee-23",
+        "word": "convertir",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "1b1a6804-9e08-46f4-8e36-02db263545e7",
+        "dictee_id": "dictee-23",
+        "word": "le petit-fils",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "1293903f-3ef9-4732-8dc1-fe64beb0bf0e",
+        "dictee_id": "dictee-23",
+        "word": "précis (se)",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "d12636ca-a7ac-4920-a8cf-42d24cb1b01b",
+        "dictee_id": "dictee-23",
+        "word": "la grand-mère",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "21ba16ab-ffb3-4185-b221-978e53b42675",
+        "dictee_id": "dictee-23",
+        "word": "une imprudence",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "f7044978-1b48-43b5-97ca-1a23853ed4b8",
+        "dictee_id": "dictee-23",
+        "word": "monotonie",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "1abff8ac-5f05-43cd-9cc3-179244251d1e",
+        "dictee_id": "dictee-23",
+        "word": "studieux",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "be5fef60-be40-4195-8361-12bcdc39495b",
+        "dictee_id": "dictee-23",
+        "word": "un garage",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "0eafea50-ca9f-4979-b448-3595184d6796",
+        "dictee_id": "dictee-23",
+        "word": "pleuvoir",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "a695aea6-ed21-4f21-97b6-ff24e7b18aff",
+        "dictee_id": "dictee-23",
+        "word": "une révision",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "1b41a5f7-f023-4b71-be41-f78d94918806",
+        "dictee_id": "dictee-23",
+        "word": "le temps",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "0381c1b4-c2aa-445d-96dd-cb091c344e51",
+        "dictee_id": "dictee-23",
+        "word": "le calendrier",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-24",
+    "position": 24,
+    "title": "Dictée n°24",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "82b022e4-98a8-44fd-bec2-0d02da465666",
+        "dictee_id": "dictee-24",
+        "word": "le palefrenier",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "9aaed078-2550-4488-9f54-265eb4221d19",
+        "dictee_id": "dictee-24",
+        "word": "le garçon",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "1f5de86c-f188-4cfe-b813-4decb2635165",
+        "dictee_id": "dictee-24",
+        "word": "obtenir",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "4c0c9eeb-4140-4ad2-93cd-3ed26f0861be",
+        "dictee_id": "dictee-24",
+        "word": "une activité",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "06d25ca0-d9b6-4374-90be-7c4311606403",
+        "dictee_id": "dictee-24",
+        "word": "le box",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "36302488-0f6a-403b-adcb-8950b4065f11",
+        "dictee_id": "dictee-24",
+        "word": "creux",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "b1a68421-0168-41f4-aeef-d03ddcbd64d5",
+        "dictee_id": "dictee-24",
+        "word": "détourner",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "70ec1233-71f1-4950-87a3-ad965ff7fe87",
+        "dictee_id": "dictee-24",
+        "word": "un étrier",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "eaa2d4cf-b5ec-4dad-a852-8c4a0d4f36ce",
+        "dictee_id": "dictee-24",
+        "word": "las, lasse",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "97f03dcd-7d93-4349-986d-be7ba1b2e49e",
+        "dictee_id": "dictee-24",
+        "word": "le trot",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "f20f2f01-a0f6-491d-b34e-8f7993069cec",
+        "dictee_id": "dictee-24",
+        "word": "verser",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "2625e3ba-332e-446c-9971-ec43e477747c",
+        "dictee_id": "dictee-24",
+        "word": "l'appartement",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "49980990-bb50-43b3-be48-08fdf3d07017",
+        "dictee_id": "dictee-24",
+        "word": "signer",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "c78c76fd-bc95-4200-8cab-08d5b73454d8",
+        "dictee_id": "dictee-24",
+        "word": "mélodieux (se)",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "1be6c470-46a5-4bbc-b7b8-11172a22b7b9",
+        "dictee_id": "dictee-24",
+        "word": "emmener",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "6b1f10b8-c822-45cb-8142-e19d918794b1",
+        "dictee_id": "dictee-24",
+        "word": "le crin",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "3ff41fdc-a962-4a98-ae58-29e732914528",
+        "dictee_id": "dictee-24",
+        "word": "un haras",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "ba7f8c80-c0c5-4bec-a432-1c9a556d92b0",
+        "dictee_id": "dictee-24",
+        "word": "un salon",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "5817c4ff-b28b-4393-9582-e3fa6f51a500",
+        "dictee_id": "dictee-24",
+        "word": "l’équitation",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "5e7d6563-8712-4886-84f3-b8872c72ef42",
+        "dictee_id": "dictee-24",
+        "word": "la forêt",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-25",
+    "position": 25,
+    "title": "Dictée n°25",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "152abfcb-7ff1-43a9-81bc-3148d5b01c15",
+        "dictee_id": "dictee-25",
+        "word": "l'intelligence",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "0f1a18c8-4dbf-4171-b4fb-97cdc6de5292",
+        "dictee_id": "dictee-25",
+        "word": "engendrer",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "8e04d875-5316-401a-9df8-69b27e27c2f5",
+        "dictee_id": "dictee-25",
+        "word": "encourager",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "25d97d90-9ac8-4e51-80ef-d53daec15b21",
+        "dictee_id": "dictee-25",
+        "word": "enseigner",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "13d7ba2b-d669-47de-9dfe-f4faf34fc40e",
+        "dictee_id": "dictee-25",
+        "word": "l'abondance",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "9b280a31-71fb-466a-907e-71b95c8f46f2",
+        "dictee_id": "dictee-25",
+        "word": "activer",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "43e13a29-98b8-4817-a7f2-1586cf8533bf",
+        "dictee_id": "dictee-25",
+        "word": "grandiose",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "87ac16ca-d36e-46c7-8cd0-6c30f073cb70",
+        "dictee_id": "dictee-25",
+        "word": "la stupéfaction",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "97014581-fa5e-42da-b243-3ea336505e36",
+        "dictee_id": "dictee-25",
+        "word": "la ferveur",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "1cb4275d-fe54-44e7-8339-4a6d39b32dcc",
+        "dictee_id": "dictee-25",
+        "word": "infiniment",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "383bf296-6e20-4f43-a85a-706b2f79f87e",
+        "dictee_id": "dictee-25",
+        "word": "un million",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "54156c68-4d25-48e6-9c8d-a11550c0d220",
+        "dictee_id": "dictee-25",
+        "word": "l’art",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "d06d964f-7e12-4d7e-89c2-5f6c087b8902",
+        "dictee_id": "dictee-25",
+        "word": "le magicien",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "ee129004-1174-4f33-81e6-ead8ce253a21",
+        "dictee_id": "dictee-25",
+        "word": "la serviette",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "094a518e-b6c7-4832-8296-39ee70a23ca3",
+        "dictee_id": "dictee-25",
+        "word": "descendre",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "996ef4d9-d78d-4406-a8ab-d422fc3baf8b",
+        "dictee_id": "dictee-25",
+        "word": "une baguette",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "7ee49e7e-837e-4ee7-b428-5e548dbad6c0",
+        "dictee_id": "dictee-25",
+        "word": "les confettis",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "281bb610-d0a5-4898-9d98-441361da14bc",
+        "dictee_id": "dictee-25",
+        "word": "velouté",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "7869b147-cef8-4657-aac9-74333b05ca9a",
+        "dictee_id": "dictee-25",
+        "word": "sans répit",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "0c64bedf-26d0-4b6d-9ca2-02f745267286",
+        "dictee_id": "dictee-25",
+        "word": "ravi (e)",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-26",
+    "position": 26,
+    "title": "Dictée n°26",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "133c0ce4-0adf-4df6-a6be-fa5170594ee8",
+        "dictee_id": "dictee-26",
+        "word": "déchirer",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "f8722108-3d39-4ea8-a313-13b98019df90",
+        "dictee_id": "dictee-26",
+        "word": "malheureusement",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "c95018ce-81cc-4115-a066-38551c6a3679",
+        "dictee_id": "dictee-26",
+        "word": "une dizaine",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "2a024f8b-37a9-4d3b-84aa-8c33a315eb08",
+        "dictee_id": "dictee-26",
+        "word": "un imperméable",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "f37d6c7e-9295-48fa-90dd-7b31847cfcb8",
+        "dictee_id": "dictee-26",
+        "word": "l'inquiétude",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "12fe9e2c-8949-409b-99f9-b427c6cf44d0",
+        "dictee_id": "dictee-26",
+        "word": "disparaître",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "25072402-3e2c-4fb9-8305-49a4091b1afb",
+        "dictee_id": "dictee-26",
+        "word": "une étagère",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "c97cd351-6ed5-4400-9c4e-b26593f7eafd",
+        "dictee_id": "dictee-26",
+        "word": "prodigieux (se)",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "efd8746d-5451-4115-aa59-d05b40afe3f2",
+        "dictee_id": "dictee-26",
+        "word": "la composition",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "0b5334ba-0bc3-4886-bca5-f474a0d4d62b",
+        "dictee_id": "dictee-26",
+        "word": "un prestidigitateur",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "67b011e5-f456-462d-98c4-f5225cdc8200",
+        "dictee_id": "dictee-26",
+        "word": "les paillettes",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "aeb7d8de-dc65-492d-be3a-6081a3734056",
+        "dictee_id": "dictee-26",
+        "word": "une administration",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "3b0a9385-8ba3-4a9f-bc8e-dfefc6117102",
+        "dictee_id": "dictee-26",
+        "word": "en moyenne",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "8ea67abe-a3c3-4538-93f1-0abfa58b13c5",
+        "dictee_id": "dictee-26",
+        "word": "le centimètre",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "8a57830f-9aa1-4d6e-897a-0cf150e99cc4",
+        "dictee_id": "dictee-26",
+        "word": "multicolore",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "8df133fd-fe01-4c78-a61c-b9ee87f4f303",
+        "dictee_id": "dictee-26",
+        "word": "habillé (ée)",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "eb89733b-c8b3-473d-be97-d023f8153389",
+        "dictee_id": "dictee-26",
+        "word": "unir",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "cfc22e39-89de-40dc-9661-e93e04e8488c",
+        "dictee_id": "dictee-26",
+        "word": "dernièrement",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "17417cbe-28f5-444f-a3c6-2c1180ebb2db",
+        "dictee_id": "dictee-26",
+        "word": "étincelant",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "2f9cefb5-cf64-4847-ae97-d0321fdd959e",
+        "dictee_id": "dictee-26",
+        "word": "parsemé (ée)",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-27",
+    "position": 27,
+    "title": "Dictée n°27",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "945d6658-f001-4b3a-9c19-0b359a17922f",
+        "dictee_id": "dictee-27",
+        "word": "adorer",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "d8eae26c-95c4-4aa4-867a-ce40e8d3f216",
+        "dictee_id": "dictee-27",
+        "word": "le poteau",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "aa5ce2c5-7420-430f-9e07-5872885184be",
+        "dictee_id": "dictee-27",
+        "word": "mignon",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "37d0a4b3-36bf-4e13-a3ac-3db84e55aee1",
+        "dictee_id": "dictee-27",
+        "word": "la chèvre",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "f143bba6-e9b1-46ab-acd2-50a17323b75c",
+        "dictee_id": "dictee-27",
+        "word": "la liberté",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "742f1ba4-0c43-4d9e-abdc-7d9565d95aec",
+        "dictee_id": "dictee-27",
+        "word": "humble",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "0bf0b374-9164-4454-a6f3-46bc0d38e739",
+        "dictee_id": "dictee-27",
+        "word": "au pied",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "79ba86eb-3b43-4a3d-83d5-1cb00aaadb04",
+        "dictee_id": "dictee-27",
+        "word": "attacher",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "9e2df0be-001e-4ffe-b296-ab2dd2f7960c",
+        "dictee_id": "dictee-27",
+        "word": "céleste",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "269a9e34-6c75-4c90-b280-dbaf3dbd3d13",
+        "dictee_id": "dictee-27",
+        "word": "le chauffage",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "6b8c28b5-7509-44ae-ac01-75d1471e666f",
+        "dictee_id": "dictee-27",
+        "word": "accorder",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "4f6bf08e-0484-4db6-ab7a-eed8a441661d",
+        "dictee_id": "dictee-27",
+        "word": "tromper",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "831efe12-e045-46c5-918a-fe728cf8bc40",
+        "dictee_id": "dictee-27",
+        "word": "le sort",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "95d5f665-d232-402a-8fc7-b4364380149a",
+        "dictee_id": "dictee-27",
+        "word": "en vain",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "306a48c8-1c80-40de-8174-ac22e3422795",
+        "dictee_id": "dictee-27",
+        "word": "un poteau",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "8dcfee42-c6dd-4bea-92f6-3659d640f07f",
+        "dictee_id": "dictee-27",
+        "word": "un saut",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "40021936-250a-4742-a069-5d9e9c045a90",
+        "dictee_id": "dictee-27",
+        "word": "informer",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "a4d8e5f4-7539-4e29-9ba4-9383dd4a8fa0",
+        "dictee_id": "dictee-27",
+        "word": "délicieux",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "d04e0c8f-6133-4a7e-a34d-a87184051d75",
+        "dictee_id": "dictee-27",
+        "word": "une envie",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "fa0faf0e-a7d9-4b60-89f9-a28c44b2b386",
+        "dictee_id": "dictee-27",
+        "word": "participer",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  },
+  {
+    "id": "dictee-28",
+    "position": 28,
+    "title": "Dictée n°28",
+    "dictation_text": "",
+    "words": [
+      {
+        "id": "c4eb5c3e-0138-462b-86a8-21de842a2c7c",
+        "dictee_id": "dictee-28",
+        "word": "tout à coup",
+        "position": 0,
+        "spelling_errors": null
+      },
+      {
+        "id": "2590c360-1ca2-4009-88f7-5b77c9fbc702",
+        "dictee_id": "dictee-28",
+        "word": "une cîme",
+        "position": 1,
+        "spelling_errors": null
+      },
+      {
+        "id": "1a1a9d8e-038e-4bfb-ab55-9ae8dbef4d57",
+        "dictee_id": "dictee-28",
+        "word": "isoler",
+        "position": 2,
+        "spelling_errors": null
+      },
+      {
+        "id": "af556dec-079d-4793-9e8e-1e57784dfeaa",
+        "dictee_id": "dictee-28",
+        "word": "la poussière",
+        "position": 3,
+        "spelling_errors": null
+      },
+      {
+        "id": "aa2a4370-feb1-4e57-affb-4404581f9c30",
+        "dictee_id": "dictee-28",
+        "word": "un abri",
+        "position": 4,
+        "spelling_errors": null
+      },
+      {
+        "id": "bd75faf1-6df4-402b-a4d6-496cdb08f707",
+        "dictee_id": "dictee-28",
+        "word": "rompant",
+        "position": 5,
+        "spelling_errors": null
+      },
+      {
+        "id": "becc05d6-bd3f-4d17-99d1-1984b81ddaf4",
+        "dictee_id": "dictee-28",
+        "word": "un bêlement",
+        "position": 6,
+        "spelling_errors": null
+      },
+      {
+        "id": "da61c41d-2e48-4be5-9b92-854addffa3a0",
+        "dictee_id": "dictee-28",
+        "word": "un piquet",
+        "position": 7,
+        "spelling_errors": null
+      },
+      {
+        "id": "d2601000-7f11-48b2-bfd0-0884884f05f0",
+        "dictee_id": "dictee-28",
+        "word": "désorienté (ée)",
+        "position": 8,
+        "spelling_errors": null
+      },
+      {
+        "id": "7c71d835-612f-43be-abb8-2d4f2748fbf2",
+        "dictee_id": "dictee-28",
+        "word": "tant",
+        "position": 9,
+        "spelling_errors": null
+      },
+      {
+        "id": "5ee217ee-a909-4ceb-b871-81a11bd871f8",
+        "dictee_id": "dictee-28",
+        "word": "retentissant (e)",
+        "position": 10,
+        "spelling_errors": null
+      },
+      {
+        "id": "7a619d20-6626-4d1f-8031-141f500e2a6a",
+        "dictee_id": "dictee-28",
+        "word": "honteux",
+        "position": 11,
+        "spelling_errors": null
+      },
+      {
+        "id": "746ab2c2-53e2-4dcc-bced-9496b6fc71e9",
+        "dictee_id": "dictee-28",
+        "word": "un oranger",
+        "position": 12,
+        "spelling_errors": null
+      },
+      {
+        "id": "a734d812-d20b-496e-82ae-5e718b7f1a85",
+        "dictee_id": "dictee-28",
+        "word": "un roncier",
+        "position": 13,
+        "spelling_errors": null
+      },
+      {
+        "id": "953476b9-a65c-4465-9363-5798271f336a",
+        "dictee_id": "dictee-28",
+        "word": "un tourbillon",
+        "position": 14,
+        "spelling_errors": null
+      },
+      {
+        "id": "a359b882-28eb-4ef2-a8e4-9a39a1557af4",
+        "dictee_id": "dictee-28",
+        "word": "grimper",
+        "position": 15,
+        "spelling_errors": null
+      },
+      {
+        "id": "42aa86d0-3938-4cdf-9d19-676c4d315f6b",
+        "dictee_id": "dictee-28",
+        "word": "un sort",
+        "position": 16,
+        "spelling_errors": null
+      },
+      {
+        "id": "3414cc6c-9542-46f2-a0a5-745f99b103ae",
+        "dictee_id": "dictee-28",
+        "word": "figurer",
+        "position": 17,
+        "spelling_errors": null
+      },
+      {
+        "id": "f319ab7a-3fb3-40da-a206-d0851dcaa9e4",
+        "dictee_id": "dictee-28",
+        "word": "une conquête",
+        "position": 18,
+        "spelling_errors": null
+      },
+      {
+        "id": "402d607d-d6ac-4233-afca-39fd0bec30e5",
+        "dictee_id": "dictee-28",
+        "word": "longer",
+        "position": 19,
+        "spelling_errors": null
+      }
+    ]
+  }
+]

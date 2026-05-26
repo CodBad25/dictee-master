@@ -2,6 +2,20 @@
 
 Notes essentielles pour reprendre le projet sans perdre de contexte. À compléter au fur et à mesure des sessions.
 
+## Vision « Distracteurs apprenants » (25/05/2026)
+
+**Idée directrice de Badri.** Le moteur de distracteurs du mode « Choix orthographique » doit s'auto-améliorer dans le temps en exploitant les vraies fautes des élèves. Trois étages, dans l'ordre de priorité :
+
+1. **Bootstrap auto-généré** : pour chaque mot, on part de distracteurs générés via les règles GAFF / Catach (`src/lib/distractor-generator.ts`). Si GAFF ne sort rien sur un mot donné (cas typique : « vertu », « joli », « table », « chien »…), on s'autorise à **inventer** des distracteurs plausibles (LLM ou règles complémentaires) plutôt que de laisser l'exercice vide. Ces distracteurs sont marqués comme « auto » en base.
+2. **Capture des vraies fautes** : à chaque session de dictée (`fill_blanks`, `audio_dictation`, `audio_word`), on log les réponses incorrectes des élèves dans une table dédiée (table `dm_word_attempts` déjà existante). On agrège par `mot × faute écrite` : « pour le mot *vertu*, l'élève X a écrit *vertue*, l'élève Y a écrit *verthu* », etc.
+3. **Remplacement progressif** : un job (manuel au début, puis automatique) **promeut** les fautes les plus fréquentes au rang de distracteurs officiels en base (`dictee_words.spelling_errors`), et **évince** les distracteurs auto-générés artificiels. Critère de promotion à définir (ex : seuil de 3 élèves distincts ayant fait la même faute sur le même mot).
+
+**Effet pédagogique recherché** : au fil du temps, le mode Choix orthographique présente à l'élève **les fautes que ses pairs commettent vraiment** plutôt que des fautes théoriques. Le moteur devient un outil de remédiation collective, alimenté par les données du collège.
+
+**État au 25/05/2026** : étage 1 implémenté partiellement (générateur lexique-pure, filtre `isLexicalDistractor` qui rejette les fautes d'accord). Étages 2 et 3 pas encore conçus — à designer : schéma `dm_observed_errors` (mot, faute, classe, fréquence, première/dernière occurrence), UI prof pour valider/promouvoir, règles de purge des distracteurs artificiels obsolètes.
+
+**Garde-fou (Nadia, 25/05/2026)** : un distracteur officiel ne doit JAMAIS tester un accord (nombre/genre) ni une conjugaison sur un mot à l'infinitif — seulement l'orthographe lexicale. Ce filtre s'applique aussi bien aux distracteurs auto-générés qu'aux fautes capturées avant promotion.
+
 ## Public et identités
 
 DictéeMaster est conçu par **M. Mohamed Belhaj** (prof, collège Chaissac à Pouzauges) pour ses élèves et ses collègues du même établissement. Authentification déléguée au **Hub Beltools** (`https://hub.beltools.fr/api/v1`), pas d'auth Supabase utilisée.

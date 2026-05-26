@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { ArrowLeft, Loader2, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -9,6 +9,7 @@ import {
   type FillBlanksVariant,
 } from "@/lib/dictee-service";
 import { classifyWord, GRAMMAR_LABELS, type GrammaticalClass } from "@/lib/grammar-classifier";
+import { generateDistractors } from "@/lib/distractor-generator";
 import { playWordAudio } from "@/lib/audio";
 import AudioRecorder from "@/components/audio-recorder";
 import type { WordConfigRow } from "@/components/word-config-modal";
@@ -100,6 +101,18 @@ export default function WordConfigSection({
   const addInputRef = useRef<HTMLInputElement>(null);
 
   const colors = TAB_COLORS[activeTab];
+
+  // Aperçu des distracteurs auto-générés (figé pour éviter le clignotement :
+  // generateDistractors mélange aléatoirement à chaque appel).
+  const wordsKey = localWords.map((w) => w.word).join("|");
+  const autoPreviews = useMemo(() => {
+    const map: Record<number, string[]> = {};
+    for (const w of localWords) {
+      map[w.position] = generateDistractors(w.word).slice(0, 3);
+    }
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wordsKey]);
 
   const setSavingFor = (pos: number, val: boolean) =>
     setSaving((s) => ({ ...s, [pos]: val }));
@@ -207,6 +220,11 @@ export default function WordConfigSection({
     const isSaving = saving[w.position];
 
     if (activeTab === "spelling_choice") {
+      // Si aucun piège n'a été défini manuellement, on prévisualise ceux qui
+      // seront générés automatiquement pour l'élève (fallback lexical).
+      const autoPreview = w.spelling_errors.length === 0
+        ? (autoPreviews[w.position] ?? [])
+        : [];
       return (
         <div className="flex flex-wrap items-center gap-1">
           {w.spelling_errors.map((err) => (
@@ -219,6 +237,20 @@ export default function WordConfigSection({
               >×</button>
             </span>
           ))}
+          {autoPreview.length > 0 && (
+            <>
+              {autoPreview.map((err) => (
+                <span
+                  key={`auto-${err}`}
+                  title="Aperçu : généré automatiquement pour l'élève. Ajoute un piège manuel pour le remplacer."
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs italic text-gray-500 bg-gray-50 border border-dashed border-gray-300"
+                >
+                  {err}
+                </span>
+              ))}
+              <span className="text-[10px] text-gray-400 italic ml-0.5">aperçu auto</span>
+            </>
+          )}
           {addingPos === w.position ? (
             <span className="inline-flex items-center gap-1">
               <input
@@ -421,7 +453,7 @@ export default function WordConfigSection({
         <span className="text-sm">{activeTabDef.icon}</span>
         <span className="text-sm font-semibold">{activeTabDef.label}</span>
         <span className="text-xs opacity-70">
-          {activeTab === "spelling_choice" && "· Saisissez les orthographes erronées que l'élève verra comme distracteurs."}
+          {activeTab === "spelling_choice" && "· Saisis tes propres pièges, ou laisse vide pour utiliser ceux générés automatiquement (en gris pointillé)."}
           {activeTab === "grammar_class"   && "· Cliquez sur un mot pour choisir sa classe grammaticale."}
           {activeTab === "definitions"     && "· Saisissez une définition courte. Validation sur Entrée ou perte de focus."}
           {activeTab === "audio_word"      && "· Clique sur ▶ pour écouter la prononciation actuelle. Utilise le micro pour enregistrer ta propre voix."}

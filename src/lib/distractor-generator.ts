@@ -7,6 +7,14 @@
  *   https://github.com/momenttech/GAFF
  * Cadre théorique : typologie des erreurs de Nina Catach
  *   (phonogrammes, morphogrammes, logogrammes).
+ *
+ * IMPORTANT — Décision pédagogique (Nadia, 25/05/2026) :
+ * Ce générateur ne teste QUE l'orthographe LEXICALE. Il ne doit JAMAIS
+ * produire de variantes qui changent :
+ *   - la conjugaison du verbe (manger → mangé, mangeait, mangez…)
+ *   - le nombre (chien → chiens, maisons → maison)
+ *   - le genre (joli → jolie, étudiant → étudiante)
+ * Ces aspects sont traités par d'autres exercices du parcours.
  */
 
 const ARTICLE_RE = /^(le |la |l'|un |une |les |des |du |au |aux )/i;
@@ -117,35 +125,9 @@ const PHONETIC_SUBS: Array<{ pattern: RegExp; replacements: string[] }> = [
   { pattern: /g(?=[eiéè])/, replacements: ["j"] },
 ];
 
-// Confusions sur les finales verbales (son /e/).
-// Source : GAFF/phoneme/finsdemot.txt.
-const ENDING_SUBS: Array<{ ending: string; replacements: string[] }> = [
-  { ending: "er", replacements: ["é", "ai", "ait", "ez", "ée"] },
-  { ending: "é", replacements: ["er", "ai", "et", "ez"] },
-  { ending: "ée", replacements: ["er", "é", "ait"] },
-  { ending: "ai", replacements: ["é", "ait", "er", "ais"] },
-  { ending: "ais", replacements: ["ai", "é", "ait", "er"] },
-  { ending: "ait", replacements: ["ai", "ais", "é", "er"] },
-  { ending: "aient", replacements: ["ait", "ai", "é"] },
-  { ending: "ez", replacements: ["er", "é", "ai"] },
-  { ending: "et", replacements: ["é", "er", "ai"] },
-];
-
 function tryHomophone(word: string): string[] {
   const lower = word.toLowerCase();
   return HOMOPHONES[lower] ?? [];
-}
-
-function tryEnding(word: string): string[] {
-  const out: string[] = [];
-  for (const { ending, replacements } of ENDING_SUBS) {
-    if (word.endsWith(ending)) {
-      const stem = word.slice(0, -ending.length);
-      for (const rep of replacements) out.push(stem + rep);
-      break;
-    }
-  }
-  return out;
 }
 
 function tryPhonetic(word: string): string[] {
@@ -167,14 +149,14 @@ function tryPhonetic(word: string): string[] {
 function tryMorphology(word: string): string[] {
   const out: string[] = [];
 
-  // Accents supprimés (faute fréquente)
+  // Accents supprimés (faute fréquente, lexicale)
   const noAccent = word
     .replace(/[éèêë]/g, "e").replace(/[àâä]/g, "a")
     .replace(/[ùûü]/g, "u").replace(/[ôö]/g, "o")
     .replace(/[îï]/g, "i").replace(/ç/g, "c");
   if (noAccent !== word) out.push(noAccent);
 
-  // Confusion é ↔ è (très fréquente)
+  // Confusion é ↔ è (lexicale)
   if (/é/.test(word)) out.push(word.replace(/é/g, "è"));
   else if (/è/.test(word)) out.push(word.replace(/è/g, "é"));
 
@@ -186,53 +168,87 @@ function tryMorphology(word: string): string[] {
   const doubled = word.replace(/([aeiou])([lnpt])([eè])/, "$1$2$2$3");
   if (doubled !== word) out.push(doubled);
 
-  // Lettre muette finale supprimée (s, t, d, x, p)
-  if (/[stdxp]$/.test(word) && word.length > 3) {
+  // Lettre muette finale supprimée (chat → cha, sport → spor, pied → pie)
+  // Lexical : l'élève doit savoir qu'il y a un -t/-d/-s/-x/-p muet.
+  if (/[tdxp]$/.test(word) && word.length > 3) {
     out.push(word.slice(0, -1));
   }
-  // -ent → -e (faute classique sur les verbes 3e personne pluriel)
-  if (word.endsWith("ent") && word.length > 4) out.push(word.slice(0, -3) + "e");
 
-  // -al → -als (faute classique au lieu de -aux)
-  if (word.endsWith("al") && word.length > 3) out.push(word + "s");
-
-  // h initial oublié (huile → uile, héros → éros)
+  // h initial oublié (huile → uile, héros → éros) — lexical
   if (word.startsWith("h") && word.length > 2) out.push(word.slice(1));
 
-  // -e final supprimé (vague → vagu, table → tabl)
-  if (word.endsWith("e") && word.length > 3) out.push(word.slice(0, -1));
-
-  // -s final ajouté/supprimé (faute d'accord en nombre)
-  if (word.endsWith("s") && word.length > 3) out.push(word.slice(0, -1));
-  else if (/[aeioulmnrdfgvb]$/.test(word) && word.length > 3) out.push(word + "s");
-
-  // g → j (faute phonétique courante : gentil → jentil, dangereux → danjereux)
+  // g → j (faute phonétique courante : gentil → jentil) — lexical
   if (/g[eiéè]/.test(word)) out.push(word.replace(/g([eiéè])/, "j$1"));
 
-  // Confusion s/ss intervocalique (poison ↔ poisson)
+  // Confusion s/ss intervocalique (poison ↔ poisson) — lexical
   if (/[aeiou]s[aeiou]/.test(word)) out.push(word.replace(/([aeiou])s([aeiou])/, "$1ss$2"));
   else if (/[aeiou]ss[aeiou]/.test(word)) out.push(word.replace(/([aeiou])ss([aeiou])/, "$1s$2"));
+
+  // NB : règles intentionnellement RETIRÉES (faute d'accord, pas de lexique) :
+  //   - -s final ajouté/supprimé (chien → chiens) → nombre
+  //   - -ent → -e (mangent → mange) → conjugaison
+  //   - -al → -als (cheval → chevals) → nombre
+  //   - -e final supprimé (vague → vagu) → potentiellement genre, ambigu
+  //   - tryEnding (-er/-é/-ai/-ait/-ez/-ée) → conjugaison
 
   return out;
 }
 
 /**
+ * Filtre une variante candidate : rejette tout ce qui ressemble à une faute
+ * d'accord (nombre/genre) plutôt qu'une faute d'orthographe lexicale.
+ */
+function isLexicalDistractor(word: string, candidate: string): boolean {
+  // Diffère uniquement par un -s final → faute de nombre, on rejette.
+  if (word + "s" === candidate || word === candidate + "s") return false;
+  // Diffère uniquement par un -e final → faute de genre, on rejette.
+  if (word + "e" === candidate || word === candidate + "e") return false;
+  // -é ↔ -ée → genre, on rejette.
+  if (word.endsWith("é") && candidate === word + "e") return false;
+  if (candidate.endsWith("é") && word === candidate + "e") return false;
+  // -er ↔ -é / -ée / -ai / -ait / -aient / -ais / -ez → conjugaison, on rejette.
+  const verbalPairs: Array<[RegExp, RegExp]> = [
+    [/er$/, /(é|ée|ai|ait|aient|ais|ez)$/],
+    [/(é|ée|ai|ait|aient|ais|ez)$/, /er$/],
+    [/é$/, /(ée|ai|ait|ais|aient|ez|et)$/],
+    [/(ée|ai|ait|ais|aient|ez|et)$/, /é$/],
+  ];
+  for (const [a, b] of verbalPairs) {
+    if (a.test(word) && b.test(candidate)) {
+      const stemA = word.replace(a, "");
+      const stemB = candidate.replace(b, "");
+      if (stemA === stemB) return false;
+    }
+  }
+  return true;
+}
+
+export interface DistractorOptions {
+  /** Classe grammaticale du mot (si connue). Non utilisée pour l'instant —
+   * tous les distracteurs sont filtrés strictement sur le critère lexical. */
+  grammaticalClass?: string | null;
+}
+
+/**
  * Génère 3 distracteurs plausibles pour un mot français.
+ * Stratégie : variations LEXICALES uniquement (orthographe pure).
+ * Aucune variation d'accord (nombre/genre) ni de conjugaison.
+ *
  * Ordre de priorité :
  *   1. Homophone connu (cas le plus pédagogiquement riche)
- *   2. Finale verbale alternative (-er/-é/-ai…)
- *   3. Substitution phonétique
- *   4. Erreur morphologique (accent, double consonne, lettre muette)
+ *   2. Substitution phonétique (eau/au/o, ph/f, qu/k…)
+ *   3. Erreur morphologique lexicale (accent, double consonne, lettre muette)
  *
  * Le mot reçu peut contenir un article ("le héros"), qui est préservé.
  */
-export function generateDistractors(full: string): string[] {
+export function generateDistractors(full: string, _opts: DistractorOptions = {}): string[] {
   const { article, word } = splitArticle(full);
   if (!word) return [];
 
   const seen = new Set<string>();
   const add = (variant: string) => {
     if (!variant || variant === word) return;
+    if (!isLexicalDistractor(word, variant)) return;
     const withArticle = article + variant;
     if (withArticle !== full) seen.add(withArticle);
   };
@@ -242,12 +258,12 @@ export function generateDistractors(full: string): string[] {
   const priority = new Set<string>();
   const addPriority = (v: string) => {
     if (!v || v === word) return;
+    if (!isLexicalDistractor(word, v)) return;
     const wa = article + v;
     if (wa !== full) priority.add(wa);
   };
   tryHomophone(word).forEach(addPriority);
 
-  tryEnding(word).forEach(add);
   tryPhonetic(word).forEach(add);
   tryMorphology(word).forEach(add);
 
