@@ -62,8 +62,9 @@ export default function WordDefinitionMode() {
   const wordCountOptions = [3, 5, 7, 10].filter(n => n <= currentWords.length);
 
   // Charger les définitions depuis Supabase (pas d'API IA)
-  const loadDefinitions = useCallback(async () => {
-    if (!currentWords.length || !currentList) return;
+  // Retourne le nombre de définitions chargées (0 si la dictée n'en a pas encore).
+  const loadDefinitions = useCallback(async (): Promise<number> => {
+    if (!currentWords.length || !currentList) return 0;
 
     setIsLoading(true);
     try {
@@ -86,19 +87,27 @@ export default function WordDefinitionMode() {
         setDefinitions(defs);
         setShuffledDefinitions(shuffleArray(defs.map(d => d.definition)));
         setMatches({});
+        return defs.length;
       } else {
         toast.error("Aucune définition trouvée");
+        return 0;
       }
     } catch (error) {
       console.error("Error loading definitions:", error);
       toast.error("Erreur lors du chargement des définitions");
+      return 0;
     } finally {
       setIsLoading(false);
     }
   }, [currentWords, currentList, wordCount]);
 
   const handleStartExercise = async () => {
-    await loadDefinitions();
+    const count = await loadDefinitions();
+    // Garde-fou : ne pas entrer dans un exercice vide (dictée sans définitions en base)
+    if (count === 0) {
+      toast.error("Cette dictée n'a pas encore de définitions — choisis un autre exercice pour l'instant.");
+      return;
+    }
     setPhase("exercise");
     setStartTime(Date.now());
   };
