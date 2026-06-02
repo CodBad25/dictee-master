@@ -3,6 +3,40 @@ let isAudioPlaying = false;
 let lastPlayedWord: string | null = null;
 let lastPlayTime = 0;
 
+// ── Sélection d'une voix française pour Web Speech API ───────────────────────
+// `utterance.lang = "fr-FR"` n'est qu'une indication : sans voix imposée, beaucoup
+// de navigateurs (Chrome/Edge sous Windows) lisent le texte français avec leur voix
+// par défaut, souvent ANGLAISE. On épingle donc explicitement une voix fr-*.
+// getVoices() est souvent vide au 1er appel → on écoute aussi `voiceschanged`.
+let cachedFrenchVoice: SpeechSynthesisVoice | null = null;
+
+function pickFrenchVoice(): SpeechSynthesisVoice | null {
+  if (typeof speechSynthesis === "undefined") return null;
+  const voices = speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  const frFR = voices.find((v) => v.lang === "fr-FR" || v.lang === "fr_FR");
+  const frAny = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("fr"));
+  return frFR || frAny || null;
+}
+
+function refreshFrenchVoice(): void {
+  const v = pickFrenchVoice();
+  if (v) cachedFrenchVoice = v;
+}
+
+if (typeof speechSynthesis !== "undefined") {
+  refreshFrenchVoice();
+  // La liste des voix peut arriver de façon asynchrone après le chargement.
+  speechSynthesis.addEventListener?.("voiceschanged", refreshFrenchVoice);
+}
+
+/** Applique la voix française épinglée (ou fr-FR par défaut) à un utterance. */
+function applyFrenchVoice(utterance: SpeechSynthesisUtterance): void {
+  utterance.lang = "fr-FR";
+  const voice = cachedFrenchVoice ?? pickFrenchVoice();
+  if (voice) utterance.voice = voice;
+}
+
 /**
  * Convertit un mot de la base de données en nom de fichier audio.
  * Exemples :
@@ -143,7 +177,7 @@ function fallbackSpeak(
   }
   speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(word);
-  utterance.lang = "fr-FR";
+  applyFrenchVoice(utterance);
   utterance.rate = 0.85;
   utterance.onstart = () => onStart?.();
   utterance.onend = () => onEnd?.();
@@ -165,7 +199,7 @@ export function playTextAudio(
   }
   speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "fr-FR";
+  applyFrenchVoice(utterance);
   utterance.rate = 0.8;
   utterance.onstart = () => onStart?.();
   utterance.onend = () => onEnd?.();

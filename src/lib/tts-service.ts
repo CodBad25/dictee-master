@@ -189,6 +189,13 @@ export function speakWithBrowser(text: string): Promise<void> {
     window.speechSynthesis.cancel(); // annuler toute lecture en cours
     const utt = new SpeechSynthesisUtterance(text);
     utt.lang = "fr-FR";
+    // Épingler une voix française : sans cela, certains navigateurs (Chrome/Edge
+    // sous Windows) lisent le texte français avec leur voix par défaut anglaise.
+    const voices = window.speechSynthesis.getVoices();
+    const frVoice =
+      voices.find((v) => v.lang === "fr-FR" || v.lang === "fr_FR") ||
+      voices.find((v) => v.lang && v.lang.toLowerCase().startsWith("fr"));
+    if (frVoice) utt.voice = frVoice;
     utt.rate = 0.9;
     utt.onend = () => resolve();
     utt.onerror = (e) => reject(new Error(`SpeechSynthesis erreur : ${e.error}`));
