@@ -257,7 +257,7 @@ export default function FillBlanksMode() {
         listId: currentList.id,
         listTitle: currentList.title,
         studentName: currentStudentName.trim() || undefined,
-        modeUsed: "audio", // On utilise "audio" car fill-blanks n'est pas dans le schéma DB
+        modeUsed: "fill_blanks", // doit matcher l'entrée du parcours (activityOrder) pour débloquer l'exercice suivant
         totalWords,
         correctWords: correctCount,
         percentage,
