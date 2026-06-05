@@ -80,7 +80,11 @@ export default function WordDefinitionMode() {
         if (selectedPositions) {
           filtered = data.filter(w => selectedPositions.includes(w.position));
         }
-        const defs = filtered.filter(d => d.definition && d.definition.length > 5).slice(0, wordCount).map(d => ({
+        // Tirage ALÉATOIRE de `wordCount` mots parmi tous ceux qui ont une
+        // définition valide → la sélection change à chaque session, et un élève
+        // qui révise plusieurs fois finit par voir la majorité des mots (Nadia 03/06).
+        const pool = filtered.filter(d => d.definition && d.definition.length > 5);
+        const defs = shuffleArray(pool).slice(0, wordCount).map(d => ({
           word: d.word,
           definition: d.definition,
         }));
@@ -197,10 +201,12 @@ export default function WordDefinitionMode() {
     setPhase("result");
   };
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setMatches({});
     setSelectedWord(null);
-    setShuffledDefinitions(shuffleArray(definitions.map(d => d.definition)));
+    // Re-tirer un NOUVEL échantillon de mots (et non rejouer les mêmes)
+    const count = await loadDefinitions();
+    if (count === 0) return;
     setPhase("exercise");
     setStartTime(Date.now());
   };

@@ -411,9 +411,8 @@ const DEFAULT_ACTIVITY_ORDER_FALLBACK = [
   "dictionary", "audio_word", "fill_blanks", "audio_dictation",
 ];
 
-// Liste canonique de toutes les activités existantes — source de vérité.
-// Ajoute ici toute nouvelle activité pour qu'elle apparaisse automatiquement
-// dans les ordres déjà stockés en DB (sans avoir à les réécrire).
+// Liste canonique de toutes les activités existantes — source de vérité pour
+// valider les ids stockés et pour le cas « aucune config » (on renvoie tout).
 const ALL_ACTIVITIES_CANONICAL = [
   "flashcard", "genre", "grammar_class", "spelling_choice", "definitions",
   "dictionary", "audio_word", "fill_blanks", "audio_dictation",
@@ -423,17 +422,26 @@ const ALL_ACTIVITIES_CANONICAL = [
 // Pour désactiver une activité : ajouter son id dans cet ensemble.
 const DISABLED_ACTIVITIES = new Set<string>([]);
 
-// Merge un ordre stocké avec la liste canonique : préserve l'ordre choisi par
-// le prof, ajoute en queue toute activité nouvelle, et filtre les activités
-// désactivées (DISABLED_ACTIVITIES).
+// Réconcilie un ordre stocké avec la liste canonique.
+//
+// IMPORTANT : un ordre sauvegardé ne contient QUE les activités actives ;
+// l'absence d'une activité = retrait volontaire par le prof. On ne réinjecte
+// donc JAMAIS les activités manquantes (sinon les exercices retirés par le prof
+// — ex. genre/dictionnaire/dictée — réapparaissent en fin de parcours).
+// On garde les activités connues, dans l'ordre choisi par le prof, en filtrant
+// celles désactivées au niveau de l'app (DISABLED_ACTIVITIES).
+//
+// Conséquence : si une NOUVELLE activité est ajoutée à l'app, elle n'apparaîtra
+// pas automatiquement dans les parcours déjà personnalisés — le prof devra la
+// réactiver. C'est le comportement sûr (ne pas injecter d'exercice surprise).
 function mergeWithCanonical(stored: string[] | null | undefined): string[] {
-  const merged = (() => {
-    if (!stored || stored.length === 0) return ALL_ACTIVITIES_CANONICAL;
-    const known = new Set(stored);
-    const missing = ALL_ACTIVITIES_CANONICAL.filter(a => !known.has(a));
-    return [...stored, ...missing];
-  })();
-  return merged.filter(a => !DISABLED_ACTIVITIES.has(a));
+  // Aucune config → toutes les activités (ordre canonique).
+  if (!stored || stored.length === 0) {
+    return ALL_ACTIVITIES_CANONICAL.filter(a => !DISABLED_ACTIVITIES.has(a));
+  }
+  return stored.filter(
+    a => ALL_ACTIVITIES_CANONICAL.includes(a) && !DISABLED_ACTIVITIES.has(a),
+  );
 }
 
 export async function loadActivityConfig(
