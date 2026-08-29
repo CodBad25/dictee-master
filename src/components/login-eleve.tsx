@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, BookOpen, Loader2, Search, X } from "lucide-react";
 import {
   getClasses,
+  isCurrentYearClasse,
   getEleves,
   checkPin,
   createPin,
@@ -44,7 +45,8 @@ export default function LoginEleve({ onLogin, onClose }: LoginEleveProps) {
     const load = async () => {
       try {
         setLoading(true);
-        const classes = await getClasses();
+        // Uniquement les classes de l'année en cours (+ classes de test « T »)
+        const classes = (await getClasses()).filter(isCurrentYearClasse);
         const allEntries: StudentEntry[] = [];
         await Promise.all(
           (classes || []).map(async (cls) => {

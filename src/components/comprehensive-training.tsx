@@ -754,7 +754,13 @@ export default function ComprehensiveTraining() {
               <div className="bg-white rounded-3xl border-2 border-blue-100 shadow-xl p-8 mb-6 min-h-[250px] flex flex-col items-center justify-center">
                 {showWord && !showResult ? (
                   <>
-                    <p className="text-5xl sm:text-6xl font-bold text-gray-800 mb-6">
+                    <p className={`font-bold text-gray-800 mb-6 whitespace-nowrap ${
+                      (currentWords[currentWordIndex]?.word.length ?? 0) <= 12
+                        ? "text-5xl sm:text-6xl"
+                        : (currentWords[currentWordIndex]?.word.length ?? 0) <= 16
+                        ? "text-4xl sm:text-5xl"
+                        : "text-3xl sm:text-4xl"
+                    }`}>
                       {currentWords[currentWordIndex]?.word}
                     </p>
                     <Button

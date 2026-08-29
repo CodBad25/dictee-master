@@ -6,7 +6,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
 import { createClient } from "@/lib/supabase/client";
-import { getClasses, getEleves, type HubClasse } from "@/lib/hub";
+import { getClasses, getEleves, getEnseignantClasses, isCurrentYearClasse, type HubClasse } from "@/lib/hub";
 import { useAnonymize, useDisplayName } from "@/lib/anonymize";
 import { loadOnlineStudents } from "@/lib/presence";
 import {
@@ -142,6 +142,21 @@ export default function TeacherPage() {
   >({});
   const [selectedClasse, setSelectedClasse] = useState<string>("");
   const [selectedClasseName, setSelectedClasseName] = useState<string>("");
+  // Classes des années passées masquées par défaut (bouton 📦 Archives)
+  const [showArchives, setShowArchives] = useState(false);
+  // Classes de la fiche Hub de l'enseignant connecté (null = fiche introuvable
+  // ou vide → on montre tout) ; bouton 👥 pour élargir ponctuellement
+  const [myClassNames, setMyClassNames] = useState<string[] | null>(null);
+  const [showAllClasses, setShowAllClasses] = useState(false);
+
+  // Une classe « m'appartient » si son nom (ou son id — la fiche Hub contient
+  // parfois des ids bruts) figure sur ma fiche. Les classes de test « T »
+  // (Lambda) restent toujours visibles pour le bouton 🧪 Tester.
+  const isMyClasse = (hc: HubClasse): boolean => {
+    if (!myClassNames) return true;
+    if (/^\dT$/i.test(hc.nom.trim())) return true;
+    return myClassNames.includes(hc.nom) || myClassNames.includes(hc.id);
+  };
 
   // Presence state
   const [onlineStudents, setOnlineStudents] = useState<Map<string, any>>(new Map());
@@ -215,12 +230,26 @@ export default function TeacherPage() {
           ? classes.filter((c) => c.nom === "6T")
           : classes;
       setHubClasses(filteredClasses);
+
+      // Fiche Hub de l'enseignant → ses classes (null = tout montrer)
+      let mine: string[] | null = null;
+      if (user?.id && user.id !== "visitor") {
+        mine = await getEnseignantClasses(user.id);
+        setMyClassNames(mine);
+      }
+      const isMine = (hc: HubClasse) =>
+        !mine || /^\dT$/i.test(hc.nom.trim()) || mine.includes(hc.nom) || mine.includes(hc.id);
+
       if (filteredClasses.length > 0) {
-        // Restaurer la dernière classe consultée si elle est toujours présente, sinon la première
+        // Restaurer la dernière classe consultée si elle est toujours présente,
+        // sinon la première de MES classes de l'année en cours
         const remembered = lastSelectedClasseId
           ? filteredClasses.find((c) => c.id === lastSelectedClasseId)
           : null;
-        const target = remembered ?? filteredClasses[0];
+        const target = remembered
+          ?? filteredClasses.find((c) => isMine(c) && isCurrentYearClasse(c))
+          ?? filteredClasses.find(isCurrentYearClasse)
+          ?? filteredClasses[0];
         pickClass(target.id, target.nom, target.niveau);
       }
     } catch (error) {
@@ -433,20 +462,50 @@ export default function TeacherPage() {
     <main className="h-dvh flex flex-col overflow-hidden bg-gray-50">
       {/* Header - Purple bar */}
       <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-4 py-3 flex items-center justify-between z-20">
-        <div data-tour="class-tabs" className="flex items-center gap-3">
-          {hubClasses.map((hc) => (
+        <div data-tour="class-tabs" className="flex items-center gap-3 flex-wrap">
+          {hubClasses
+            .filter((hc) => showArchives || isCurrentYearClasse(hc) || hc.id === selectedClasse)
+            .filter((hc) => showAllClasses || isMyClasse(hc) || hc.id === selectedClasse)
+            .map((hc) => {
+              const archived = !isCurrentYearClasse(hc);
+              return (
+                <button
+                  key={hc.id}
+                  onClick={() => pickClass(hc.id, hc.nom, hc.niveau)}
+                  title={archived ? `Classe archivée (${hc.anneeScolaire})` : undefined}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    selectedClasse === hc.id
+                      ? "bg-white text-purple-600"
+                      : "bg-white/20 hover:bg-white/30"
+                  } ${archived ? "opacity-60" : ""}`}
+                >
+                  {hc.nom}
+                  {archived && <span className="ml-1 text-xs">📦</span>}
+                </button>
+              );
+            })}
+          {myClassNames && hubClasses.some((hc) => !isMyClasse(hc)) && (
             <button
-              key={hc.id}
-              onClick={() => pickClass(hc.id, hc.nom, hc.niveau)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                selectedClasse === hc.id
-                  ? "bg-white text-purple-600"
-                  : "bg-white/20 hover:bg-white/30"
+              onClick={() => setShowAllClasses((v) => !v)}
+              className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                showAllClasses ? "bg-white/40" : "bg-white/10 hover:bg-white/20"
               }`}
+              title="Afficher/masquer les classes des collègues"
             >
-              {hc.nom}
+              👥 {showAllClasses ? "Mes classes" : "Toutes les classes"}
             </button>
-          ))}
+          )}
+          {hubClasses.some((hc) => !isCurrentYearClasse(hc)) && (
+            <button
+              onClick={() => setShowArchives((v) => !v)}
+              className={`px-3 py-2 rounded-lg text-sm transition-all ${
+                showArchives ? "bg-white/40" : "bg-white/10 hover:bg-white/20"
+              }`}
+              title="Afficher/masquer les classes des années passées"
+            >
+              📦 {showArchives ? "Masquer les archives" : "Archives"}
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -641,7 +700,10 @@ export default function TeacherPage() {
                             <span>{dn(row.name)}</span>
                           ) : (
                             <span>
-                              {(row.name || "").split(" ")[0]} {row.lastName?.[0] || ""}.
+                              {/* Corpus court (5e : 16 dictées) → place pour le nom entier */}
+                              {dictees.length <= 20
+                                ? row.name
+                                : `${(row.name || "").split(" ")[0]} ${row.lastName?.[0] || ""}.`}
                             </span>
                           )}
                           {studentsWithOverrides.has(row.id) && (

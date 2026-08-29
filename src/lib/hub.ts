@@ -12,6 +12,23 @@ export interface HubClasse {
   nom: string;
   niveau: string;
   nbEleves: number;
+  anneeScolaire?: string; // ex. "26-27"
+}
+
+// Année scolaire en cours au format Hub ("26-27") : bascule au 1er août.
+export function currentSchoolYear(): string {
+  const now = new Date();
+  const y = now.getFullYear() % 100;
+  return now.getMonth() >= 7 ? `${y}-${y + 1}` : `${y - 1}-${y}`;
+}
+
+// Une classe est « active » si elle est de l'année en cours, si le Hub
+// n'indique pas d'année, ou si c'est une classe de test en « T » (6T, 5T…
+// où vit l'élève fictif Lambda — indispensable au bouton 🧪 Tester et au
+// mode Visiteur, jamais recréées à la rentrée).
+export function isCurrentYearClasse(c: HubClasse): boolean {
+  if (/^\dT$/i.test(c.nom.trim())) return true;
+  return !c.anneeScolaire || c.anneeScolaire === currentSchoolYear();
 }
 
 export interface HubEleve {
@@ -61,6 +78,21 @@ export async function getClasses(): Promise<HubClasse[]> {
     hubFetch("/classes?niveau=5eme").catch(() => ({ classes: [] })),
   ]);
   return [...(six.classes || []), ...(cinq.classes || [])];
+}
+
+// Classes affectées à un enseignant, d'après sa fiche Hub (liste de NOMS de
+// classes, parfois pollués par un id brut — le filtre appelant doit être
+// tolérant). Renvoie null si la fiche est introuvable ou vide : dans ce cas
+// l'appelant affiche tout (ne jamais bloquer un prof sur une fiche mal remplie).
+export async function getEnseignantClasses(enseignantId: string): Promise<string[] | null> {
+  try {
+    const data = await hubFetch("/enseignants");
+    const moi = (data.enseignants || []).find((e: any) => e.id === enseignantId);
+    const classes: string[] = moi?.classes || [];
+    return classes.length > 0 ? classes : null;
+  } catch {
+    return null;
+  }
 }
 
 // GET students of a class

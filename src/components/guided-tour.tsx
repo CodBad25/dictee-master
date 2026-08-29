@@ -97,7 +97,9 @@ export default function GuidedTour({ tourId, steps, onComplete }: GuidedTourProp
     const mobile = isMobile();
     const padding = mobile ? 12 : 16;
     const tooltipWidth = mobile ? Math.min(280, window.innerWidth - padding * 2) : 320;
-    const tooltipHeight = 200;
+    // Estimation haute (en-tête + titre + 3 lignes + bouton + lien « Passer ») :
+    // sous-estimer faisait déborder la carte sous le bord de la fenêtre.
+    const tooltipHeight = 280;
 
     if (!targetRect) {
       return { position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: tooltipWidth };
@@ -122,16 +124,25 @@ export default function GuidedTour({ tourId, steps, onComplete }: GuidedTourProp
       return { ...base, top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
     }
 
+    // Ne jamais sortir de la fenêtre : en dessous si ça rentre, sinon
+    // au-dessus, sinon position clampée (le tooltip peut chevaucher la cible,
+    // mais rester visible prime — cf. bug « Étape 4/6 » invisible sans dézoom).
+    const fitsBelow = window.innerHeight - (targetRect.top + targetRect.height) >= tooltipHeight + padding;
+    const fitsAbove = targetRect.top >= tooltipHeight + padding;
+    const belowTop = targetRect.top + targetRect.height + padding;
+    const aboveTop = targetRect.top - tooltipHeight - padding;
+    const fallbackTop = fitsBelow ? belowTop : fitsAbove ? aboveTop : safeTop;
+
     switch (position) {
-      case "top": return { ...base, top: Math.max(padding, targetRect.top - padding - 8 - tooltipHeight), left: safeLeft };
-      case "bottom": return { ...base, top: targetRect.top + targetRect.height + padding, left: safeLeft };
+      case "top": return { ...base, top: fitsAbove ? aboveTop : fitsBelow ? belowTop : safeTop, left: safeLeft };
       case "left": return targetRect.left - padding >= tooltipWidth
         ? { ...base, top: safeTop, left: targetRect.left - padding - tooltipWidth }
-        : { ...base, top: targetRect.top + targetRect.height + padding, left: safeLeft };
+        : { ...base, top: fallbackTop, left: safeLeft };
       case "right": return window.innerWidth - (targetRect.left + targetRect.width) - padding >= tooltipWidth
         ? { ...base, top: safeTop, left: targetRect.left + targetRect.width + padding }
-        : { ...base, top: targetRect.top + targetRect.height + padding, left: safeLeft };
-      default: return { ...base, top: targetRect.top + targetRect.height + padding, left: safeLeft };
+        : { ...base, top: fallbackTop, left: safeLeft };
+      case "bottom":
+      default: return { ...base, top: fallbackTop, left: safeLeft };
     }
   };
 

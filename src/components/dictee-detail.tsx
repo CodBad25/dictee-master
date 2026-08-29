@@ -355,20 +355,34 @@ export default function DicteeDetail({
                 </span>
               )}
             </h2>
-          <div className="flex flex-wrap gap-2">
+          {/* Cartes réparties sur la colonne : mot + définition, ⭐ mot vedette en tête */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {words.map((w) => {
               const isActive = !selectedWords || selectedWords.includes(w.position);
+              const isStar = !!dicteeMeta.star_word &&
+                w.word.replace(/^(le |la |l'|l’|un |une )/i, "") === dicteeMeta.star_word;
               return (
-                <span
+                <div
                   key={w.position}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
-                    isActive
-                      ? "bg-white border-gray-200 text-gray-700"
-                      : "bg-gray-50 border-gray-100 text-gray-300 line-through"
+                  className={`px-3 py-2.5 rounded-xl border transition-all ${
+                    !isActive
+                      ? "bg-gray-50 border-gray-100 text-gray-300"
+                      : isStar
+                      ? "bg-amber-50 border-amber-300"
+                      : "bg-white border-gray-200"
                   }`}
                 >
-                  {w.word}
-                </span>
+                  <div className={`text-base font-semibold ${
+                    !isActive ? "line-through" : isStar ? "text-amber-800" : "text-gray-800"
+                  }`}>
+                    {isStar && "⭐ "}{w.word}
+                  </div>
+                  {w.definition && (
+                    <div className={`mt-0.5 text-xs leading-snug ${!isActive ? "text-gray-300" : "text-gray-500"}`}>
+                      {w.definition}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

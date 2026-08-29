@@ -827,7 +827,17 @@ export default function TrainingMode() {
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ type: "spring", stiffness: 200 }}
-                        className="text-5xl sm:text-6xl md:text-7xl font-bold"
+                        className={`font-bold whitespace-nowrap ${
+                          // Taille adaptée à la longueur : un mot tronqué est
+                          // rédhibitoire pour une mémorisation visuelle
+                          currentWord.word.length <= 8
+                            ? "text-5xl sm:text-6xl md:text-7xl"
+                            : currentWord.word.length <= 12
+                            ? "text-4xl sm:text-5xl md:text-6xl"
+                            : currentWord.word.length <= 16
+                            ? "text-3xl sm:text-4xl md:text-5xl"
+                            : "text-2xl sm:text-3xl md:text-4xl"
+                        }`}
                       >
                         {(() => {
                           const { article, base } = splitArticle(currentWord.word);
