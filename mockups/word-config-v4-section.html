@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personnaliser les mots — Mockup v4</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    * { font-family: 'Inter', system-ui, sans-serif; }
+
+    /* Chips */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .chip-amber { background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; }
+    .chip-cyan  { background: #cffafe; color: #0e7490; border: 1px solid #67e8f9; }
+    .chip-emerald { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+    .chip-indigo  { background: #e0e7ff; color: #3730a3; border: 1px solid #a5b4fc; }
+    .chip-rose    { background: #ffe4e6; color: #9f1239; border: 1px solid #fda4af; }
+
+    /* Sidebar tab active states */
+    .tab-amber-active  { background: #fffbeb; border-left: 3px solid #f59e0b; color: #92400e; }
+    .tab-cyan-active   { background: #ecfeff; border-left: 3px solid #06b6d4; color: #164e63; }
+    .tab-emerald-active{ background: #ecfdf5; border-left: 3px solid #10b981; color: #064e3b; }
+    .tab-indigo-active { background: #eef2ff; border-left: 3px solid #6366f1; color: #312e81; }
+    .tab-rose-active   { background: #fff1f2; border-left: 3px solid #f43f5e; color: #881337; }
+
+    /* Horizontal tab active states */
+    .htab-amber-active  { border-bottom: 3px solid #f59e0b; background: #fffbeb; color: #92400e; }
+    .htab-cyan-active   { border-bottom: 3px solid #06b6d4; background: #ecfeff; color: #0e7490; }
+    .htab-emerald-active{ border-bottom: 3px solid #10b981; background: #ecfdf5; color: #065f46; }
+    .htab-indigo-active { border-bottom: 3px solid #6366f1; background: #eef2ff; color: #3730a3; }
+    .htab-rose-active   { border-bottom: 3px solid #f43f5e; background: #fff1f2; color: #9f1239; }
+
+    /* Hover effects */
+    .sidebar-tab:hover { background: #f9fafb; }
+    .htab:hover { background: #f9fafb; }
+    .btn-add:hover { background: #fef3c7; }
+    .btn-del:hover { background: #fee2e2; color: #dc2626; }
+    .gram-btn:hover { background: #cffafe; color: #0e7490; }
+
+    /* Word row alternating */
+    .word-row:nth-child(even) { background: #f9fafb; }
+    .word-row:hover { background: #f0f9ff; }
+
+    /* Save button sticky */
+    .save-bar {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      border-top: 1px solid #e5e7eb;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-10 px-4">
+
+  <!-- Séparateur de section -->
+  <div class="max-w-6xl mx-auto mb-4">
+    <h1 class="text-2xl font-bold text-gray-800">Mockup v4 — Section « Personnaliser les mots »</h1>
+    <p class="text-gray-500 text-sm mt-1">Deux variantes de design pour validation par Nadia. Aucun JS interactif — état figé sur l'exo « Pièges ».</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       VARIANTE 1 — Sidebar verticale d'exos
+  ══════════════════════════════════════════════════════════ -->
+  <div class="max-w-6xl mx-auto mb-16">
+    <div class="bg-amber-50 border border-amber-200 rounded-xl px-5 py-3 mb-4 flex items-center gap-3">
+      <span class="text-lg">🅰️</span>
+      <div>
+        <p class="font-semibold text-amber-800">Variante 1 — Sidebar verticale d'exos</p>
+        <p class="text-amber-700 text-sm">Le prof choisit l'exo dans la colonne de gauche. La colonne droite montre les 20 mots avec l'éditeur inline correspondant.</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden" style="height: 860px; display: flex; flex-direction: column;">
+
+      <!-- Header de page -->
+      <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 flex items-center gap-3 flex-shrink-0">
+        <button class="text-purple-200 hover:text-white transition text-sm flex items-center gap-1">
+          ← Retour
+        </button>
+        <div class="flex items-center gap-1 text-sm text-purple-200">
+          <span>Parcours</span>
+          <span>›</span>
+          <span>Dictée 3 — Fin septembre</span>
+          <span>›</span>
+          <span class="text-white font-semibold">Personnaliser les mots</span>
+        </div>
+      </div>
+
+      <!-- Sous-header avec titre dictée -->
+      <div class="px-6 py-3 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+        <div>
+          <h2 class="font-semibold text-gray-800">🎯 Personnaliser les mots — Dictée n°3</h2>
+          <p class="text-xs text-gray-400 mt-0.5">20 mots · Choisissez un exercice dans la colonne de gauche pour éditer la personnalisation de chaque mot.</p>
+        </div>
+        <span class="chip chip-amber">✏️ Pièges actif</span>
+      </div>
+
+      <!-- Layout 2 colonnes -->
+      <div class="flex flex-1 overflow-hidden">
+
+        <!-- Sidebar gauche -->
+        <div class="w-52 border-r border-gray-100 flex flex-col flex-shrink-0 bg-gray-50 py-2">
+          <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 px-4 mb-1 mt-1">Exercices perso</p>
+
+          <!-- Tab Pièges (actif) -->
+          <button class="sidebar-tab tab-amber-active flex items-center gap-2.5 px-4 py-2.5 text-left w-full transition">
+            <span class="text-base">✏️</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold truncate">Pièges</p>
+              <p class="text-[10px] text-amber-600">Choix orthographique</p>
+            </div>
+            <span class="chip chip-amber text-[10px] px-1.5 py-0.5">8/20</span>
+          </button>
+
+          <!-- Tab Classe gram -->
+          <button class="sidebar-tab flex items-center gap-2.5 px-4 py-2.5 text-left w-full transition text-gray-600">
+            <span class="text-base">🔤</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate">Classe gram.</p>
+              <p class="text-[10px] text-gray-400">Catégorie</p>
+            </div>
+            <span class="chip chip-cyan text-[10px] px-1.5 py-0.5">12/20</span>
+          </button>
+
+          <!-- Tab Définitions -->
+          <button class="sidebar-tab flex items-center gap-2.5 px-4 py-2.5 text-left w-full transition text-gray-600">
+            <span class="text-base">📖</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate">Définitions</p>
+              <p class="text-[10px] text-gray-400">Texte court</p>
+            </div>
+            <span class="chip chip-emerald text-[10px] px-1.5 py-0.5">5/20</span>
+          </button>
+
+          <!-- Tab Audio -->
+          <button class="sidebar-tab flex items-center gap-2.5 px-4 py-2.5 text-left w-full transition text-gray-600">
+            <span class="text-base">🎧</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate">Audio mot</p>
+              <p class="text-[10px] text-gray-400">Enregistrement</p>
+            </div>
+            <span class="chip chip-indigo text-[10px] px-1.5 py-0.5">3/20</span>
+          </button>
+
+          <!-- Tab Genre -->
+          <button class="sidebar-tab flex items-center gap-2.5 px-4 py-2.5 text-left w-full transition text-gray-600">
+            <span class="text-base">🏷️</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium truncate">Genre</p>
+              <p class="text-[10px] text-gray-400">Article</p>
+            </div>
+            <span class="chip chip-rose text-[10px] px-1.5 py-0.5">18/20</span>
+          </button>
+
+          <!-- Exos non perso -->
+          <div class="mt-4 px-4">
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Exos fixes</p>
+            <div class="flex flex-col gap-1.5">
+              <div class="flex items-center gap-2 text-gray-400 text-xs"><span>🃏</span> Flashcard</div>
+              <div class="flex items-center gap-2 text-gray-400 text-xs"><span>📚</span> Dictionnaire</div>
+              <div class="flex items-center gap-2 text-gray-400 text-xs"><span>📝</span> Texte à trous</div>
+              <div class="flex items-center gap-2 text-gray-400 text-xs"><span>🎙️</span> Dictée audio</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne droite — liste des 20 mots -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <div class="px-5 py-2 border-b border-amber-100 bg-amber-50 flex items-center gap-2 flex-shrink-0">
+            <span class="text-sm">✏️</span>
+            <p class="text-sm font-semibold text-amber-800">Pièges — Choix orthographique</p>
+            <span class="text-xs text-amber-600 ml-1">Saisissez les variantes erronées pour chaque mot. L'élève devra choisir la bonne orthographe.</span>
+          </div>
+
+          <!-- Header colonnes -->
+          <div class="grid px-5 py-1.5 border-b border-gray-100 bg-gray-50 flex-shrink-0" style="grid-template-columns: 24px 130px 1fr 64px;">
+            <span class="text-[10px] font-semibold uppercase text-gray-400">#</span>
+            <span class="text-[10px] font-semibold uppercase text-gray-400">Mot</span>
+            <span class="text-[10px] font-semibold uppercase text-gray-400">Pièges (distracteurs)</span>
+            <span class="text-[10px] font-semibold uppercase text-gray-400 text-center">Actions</span>
+          </div>
+
+          <!-- Liste mots (20 lignes, hauteur fixe ~32px chacune) -->
+          <div class="flex-1 overflow-y-auto">
+
+            <!-- Mot 1 — avec pièges -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">1</span>
+              <span class="text-sm font-semibold text-gray-800">hirondelle</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">irondelle <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <span class="chip chip-amber">hirondele <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div class="flex justify-center gap-1">
+                <button class="text-gray-300 hover:text-gray-500 transition text-sm">✎</button>
+              </div>
+            </div>
+
+            <!-- Mot 2 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">2</span>
+              <span class="text-sm font-semibold text-gray-800">désordre</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div class="flex justify-center"></div>
+            </div>
+
+            <!-- Mot 3 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">3</span>
+              <span class="text-sm font-semibold text-gray-800">balayer</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">balaier <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 4 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">4</span>
+              <span class="text-sm font-semibold text-gray-800">septembre</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">septembre <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <span class="chip chip-amber">setembre <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 5 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">5</span>
+              <span class="text-sm font-semibold text-gray-800">digne</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 6 — avec pièges -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">6</span>
+              <span class="text-sm font-semibold text-gray-800">cultivateur</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">cultivateurs <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <span class="chip chip-amber">cultivatteur <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 7 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">7</span>
+              <span class="text-sm font-semibold text-gray-800">automne</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">automme <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 8 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">8</span>
+              <span class="text-sm font-semibold text-gray-800">cueillette</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">cueilette <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <span class="chip chip-amber">cueillète <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 9 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">9</span>
+              <span class="text-sm font-semibold text-gray-800">persil</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 10 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">10</span>
+              <span class="text-sm font-semibold text-gray-800">tarder</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 11 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">11</span>
+              <span class="text-sm font-semibold text-gray-800">cigogne</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">cigone <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 12 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">12</span>
+              <span class="text-sm font-semibold text-gray-800">paysage</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">paysaje <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 13 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">13</span>
+              <span class="text-sm font-semibold text-gray-800">soulagement</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 14 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">14</span>
+              <span class="text-sm font-semibold text-gray-800">autour</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 15 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">15</span>
+              <span class="text-sm font-semibold text-gray-800">embarrer</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">embaré <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 16 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">16</span>
+              <span class="text-sm font-semibold text-gray-800">troupeau</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">troupaux <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 17 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">17</span>
+              <span class="text-sm font-semibold text-gray-800">étourdir</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 18 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">18</span>
+              <span class="text-sm font-semibold text-gray-800">gémir</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 19 -->
+            <div class="word-row grid items-center px-5 py-1.5 border-b border-gray-100" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">19</span>
+              <span class="text-sm font-semibold text-gray-800">déposer</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">déposé <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+            <!-- Mot 20 -->
+            <div class="word-row grid items-center px-5 py-1.5" style="grid-template-columns: 24px 130px 1fr 64px; min-height: 36px;">
+              <span class="text-[11px] text-gray-400 font-mono">20</span>
+              <span class="text-sm font-semibold text-gray-800">prairie</span>
+              <div class="flex flex-wrap items-center gap-1">
+                <span class="chip chip-amber">praierie <button class="ml-1 text-amber-400 hover:text-red-500 btn-del transition">×</button></span>
+                <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+              </div>
+              <div></div>
+            </div>
+
+          </div><!-- fin overflow liste -->
+
+          <!-- Save bar sticky -->
+          <div class="save-bar flex-shrink-0">
+            <button class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 transition">Annuler</button>
+            <button class="px-5 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow hover:opacity-90 transition">💾 Enregistrer les pièges</button>
+          </div>
+        </div><!-- fin colonne droite -->
+      </div><!-- fin layout 2 colonnes -->
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       VARIANTE 2 — Tabs horizontales + tableau dense
+  ══════════════════════════════════════════════════════════ -->
+  <div class="max-w-6xl mx-auto mb-16">
+    <div class="bg-cyan-50 border border-cyan-200 rounded-xl px-5 py-3 mb-4 flex items-center gap-3">
+      <span class="text-lg">🅱️</span>
+      <div>
+        <p class="font-semibold text-cyan-800">Variante 2 — Tabs horizontales + tableau dense</p>
+        <p class="text-cyan-700 text-sm">Les exercices sont sur une rangée horizontale. En dessous, un tableau compact 1 ligne/mot avec l'éditeur inline de l'exo actif.</p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden" style="height: 860px; display: flex; flex-direction: column;">
+
+      <!-- Header de page -->
+      <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 flex items-center gap-3 flex-shrink-0">
+        <button class="text-purple-200 hover:text-white transition text-sm flex items-center gap-1">
+          ← Retour
+        </button>
+        <div class="flex items-center gap-1 text-sm text-purple-200">
+          <span>Parcours</span>
+          <span>›</span>
+          <span>Dictée 3 — Fin septembre</span>
+          <span>›</span>
+          <span class="text-white font-semibold">Personnaliser les mots</span>
+        </div>
+      </div>
+
+      <!-- Sous-header -->
+      <div class="px-6 py-2.5 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+        <div>
+          <h2 class="font-semibold text-gray-800">🎯 Personnaliser les mots — Dictée n°3</h2>
+          <p class="text-xs text-gray-400">20 mots · Fin septembre · Sélectionnez un exercice ci-dessous pour éditer sa personnalisation</p>
+        </div>
+      </div>
+
+      <!-- Tabs horizontales -->
+      <div class="flex border-b border-gray-200 flex-shrink-0 bg-gray-50">
+
+        <!-- Onglet Pièges — actif -->
+        <button class="htab htab-amber-active flex items-center gap-2 px-5 py-3 transition border-b-[3px]">
+          <span class="text-lg">✏️</span>
+          <div class="text-left">
+            <div class="text-sm font-semibold">Pièges</div>
+            <div class="text-[10px]">8/20 <span class="text-amber-500">●</span></div>
+          </div>
+        </button>
+
+        <button class="htab flex items-center gap-2 px-5 py-3 transition border-b-[3px] border-transparent text-gray-600 hover:bg-gray-100">
+          <span class="text-lg">🔤</span>
+          <div class="text-left">
+            <div class="text-sm font-medium">Classe gram.</div>
+            <div class="text-[10px] text-gray-400">12/20</div>
+          </div>
+        </button>
+
+        <button class="htab flex items-center gap-2 px-5 py-3 transition border-b-[3px] border-transparent text-gray-600 hover:bg-gray-100">
+          <span class="text-lg">📖</span>
+          <div class="text-left">
+            <div class="text-sm font-medium">Définitions</div>
+            <div class="text-[10px] text-gray-400">5/20</div>
+          </div>
+        </button>
+
+        <button class="htab flex items-center gap-2 px-5 py-3 transition border-b-[3px] border-transparent text-gray-600 hover:bg-gray-100">
+          <span class="text-lg">🎧</span>
+          <div class="text-left">
+            <div class="text-sm font-medium">Audio mot</div>
+            <div class="text-[10px] text-gray-400">3/20</div>
+          </div>
+        </button>
+
+        <button class="htab flex items-center gap-2 px-5 py-3 transition border-b-[3px] border-transparent text-gray-600 hover:bg-gray-100">
+          <span class="text-lg">🏷️</span>
+          <div class="text-left">
+            <div class="text-sm font-medium">Genre</div>
+            <div class="text-[10px] text-gray-400">18/20</div>
+          </div>
+        </button>
+
+        <!-- Exos fixes -->
+        <div class="ml-auto flex items-center px-4 gap-3">
+          <span class="text-[10px] text-gray-300 uppercase tracking-wider">Exos fixes :</span>
+          <span class="text-[11px] text-gray-400">🃏 Flashcard</span>
+          <span class="text-[11px] text-gray-400">📚 Dictionnaire</span>
+          <span class="text-[11px] text-gray-400">📝 Trous</span>
+          <span class="text-[11px] text-gray-400">🎙️ Dictée</span>
+        </div>
+      </div>
+
+      <!-- Bandeau exo actif -->
+      <div class="px-5 py-1.5 bg-amber-50 border-b border-amber-100 flex items-center gap-2 flex-shrink-0">
+        <span class="text-sm">✏️</span>
+        <span class="text-sm font-semibold text-amber-800">Pièges — Choix orthographique</span>
+        <span class="text-xs text-amber-600">· Saisissez les orthographes erronées que l'élève verra comme distracteurs.</span>
+        <span class="ml-auto chip chip-amber">8 / 20 mots configurés</span>
+      </div>
+
+      <!-- Tableau header -->
+      <div class="flex-shrink-0 bg-gray-50 border-b border-gray-200">
+        <div class="grid px-5 py-1.5" style="grid-template-columns: 28px 50px 140px 1fr 72px;">
+          <span class="text-[10px] font-semibold uppercase text-gray-400">#</span>
+          <span class="text-[10px] font-semibold uppercase text-gray-400">Rang</span>
+          <span class="text-[10px] font-semibold uppercase text-gray-400">Mot</span>
+          <span class="text-[10px] font-semibold uppercase text-gray-400">Pièges (distracteurs)</span>
+          <span class="text-[10px] font-semibold uppercase text-gray-400 text-center">Statut</span>
+        </div>
+      </div>
+
+      <!-- Tableau corps -->
+      <div class="flex-1 overflow-y-auto">
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">1</span>
+          <span class="text-[10px] text-gray-300">nm.fém</span>
+          <span class="text-sm font-semibold text-gray-800">hirondelle</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">irondelle <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <span class="chip chip-amber">hirondele <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">2 pièges</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">2</span>
+          <span class="text-[10px] text-gray-300">nm.mas</span>
+          <span class="text-sm font-semibold text-gray-800">désordre</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+          </div>
+          <div class="flex justify-center"><span class="text-[10px] text-gray-300">—</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">3</span>
+          <span class="text-[10px] text-gray-300">v.</span>
+          <span class="text-sm font-semibold text-gray-800">balayer</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">balaier <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">1 piège</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">4</span>
+          <span class="text-[10px] text-gray-300">nm.mas</span>
+          <span class="text-sm font-semibold text-gray-800">septembre</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">setembre <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <span class="chip chip-amber">septembre <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">2 pièges</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">5</span>
+          <span class="text-[10px] text-gray-300">adj.</span>
+          <span class="text-sm font-semibold text-gray-800">digne</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+          </div>
+          <div class="flex justify-center"><span class="text-[10px] text-gray-300">—</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">6</span>
+          <span class="text-[10px] text-gray-300">nm.mas</span>
+          <span class="text-sm font-semibold text-gray-800">cultivateur</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">cultivateurs <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <span class="chip chip-amber">cultivatteur <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">2 pièges</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">7</span>
+          <span class="text-[10px] text-gray-300">nm.mas</span>
+          <span class="text-sm font-semibold text-gray-800">automne</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">automme <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">1 piège</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">8</span>
+          <span class="text-[10px] text-gray-300">nf.</span>
+          <span class="text-sm font-semibold text-gray-800">cueillette</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">cueilette <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <span class="chip chip-amber">cueillète <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">2 pièges</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">9</span>
+          <span class="text-[10px] text-gray-300">nm.mas</span>
+          <span class="text-sm font-semibold text-gray-800">persil</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+          </div>
+          <div class="flex justify-center"><span class="text-[10px] text-gray-300">—</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">10</span>
+          <span class="text-[10px] text-gray-300">v.</span>
+          <span class="text-sm font-semibold text-gray-800">tarder</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+          </div>
+          <div class="flex justify-center"><span class="text-[10px] text-gray-300">—</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">11</span>
+          <span class="text-[10px] text-gray-300">nf.</span>
+          <span class="text-sm font-semibold text-gray-800">cigogne</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">cigone <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">1 piège</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">12</span>
+          <span class="text-[10px] text-gray-300">nm.mas</span>
+          <span class="text-sm font-semibold text-gray-800">paysage</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">paysaje <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">1 piège</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">13</span>
+          <span class="text-[10px] text-gray-300">nm.mas</span>
+          <span class="text-sm font-semibold text-gray-800">soulagement</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+          </div>
+          <div class="flex justify-center"><span class="text-[10px] text-gray-300">—</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">14</span>
+          <span class="text-[10px] text-gray-300">prép.</span>
+          <span class="text-sm font-semibold text-gray-800">autour</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+          </div>
+          <div class="flex justify-center"><span class="text-[10px] text-gray-300">—</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">15</span>
+          <span class="text-[10px] text-gray-300">v.</span>
+          <span class="text-sm font-semibold text-gray-800">embarrer</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">embaré <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">1 piège</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">16</span>
+          <span class="text-[10px] text-gray-300">nm.mas</span>
+          <span class="text-sm font-semibold text-gray-800">troupeau</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">troupaux <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">1 piège</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">17</span>
+          <span class="text-[10px] text-gray-300">v.</span>
+          <span class="text-sm font-semibold text-gray-800">étourdir</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+          </div>
+          <div class="flex justify-center"><span class="text-[10px] text-gray-300">—</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">18</span>
+          <span class="text-[10px] text-gray-300">v.</span>
+          <span class="text-sm font-semibold text-gray-800">gémir</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+ ajouter</button>
+          </div>
+          <div class="flex justify-center"><span class="text-[10px] text-gray-300">—</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1 border-b border-gray-100" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">19</span>
+          <span class="text-[10px] text-gray-300">v.</span>
+          <span class="text-sm font-semibold text-gray-800">déposer</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">déposé <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">1 piège</span></div>
+        </div>
+
+        <div class="word-row grid items-center px-5 py-1" style="grid-template-columns: 28px 50px 140px 1fr 72px; min-height: 34px;">
+          <span class="text-[11px] text-gray-400 font-mono">20</span>
+          <span class="text-[10px] text-gray-300">nf.</span>
+          <span class="text-sm font-semibold text-gray-800">prairie</span>
+          <div class="flex flex-wrap items-center gap-1">
+            <span class="chip chip-amber">praierie <button class="ml-1 text-amber-400 hover:text-red-500 transition">×</button></span>
+            <button class="chip btn-add border border-dashed border-amber-300 text-amber-500 text-[11px] transition">+</button>
+          </div>
+          <div class="flex justify-center"><span class="chip chip-amber text-[10px]">1 piège</span></div>
+        </div>
+
+      </div><!-- fin tableau corps -->
+
+      <!-- Save bar sticky -->
+      <div class="save-bar flex-shrink-0">
+        <button class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-100 transition">Annuler</button>
+        <button class="px-5 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow hover:opacity-90 transition">💾 Enregistrer les pièges</button>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

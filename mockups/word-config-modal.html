@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup — Configuration par mot</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; }
+  .chip-disabled { text-decoration: line-through; opacity: 0.5; }
+</style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 via-white to-indigo-50 min-h-screen">
+
+<header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 shadow">
+  <div class="max-w-5xl mx-auto flex items-center gap-3">
+    <span class="text-2xl">🎯</span>
+    <div>
+      <h1 class="font-bold">Configuration du parcours — Classe 6A</h1>
+      <p class="text-xs text-purple-100">Mockup statique — clique sur un mot pour ouvrir la modale</p>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-5xl mx-auto p-6">
+
+  <section class="bg-white rounded-2xl shadow p-5 mb-6">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-bold text-gray-700 uppercase tracking-wide">📝 Mots à inclure — Dictée n°1</h2>
+      <span class="text-xs text-gray-500" id="active-count">20/20 mots actifs</span>
+    </div>
+    <p class="text-xs text-gray-500 mb-4">
+      Survole un mot pour voir le ⊘ (désactiver). <strong>Clique sur un mot</strong> pour ouvrir la configuration de ses exercices.
+    </p>
+    <div id="words-grid" class="flex flex-wrap gap-2"></div>
+  </section>
+
+  <section class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
+    💡 <strong>Note du mockup</strong> : seuls la grille de mots et la modale sont actifs. La pile de carrés
+    « Ordre des exercices » du panneau réel n'est pas reproduite ici (hors sujet).
+  </section>
+
+</main>
+
+<!-- MODALE -->
+<div id="modal-bg" class="hidden fixed inset-0 bg-black/40 z-40" onclick="closeModal()"></div>
+<div id="modal" class="hidden fixed inset-0 z-50 flex items-start justify-center p-4 pt-10 pointer-events-none">
+  <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full pointer-events-auto max-h-[88vh] overflow-y-auto" onclick="event.stopPropagation()">
+    <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+      <div>
+        <p class="text-xs text-purple-100 uppercase tracking-wide">Dictée n°1 · mot n°<span id="modal-word-pos"></span></p>
+        <h2 class="text-2xl font-black" id="modal-word"></h2>
+        <p class="text-xs text-purple-100 mt-1" id="modal-meta"></p>
+      </div>
+      <button onclick="closeModal()" class="hover:bg-white/20 rounded-lg p-2 transition">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </header>
+
+    <div class="p-5">
+      <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">
+        Personnalisation pour ce mot — clique sur un exercice
+      </h3>
+      <div id="exo-grid" class="grid grid-cols-3 gap-3 mb-5"></div>
+
+      <div id="exo-panel" class="hidden border-t pt-5"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// === Données : 20 vrais mots de la dictée n°1 ===
+const WORDS = [
+  {position:0, word:"le héros", lemma:"héros", article:"le", traps:["le heros","le héro","le éros"], def:"Personnage principal et courageux d'une histoire", auto:"nom", manual:null},
+  {position:1, word:"l'épaule", lemma:"épaule", article:"l'", traps:["l'epaule","l'épole","l'épeaule"], def:"Partie du corps entre le cou et le bras", auto:"nom", manual:null},
+  {position:2, word:"dangereux", lemma:"dangereux", article:null, traps:["dengereux","dangereu","danngereux"], def:"Qui peut causer du mal ou un accident", auto:"adjectif", manual:null},
+  {position:3, word:"sept", lemma:"sept", article:null, traps:["sep","septe"], def:"Le chiffre 7", auto:"determinant", manual:null},
+  {position:4, word:"la soirée", lemma:"soirée", article:"la", traps:["la soiree","la soiré","la soirrée"], def:"Moment de la journée entre le soir et la nuit", auto:"nom", manual:null},
+  {position:5, word:"une statue", lemma:"statue", article:"une", traps:["une statu","une sttatue","une statuee"], def:"Sculpture représentant une personne ou un animal", auto:"nom", manual:null},
+  {position:6, word:"un canif", lemma:"canif", article:"un", traps:["un cenif","un cannif"], def:"Petit couteau de poche qui se replie", auto:"nom", manual:null},
+  {position:7, word:"une trappe", lemma:"trappe", article:"une", traps:["une trape","une trapp"], def:"Petite porte dans le sol ou le plafond", auto:"nom", manual:null},
+  {position:8, word:"une pensée", lemma:"pensée", article:"une", traps:["une pensee","une pansée","une ponsée"], def:"Idée qui vient dans notre esprit", auto:"nom", manual:null},
+  {position:9, word:"tendrement", lemma:"tendrement", article:null, traps:["tendreme","tendrem","tandrement"], def:"Avec douceur et affection", auto:"adverbe", manual:null},
+  {position:10, word:"le particulier", lemma:"particulier", article:"le", traps:["le parrticulier","le particuliere"], def:"Ce qui est spécial, propre à quelqu'un", auto:"nom", manual:null},
+  {position:11, word:"ronger", lemma:"ronger", article:null, traps:["romger","ranger","ronnger"], def:"Manger en grattant avec les dents", auto:"verbe", manual:null},
+  {position:12, word:"le marteau", lemma:"marteau", article:"le", traps:["le marto","le martau","le marteo"], def:"Outil pour enfoncer les clous", auto:"nom", manual:null},
+  {position:13, word:"le dos", lemma:"dos", article:"le", traps:["le do","le dose"], def:"Partie arrière du corps", auto:"nom", manual:null},
+  {position:14, word:"le prochain", lemma:"prochain", article:"le", traps:["le prochaain","le prochaen","le prochin"], def:"Celui qui va arriver bientôt", auto:"adjectif", manual:"adjectif"},
+  {position:15, word:"voltiger", lemma:"voltiger", article:null, traps:["volltiger","voltigere"], def:"Voler légèrement dans les airs", auto:"verbe", manual:null},
+  {position:16, word:"s'évanouir", lemma:"s'évanouir", article:null, traps:["s'evanouir","s'évenouir","s'évanuir"], def:"Perdre connaissance pendant un moment", auto:"verbe", manual:null},
+  {position:17, word:"une invitation", lemma:"invitation", article:"une", traps:["une invitatiom","une invitatian","une ainvitation"], def:"Message demandant à quelqu'un de venir", auto:"nom", manual:null},
+  {position:18, word:"le cadeau", lemma:"cadeau", article:"le", traps:["le cado","le cadau","le cadeo"], def:"Objet offert à quelqu'un pour lui faire plaisir", auto:"nom", manual:null},
+  {position:19, word:"un clairon", lemma:"clairon", article:"un", traps:["un clairom","un clairan","un cllairon"], def:"Instrument de musique à vent en cuivre", auto:"nom", manual:null},
+];
+
+// État local : mot désactivé ou non
+const disabled = new Set();
+
+// Labels classes grammaticales
+const GC_LABELS = {
+  nom:"Nom", nom_propre:"Nom propre", verbe:"Verbe", adjectif:"Adjectif",
+  determinant:"Déterminant", pronom:"Pronom", adverbe:"Adverbe",
+  preposition:"Préposition", conjonction:"Conjonction"
+};
+
+// 9 exos avec leur capacité de personnalisation par mot
+const EXOS = [
+  { id:"flashcard",       icon:"🃏", label:"Flashcard",          perWord:false },
+  { id:"genre",           icon:"🏷️", label:"Genre",               perWord:"article" },
+  { id:"spelling_choice", icon:"✏️", label:"Choix orthographique", perWord:"traps" },
+  { id:"definitions",     icon:"📖", label:"Définitions",          perWord:"def" },
+  { id:"dictionary",      icon:"📚", label:"Dictionnaire",         perWord:false },
+  { id:"audio_word",      icon:"🎧", label:"Audio mot",            perWord:"audio" },
+  { id:"fill_blanks",     icon:"📝", label:"Texte à trous",        perWord:"blank" },
+  { id:"audio_dictation", icon:"🎙️", label:"Dictée audio",        perWord:false },
+  { id:"grammar_class",   icon:"🔤", label:"Classes grammaticales", perWord:"gc" },
+];
+
+// === Rendu de la grille de mots ===
+function renderGrid() {
+  const el = document.getElementById("words-grid");
+  el.innerHTML = "";
+  WORDS.forEach((w) => {
+    const isDisabled = disabled.has(w.position);
+    const div = document.createElement("div");
+    div.className = `relative inline-flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition cursor-pointer group ${
+      isDisabled
+        ? "border-gray-200 bg-gray-50 chip-disabled"
+        : "border-purple-200 bg-purple-50 hover:border-purple-400 hover:shadow-md"
+    }`;
+    div.onclick = (e) => { if (!e.target.closest('.toggle-btn')) openModal(w.position); };
+    div.innerHTML = `
+      <span class="font-semibold text-gray-800">${w.word}</span>
+      ${w.manual ? '<span class="text-cyan-600 text-xs font-bold" title="Classe modifiée par le prof">🔤</span>' : ''}
+      <span class="text-xs text-amber-700" title="${w.traps.length} pièges">🪤<sup>${w.traps.length}</sup></span>
+      <button class="toggle-btn opacity-0 group-hover:opacity-100 transition text-red-500 hover:bg-red-100 rounded-full w-5 h-5 flex items-center justify-center text-xs" onclick="toggleWord(${w.position}); event.stopPropagation();" title="${isDisabled ? 'Activer' : 'Désactiver'}">${isDisabled ? '✓' : '⊘'}</button>
+    `;
+    el.appendChild(div);
+  });
+  document.getElementById("active-count").textContent = `${WORDS.length - disabled.size}/${WORDS.length} mots actifs`;
+}
+
+function toggleWord(pos) {
+  if (disabled.has(pos)) disabled.delete(pos);
+  else disabled.add(pos);
+  renderGrid();
+}
+
+// === Modale ===
+let activeWordPos = null;
+let activeExo = null;
+
+function openModal(pos) {
+  activeWordPos = pos;
+  activeExo = null;
+  const w = WORDS[pos];
+  document.getElementById("modal-word").textContent = w.word;
+  document.getElementById("modal-word-pos").textContent = pos + 1;
+  document.getElementById("modal-meta").innerHTML = `
+    Lemma : <strong>${w.lemma}</strong>
+    ${w.article ? ` · Article : <strong>${w.article}</strong>` : ""}
+    · Définition : « ${w.def} »
+  `;
+  renderExoGrid(w);
+  document.getElementById("exo-panel").classList.add("hidden");
+  document.getElementById("modal-bg").classList.remove("hidden");
+  document.getElementById("modal").classList.remove("hidden");
+}
+
+function closeModal() {
+  document.getElementById("modal-bg").classList.add("hidden");
+  document.getElementById("modal").classList.add("hidden");
+}
+
+function renderExoGrid(w) {
+  const grid = document.getElementById("exo-grid");
+  grid.innerHTML = "";
+  EXOS.forEach((exo) => {
+    const hasCustom = exoHasCustom(w, exo);
+    const canCustom = exo.perWord !== false;
+    const card = document.createElement("button");
+    card.className = `relative p-4 rounded-xl border-2 text-center transition ${
+      activeExo === exo.id
+        ? "border-purple-600 bg-purple-50 shadow-md"
+        : canCustom
+          ? "border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50"
+          : "border-gray-100 bg-gray-50 text-gray-400"
+    }`;
+    card.onclick = () => selectExo(exo.id);
+    const badge = hasCustom
+      ? `<span class="absolute -top-2 -right-2 bg-purple-600 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">✓</span>`
+      : "";
+    card.innerHTML = `
+      ${badge}
+      <div class="text-3xl mb-1">${exo.icon}</div>
+      <div class="text-xs font-semibold leading-tight">${exo.label}</div>
+      ${!canCustom ? '<div class="text-[10px] text-gray-400 mt-1">rien à personnaliser</div>' : ''}
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function exoHasCustom(w, exo) {
+  if (exo.perWord === "traps") return w.traps && w.traps.length > 0;
+  if (exo.perWord === "gc") return !!w.manual;
+  if (exo.perWord === "def") return !!w.def;
+  if (exo.perWord === "article") return !!w.article;
+  return false;
+}
+
+function selectExo(exoId) {
+  activeExo = exoId;
+  const w = WORDS[activeWordPos];
+  renderExoGrid(w);
+  const panel = document.getElementById("exo-panel");
+  panel.classList.remove("hidden");
+  panel.innerHTML = renderExoPanel(w, exoId);
+}
+
+function renderExoPanel(w, exoId) {
+  const exo = EXOS.find((e) => e.id === exoId);
+  switch (exo.perWord) {
+    case "traps":
+      return `
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+          <h4 class="font-bold text-amber-900 mb-2">🪤 Pièges du mode Choix orthographique</h4>
+          <p class="text-xs text-amber-800 mb-3">Ces orthographes fausses seront proposées comme distracteurs.</p>
+          <div class="flex flex-wrap gap-2 mb-3">
+            ${w.traps.map((t) => `<span class="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-amber-300 rounded-lg text-sm">${t} <button class="text-red-500" title="Supprimer">✕</button></span>`).join("")}
+          </div>
+          <div class="flex gap-2">
+            <input class="flex-1 px-3 py-2 border border-amber-300 rounded-lg text-sm" placeholder="Ajouter un piège…" />
+            <button class="px-3 py-2 bg-amber-600 text-white rounded-lg text-sm font-semibold">Ajouter</button>
+          </div>
+        </div>
+      `;
+    case "gc":
+      const classes = ["nom","nom_propre","verbe","adjectif","determinant","pronom","adverbe","preposition","conjonction"];
+      const current = w.manual || w.auto;
+      return `
+        <div class="bg-cyan-50 border border-cyan-200 rounded-xl p-4">
+          <h4 class="font-bold text-cyan-900 mb-1">🔤 Classe grammaticale</h4>
+          <p class="text-xs text-cyan-800 mb-3">
+            Auto-détection : <strong>${GC_LABELS[w.auto]}</strong>
+            ${w.manual ? `· Édité : <strong>${GC_LABELS[w.manual]}</strong>` : ""}
+          </p>
+          <div class="flex flex-wrap gap-2 mb-2">
+            ${classes.map((c) => {
+              const active = current === c;
+              const isManual = w.manual === c;
+              return `<button class="px-3 py-1.5 rounded-lg text-sm font-semibold border-2 transition ${
+                active ? (isManual ? "bg-cyan-600 border-cyan-700 text-white" : "bg-cyan-100 border-cyan-400 text-cyan-900")
+                       : "bg-white border-gray-200 text-gray-700 hover:border-cyan-400 hover:bg-cyan-50"
+              }">${GC_LABELS[c]}</button>`;
+            }).join("")}
+          </div>
+          ${w.manual ? `<button class="text-xs text-cyan-700 hover:underline">↺ Revenir à l'auto-détection</button>` : ""}
+        </div>
+      `;
+    case "def":
+      return `
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+          <h4 class="font-bold text-emerald-900 mb-2">📖 Définition (mode Définitions)</h4>
+          <textarea class="w-full px-3 py-2 border border-emerald-300 rounded-lg text-sm bg-white" rows="2">${w.def}</textarea>
+          <p class="text-xs text-emerald-700 mt-2">L'élève doit associer ce mot à sa définition. Modifier ici écrit en base.</p>
+        </div>
+      `;
+    case "article":
+      return `
+        <div class="bg-pink-50 border border-pink-200 rounded-xl p-4">
+          <h4 class="font-bold text-pink-900 mb-2">🏷️ Article (mode Genre)</h4>
+          <p class="text-sm text-pink-900">L'élève devra choisir entre les articles. Article correct pour ce mot :</p>
+          <div class="mt-2 inline-block px-4 py-2 bg-white border-2 border-pink-300 rounded-lg font-bold text-pink-700">${w.article || "(aucun)"}</div>
+          <p class="text-xs text-pink-700 mt-3">Édition de l'article = renommage du mot. À faire via la base si besoin.</p>
+        </div>
+      `;
+    case "audio":
+      return `
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+          <h4 class="font-bold text-indigo-900 mb-2">🎧 Audio personnalisé (mode Audio mot)</h4>
+          <p class="text-sm text-indigo-900 mb-3">Aucun audio personnalisé pour ce mot. La synthèse vocale du navigateur sera utilisée.</p>
+          <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold">📤 Importer un fichier audio</button>
+        </div>
+      `;
+    case "blank":
+      return `
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-4">
+          <h4 class="font-bold text-orange-900 mb-2">📝 Texte à trous</h4>
+          <p class="text-sm text-orange-900">Si ce mot est inclus dans le parcours (chip violet en haut), il devient un trou dans le texte. Sinon il reste affiché normalement.</p>
+          <p class="text-xs text-orange-700 mt-3">Pas d'option supplémentaire au niveau mot.</p>
+        </div>
+      `;
+    default:
+      return `
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-gray-600 text-sm">
+          Cet exercice n'a pas de personnalisation au niveau du mot. La configuration se fait au niveau de la dictée ou du parcours global.
+        </div>
+      `;
+  }
+}
+
+renderGrid();
+</script>
+
+</body>
+</html>

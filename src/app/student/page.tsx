@@ -67,6 +67,7 @@ export default function StudentPage() {
   const [unlockedPositions, setUnlockedPositions] = useState<number[]>([1]);
   const [activityOrder, setActivityOrder] = useState<string[]>(DEFAULT_ACTIVITY_ORDER);
   const [selectedWords, setSelectedWords] = useState<number[] | null>(null);
+  const [optionalActivities, setOptionalActivities] = useState<string[]>([]);
 
   // Polling 5s : positions déverrouillées + transitions de statut sur les demandes
   useEffect(() => {
@@ -152,10 +153,12 @@ export default function StudentPage() {
       );
       setActivityOrder(config.activityOrder);
       setSelectedWords(config.selectedWords);
+      setOptionalActivities(config.optionalActivities);
       useAppStore.getState().setSelectedWordPositions(config.selectedWords);
     } catch {
       setActivityOrder(DEFAULT_ACTIVITY_ORDER);
       setSelectedWords(null);
+      setOptionalActivities([]);
     }
   };
 
@@ -318,6 +321,7 @@ export default function StudentPage() {
           dicteePosition={selectedDictee.position}
           activityOrder={activityOrder}
           selectedWords={selectedWords}
+          optionalActivities={optionalActivities}
           onBack={() => setSelectedDictee(null)}
           onStartActivity={handleStartActivity}
         />

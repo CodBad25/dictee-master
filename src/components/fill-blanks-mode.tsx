@@ -230,7 +230,7 @@ export default function FillBlanksMode() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!generatedText) return;
 
     setShowResults(true);
@@ -242,7 +242,7 @@ export default function FillBlanksMode() {
       return {
         word: blank.word,
         userAnswer: userAnswers[index] || "",
-        isCorrect: userAnswer === correctAnswer,
+        isCorrect: userAnswer.toLowerCase() === correctAnswer.toLowerCase(), // casse ignorée, accents conservés (orthographe exigée)
       };
     });
 
@@ -252,8 +252,11 @@ export default function FillBlanksMode() {
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
 
     // Sauvegarder la session
+    // IMPORTANT : await obligatoire — sinon la sauvegarde dm_results peut être
+    // interrompue par la navigation (handleQuit → clearCurrentTraining), ce qui
+    // bloque la progression du parcours (l'étape fill_blanks n'est jamais enregistrée).
     if (currentList) {
-      saveSession({
+      await saveSession({
         listId: currentList.id,
         listTitle: currentList.title,
         studentName: currentStudentName.trim() || undefined,
@@ -317,7 +320,7 @@ export default function FillBlanksMode() {
       return {
         word: blank.word,
         userAnswer: userAnswers[index] || "",
-        isCorrect: userAnswer === correctAnswer,
+        isCorrect: userAnswer.toLowerCase() === correctAnswer.toLowerCase(), // casse ignorée, accents conservés (orthographe exigée)
       };
     });
 

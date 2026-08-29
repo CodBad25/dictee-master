@@ -104,11 +104,13 @@ export default function WordConfigSection({
 
   // Aperçu des distracteurs auto-générés (figé pour éviter le clignotement :
   // generateDistractors mélange aléatoirement à chaque appel).
-  const wordsKey = localWords.map((w) => w.word).join("|");
+  const wordsKey = localWords.map((w) => `${w.word}::${w.grammatical_class ?? ""}`).join("|");
   const autoPreviews = useMemo(() => {
     const map: Record<number, string[]> = {};
     for (const w of localWords) {
-      map[w.position] = generateDistractors(w.word).slice(0, 3);
+      map[w.position] = generateDistractors(w.word, {
+        grammaticalClass: w.grammatical_class ?? null,
+      }).slice(0, 3);
     }
     return map;
     // eslint-disable-next-line react-hooks/exhaustive-deps

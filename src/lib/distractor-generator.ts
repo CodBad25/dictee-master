@@ -99,15 +99,28 @@ const HOMOPHONES: Record<string, string[]> = {
 // Source : GAFF/phoneme/restriction_no, filtré et durci.
 const PHONETIC_SUBS: Array<{ pattern: RegExp; replacements: string[] }> = [
   // Voyelles nasales (uniquement à l'intérieur du mot, pas en finale)
-  { pattern: /ain(?=[a-zéèêà])/, replacements: ["in"] },
+  { pattern: /ain(?=[a-zéèêà])/, replacements: ["in", "ein"] },
+  { pattern: /ein(?=[a-zéèêà])/, replacements: ["ain", "in"] },
+  { pattern: /in(?=[a-zéèêà])/, replacements: ["ain", "ein"] },
   { pattern: /am(?=[bp])/, replacements: ["em"] }, // règle m/m,b,p
+  { pattern: /em(?=[bp])/, replacements: ["am"] },
   { pattern: /an(?=[a-zéèêà])/, replacements: ["en"] },
   { pattern: /en(?=[a-zéèêà])/, replacements: ["an"] },
+  // en/an en finale aussi (souvent : « parent » ↔ « parant »), seulement
+  // sur les mots longs pour éviter d'abîmer les courts (« on », « en »).
+  { pattern: /an$/, replacements: ["en"] },
+  { pattern: /en$/, replacements: ["an"] },
   { pattern: /om(?=[bp])/, replacements: ["on"] },
-  // Sons « o »
+  // Sons « o » (o / au / eau / ô)
   { pattern: /eau/, replacements: ["au", "o"] },
   { pattern: /au/, replacements: ["eau", "o"] },
   { pattern: /ô/, replacements: ["o", "au"] },
+  // Sons « eu » / « œu » (cœur ↔ ceur, sœur ↔ seur)
+  { pattern: /œu/, replacements: ["eu"] },
+  { pattern: /eu(?=[a-zéèêà])/, replacements: ["œu"] },
+  // Son « è » : ai / ei / è / e+consonne double
+  { pattern: /ai(?=[a-zéèêà])/, replacements: ["ei", "è"] },
+  { pattern: /ei(?=[a-zéèêà])/, replacements: ["ai"] },
   // Diphtongues
   { pattern: /oi/, replacements: ["oua"] },
   { pattern: /ou(?=[a-zéèêà])/, replacements: ["u"] },
@@ -160,13 +173,19 @@ function tryMorphology(word: string): string[] {
   if (/é/.test(word)) out.push(word.replace(/é/g, "è"));
   else if (/è/.test(word)) out.push(word.replace(/è/g, "é"));
 
-  // Double consonne supprimée (belle → bele, mettre → metre)
+  // Double consonne supprimée (belle → bele, mettre → metre, ennemi → enemi)
   const dedoubled = word.replace(/([bcdfgklmnprstz])\1/, "$1");
   if (dedoubled !== word) out.push(dedoubled);
 
-  // Simple → double (l, n, t, p)
-  const doubled = word.replace(/([aeiou])([lnpt])([eè])/, "$1$2$2$3");
-  if (doubled !== word) out.push(doubled);
+  // Simple → double, élargi à l, n, p, t, m, r, f, s
+  // (appeler, immense, attaque, courrir, souffrir, dessous…)
+  const doubled = word.replace(/([aeiouéèê])([lnptmrfs])([aeiouéèê])/, "$1$2$2$3");
+  if (doubled !== word && doubled !== word.replace(/([aeiou])([lnpt])([eè])/, "$1$2$2$3")) {
+    out.push(doubled);
+  }
+  // Variante ciblée avant -e/-è (forme la plus fréquente : -elle, -enne, -ette)
+  const doubledEnd = word.replace(/([aeiou])([lnptmr])([eè])/, "$1$2$2$3");
+  if (doubledEnd !== word) out.push(doubledEnd);
 
   // Lettre muette finale supprimée (chat → cha, sport → spor, pied → pie)
   // Lexical : l'élève doit savoir qu'il y a un -t/-d/-s/-x/-p muet.
@@ -224,9 +243,24 @@ function isLexicalDistractor(word: string, candidate: string): boolean {
 }
 
 export interface DistractorOptions {
-  /** Classe grammaticale du mot (si connue). Non utilisée pour l'instant —
-   * tous les distracteurs sont filtrés strictement sur le critère lexical. */
+  /** Classe grammaticale du mot (si connue). Quand c'est un « nom », on
+   * autorise des fautes lexicales typiques des noms (ex : *beautée*,
+   * *couleure*) qui seraient sinon rejetées comme fautes de genre. */
   grammaticalClass?: string | null;
+}
+
+/**
+ * Variantes spécifiques aux NOMS, qui ressemblent à des fautes d'accord
+ * mais sont en réalité des fautes lexicales très fréquentes en 6e :
+ *   - nom en -é (féminin) → -ée (la beauté → la beautée)
+ *   - nom en -eur          → -eure (la couleur → la couleure)
+ * Ces candidats bypass `isLexicalDistractor` (qui rejette le simple +e final).
+ */
+function tryNounEndings(word: string): string[] {
+  const out: string[] = [];
+  if (/[^e]é$/.test(word)) out.push(word + "e"); // beauté → beautée
+  if (/eur$/.test(word)) out.push(word + "e");   // couleur → couleure
+  return out;
 }
 
 /**
@@ -241,7 +275,7 @@ export interface DistractorOptions {
  *
  * Le mot reçu peut contenir un article ("le héros"), qui est préservé.
  */
-export function generateDistractors(full: string, _opts: DistractorOptions = {}): string[] {
+export function generateDistractors(full: string, opts: DistractorOptions = {}): string[] {
   const { article, word } = splitArticle(full);
   if (!word) return [];
 
@@ -263,6 +297,13 @@ export function generateDistractors(full: string, _opts: DistractorOptions = {})
     if (wa !== full) priority.add(wa);
   };
   tryHomophone(word).forEach(addPriority);
+
+  // Spécifique nom : -é/-eur → +e, bypass le filtre genre.
+  if (opts.grammaticalClass === "nom") {
+    for (const v of tryNounEndings(word)) {
+      if (v !== word) priority.add(article + v);
+    }
+  }
 
   tryPhonetic(word).forEach(add);
   tryMorphology(word).forEach(add);

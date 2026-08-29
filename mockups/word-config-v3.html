@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mockup — Configuration mot (v3)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .waveform { display: flex; align-items: center; gap: 2px; height: 32px; }
+    .waveform span {
+      display: inline-block; width: 3px; border-radius: 2px;
+      background: #6366f1;
+      animation: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-14 px-6">
+
+  <div class="max-w-4xl mx-auto space-y-20">
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- INTRO -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <div class="text-center space-y-2">
+      <h1 class="text-2xl font-bold text-gray-800">Mockup — Configuration d'un mot</h1>
+      <p class="text-gray-500 text-sm">3 variantes à comparer. Chaque variante est ouverte sur l'exo <strong>Pièges</strong>, suivie de 4 mini-vignettes (Classe / Définition / Audio / Genre).</p>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- VARIANTE 1 — SIDEBAR VERTICALE -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <section class="space-y-4">
+      <div>
+        <span class="inline-block bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full mb-1">Variante 1</span>
+        <h2 class="text-lg font-bold text-gray-800">Sidebar verticale</h2>
+        <p class="text-gray-500 text-sm">5 onglets à gauche (icône + label), zone d'édition à droite. Modale ~640×560 px.</p>
+      </div>
+
+      <!-- Backdrop + Modale -->
+      <div class="relative rounded-2xl overflow-hidden bg-black/40 flex items-center justify-center" style="min-height:620px;">
+        <!-- Modale -->
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col" style="width:640px;height:560px;">
+
+          <!-- Header -->
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-3 flex items-center justify-between flex-shrink-0">
+            <div>
+              <div class="text-white font-bold text-base leading-tight">le prochain</div>
+              <div class="text-purple-200 text-xs">Dictée n°3 · mot n°7 · lemme : <em>prochain</em></div>
+            </div>
+            <button class="text-white/70 hover:text-white text-xl leading-none">✕</button>
+          </div>
+
+          <!-- Corps -->
+          <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar onglets -->
+            <nav class="w-44 bg-gray-50 border-r border-gray-200 flex flex-col py-2 flex-shrink-0">
+              <button class="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-amber-50 border-r-2 border-amber-500 text-amber-700">
+                <span>🪤</span><span>Pièges</span>
+              </button>
+              <button class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100">
+                <span>🔤</span><span>Classe gram.</span>
+              </button>
+              <button class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100">
+                <span>📖</span><span>Définition</span>
+              </button>
+              <button class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100">
+                <span>🎧</span><span>Audio mot</span>
+              </button>
+              <button class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100">
+                <span>🏷️</span><span>Genre</span>
+              </button>
+            </nav>
+
+            <!-- Zone édition -->
+            <div class="flex-1 p-5 overflow-hidden flex flex-col gap-3">
+              <div class="text-sm font-semibold text-amber-700">🪤 Pièges — Choix orthographique</div>
+              <p class="text-xs text-gray-500">Ces variantes sont proposées à l'élève comme distracteurs. Cliquer sur ✕ pour supprimer.</p>
+
+              <!-- Chips existants -->
+              <div class="flex flex-wrap gap-2">
+                <span class="flex items-center gap-1 bg-amber-100 text-amber-800 text-sm px-3 py-1 rounded-full font-medium">flu (e) <button class="text-amber-500 hover:text-amber-700 ml-1">✕</button></span>
+                <span class="flex items-center gap-1 bg-amber-100 text-amber-800 text-sm px-3 py-1 rounded-full font-medium">floue <button class="text-amber-500 hover:text-amber-700 ml-1">✕</button></span>
+                <span class="flex items-center gap-1 bg-amber-100 text-amber-800 text-sm px-3 py-1 rounded-full font-medium">fou (e) <button class="text-amber-500 hover:text-amber-700 ml-1">✕</button></span>
+              </div>
+
+              <!-- Ajouter un piège -->
+              <div class="flex gap-2 mt-1">
+                <input type="text" placeholder="Nouveau piège…" class="flex-1 border border-amber-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 bg-amber-50" />
+                <button class="bg-amber-500 hover:bg-amber-600 text-white text-sm px-3 py-1.5 rounded-lg font-medium">+ Ajouter</button>
+              </div>
+
+              <div class="mt-auto text-xs text-gray-400 italic">3 pièges · modifié le 10/05/2026</div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="border-t border-gray-100 px-5 py-3 flex justify-end gap-2 flex-shrink-0">
+            <button class="text-sm text-gray-500 hover:text-gray-700 px-4 py-1.5 rounded-lg border border-gray-200">Annuler</button>
+            <button class="text-sm bg-purple-600 hover:bg-purple-700 text-white px-4 py-1.5 rounded-lg font-medium">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini-vignettes -->
+      <div class="grid grid-cols-4 gap-3">
+        <!-- Classe -->
+        <div class="bg-white rounded-xl shadow border border-cyan-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold truncate">le prochain</div>
+          <div class="flex h-full overflow-hidden">
+            <div class="w-10 bg-gray-50 border-r border-gray-100 flex flex-col gap-0.5 py-1">
+              <div class="w-full h-4 bg-gray-100 rounded-sm mx-auto" style="width:80%;"></div>
+              <div class="w-full h-4 bg-cyan-100 border-l-2 border-cyan-500 rounded-sm mx-auto" style="width:80%;"></div>
+              <div class="w-full h-4 bg-gray-100 rounded-sm mx-auto" style="width:80%;"></div>
+            </div>
+            <div class="flex-1 p-2 flex flex-col gap-1">
+              <div class="text-xs font-semibold text-cyan-700">🔤 Classe gram.</div>
+              <div class="flex flex-wrap gap-1">
+                <span class="bg-cyan-600 text-white text-xs px-2 py-0.5 rounded-full font-medium">nom</span>
+                <span class="bg-cyan-50 text-cyan-700 text-xs px-2 py-0.5 rounded-full border border-cyan-200">verbe</span>
+                <span class="bg-cyan-50 text-cyan-700 text-xs px-2 py-0.5 rounded-full border border-cyan-200">adj.</span>
+              </div>
+              <div class="text-xs text-cyan-500 mt-auto">↺ revenir à l'auto (adjectif)</div>
+            </div>
+          </div>
+        </div>
+        <!-- Définition -->
+        <div class="bg-white rounded-xl shadow border border-emerald-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold truncate">le prochain</div>
+          <div class="flex h-full overflow-hidden">
+            <div class="w-10 bg-gray-50 border-r border-gray-100 flex flex-col gap-0.5 py-1">
+              <div class="w-full h-4 bg-gray-100 rounded-sm mx-auto" style="width:80%;"></div>
+              <div class="w-full h-4 bg-gray-100 rounded-sm mx-auto" style="width:80%;"></div>
+              <div class="w-full h-4 bg-emerald-100 border-l-2 border-emerald-500 rounded-sm mx-auto" style="width:80%;"></div>
+            </div>
+            <div class="flex-1 p-2 flex flex-col gap-1">
+              <div class="text-xs font-semibold text-emerald-700">📖 Définition</div>
+              <textarea class="text-xs border border-emerald-200 rounded bg-emerald-50 w-full p-1.5 resize-none" rows="3" readonly>Qui vient juste après dans le temps</textarea>
+            </div>
+          </div>
+        </div>
+        <!-- Audio -->
+        <div class="bg-white rounded-xl shadow border border-indigo-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold truncate">le prochain</div>
+          <div class="flex h-full overflow-hidden">
+            <div class="w-10 bg-gray-50 border-r border-gray-100 flex flex-col gap-0.5 py-1">
+              <div class="w-full h-4 bg-gray-100 rounded-sm mx-auto" style="width:80%;"></div>
+              <div class="w-full h-4 bg-gray-100 rounded-sm mx-auto" style="width:80%;"></div>
+              <div class="w-full h-4 bg-indigo-100 border-l-2 border-indigo-500 rounded-sm mx-auto" style="width:80%;"></div>
+            </div>
+            <div class="flex-1 p-2 flex flex-col gap-1">
+              <div class="text-xs font-semibold text-indigo-700">🎧 Audio mot</div>
+              <div class="flex items-end gap-px bg-indigo-50 rounded px-1 py-1" style="height:32px;">
+                <span class="inline-block w-1 rounded bg-indigo-300" style="height:8px;"></span>
+                <span class="inline-block w-1 rounded bg-indigo-400" style="height:18px;"></span>
+                <span class="inline-block w-1 rounded bg-indigo-500" style="height:28px;"></span>
+                <span class="inline-block w-1 rounded bg-indigo-400" style="height:22px;"></span>
+                <span class="inline-block w-1 rounded bg-indigo-300" style="height:14px;"></span>
+                <span class="inline-block w-1 rounded bg-indigo-400" style="height:20px;"></span>
+                <span class="inline-block w-1 rounded bg-indigo-500" style="height:26px;"></span>
+                <span class="inline-block w-1 rounded bg-indigo-300" style="height:10px;"></span>
+              </div>
+              <div class="flex gap-1 mt-auto">
+                <button class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">▶ Lire</button>
+                <button class="text-xs bg-red-50 text-red-500 px-2 py-0.5 rounded-full">🗑</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Genre -->
+        <div class="bg-white rounded-xl shadow border border-pink-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold truncate">le prochain</div>
+          <div class="flex h-full overflow-hidden">
+            <div class="w-10 bg-gray-50 border-r border-gray-100 flex flex-col gap-0.5 py-1">
+              <div class="w-full h-4 bg-gray-100 rounded-sm mx-auto" style="width:80%;"></div>
+              <div class="w-full h-4 bg-gray-100 rounded-sm mx-auto" style="width:80%;"></div>
+              <div class="w-full h-4 bg-pink-100 border-l-2 border-pink-500 rounded-sm mx-auto" style="width:80%;"></div>
+            </div>
+            <div class="flex-1 p-2 flex flex-col gap-2">
+              <div class="text-xs font-semibold text-pink-700">🏷️ Genre</div>
+              <p class="text-xs text-gray-400">Lecture seule — extrait de l'article.</p>
+              <span class="bg-pink-100 text-pink-700 text-sm px-3 py-1 rounded-full font-semibold w-fit">le</span>
+              <p class="text-xs text-gray-400 italic">→ masculin singulier</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- VARIANTE 2 — TABS HORIZONTALES -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <section class="space-y-4">
+      <div>
+        <span class="inline-block bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-1">Variante 2</span>
+        <h2 class="text-lg font-bold text-gray-800">Tabs horizontales</h2>
+        <p class="text-gray-500 text-sm">5 tabs sous le header, zone d'édition en dessous. Modale ~580×560 px.</p>
+      </div>
+
+      <div class="relative rounded-2xl overflow-hidden bg-black/40 flex items-center justify-center" style="min-height:620px;">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col" style="width:580px;height:560px;">
+
+          <!-- Header -->
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-3 flex items-center justify-between flex-shrink-0">
+            <div>
+              <div class="text-white font-bold text-base">le prochain</div>
+              <div class="text-purple-200 text-xs">Dictée n°3 · mot n°7 · lemme : <em>prochain</em></div>
+            </div>
+            <button class="text-white/70 hover:text-white text-xl">✕</button>
+          </div>
+
+          <!-- Tabs -->
+          <div class="flex border-b border-gray-200 bg-white flex-shrink-0 overflow-x-auto">
+            <button class="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-amber-700 border-b-2 border-amber-500 bg-amber-50 whitespace-nowrap">🪤 Pièges</button>
+            <button class="flex items-center gap-1.5 px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">🔤 Classe</button>
+            <button class="flex items-center gap-1.5 px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">📖 Définition</button>
+            <button class="flex items-center gap-1.5 px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">🎧 Audio</button>
+            <button class="flex items-center gap-1.5 px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 whitespace-nowrap">🏷️ Genre</button>
+          </div>
+
+          <!-- Zone édition -->
+          <div class="flex-1 p-6 flex flex-col gap-4 overflow-hidden">
+            <div class="text-sm font-semibold text-amber-700">🪤 Pièges — Choix orthographique</div>
+            <p class="text-xs text-gray-500">Ces variantes sont proposées à l'élève comme distracteurs. Cliquer sur ✕ pour supprimer.</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="flex items-center gap-1 bg-amber-100 text-amber-800 text-sm px-3 py-1.5 rounded-full font-medium">flu (e) <button class="text-amber-500 ml-1">✕</button></span>
+              <span class="flex items-center gap-1 bg-amber-100 text-amber-800 text-sm px-3 py-1.5 rounded-full font-medium">floue <button class="text-amber-500 ml-1">✕</button></span>
+              <span class="flex items-center gap-1 bg-amber-100 text-amber-800 text-sm px-3 py-1.5 rounded-full font-medium">fou (e) <button class="text-amber-500 ml-1">✕</button></span>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" placeholder="Nouveau piège…" class="flex-1 border border-amber-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 bg-amber-50" />
+              <button class="bg-amber-500 text-white text-sm px-4 py-2 rounded-xl font-medium">+ Ajouter</button>
+            </div>
+            <div class="mt-auto text-xs text-gray-400 italic">3 pièges · modifié le 10/05/2026</div>
+          </div>
+
+          <!-- Footer -->
+          <div class="border-t border-gray-100 px-5 py-3 flex justify-between items-center flex-shrink-0">
+            <div class="flex gap-1">
+              <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span>
+              <span class="w-2 h-2 rounded-full bg-gray-200 inline-block"></span>
+              <span class="w-2 h-2 rounded-full bg-gray-200 inline-block"></span>
+              <span class="w-2 h-2 rounded-full bg-gray-200 inline-block"></span>
+              <span class="w-2 h-2 rounded-full bg-gray-200 inline-block"></span>
+            </div>
+            <div class="flex gap-2">
+              <button class="text-sm text-gray-500 px-4 py-1.5 rounded-lg border border-gray-200">Annuler</button>
+              <button class="text-sm bg-purple-600 text-white px-4 py-1.5 rounded-lg font-medium">Enregistrer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini-vignettes -->
+      <div class="grid grid-cols-4 gap-3">
+        <!-- Classe -->
+        <div class="bg-white rounded-xl shadow border border-cyan-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold">le prochain</div>
+          <div class="flex border-b border-gray-100 text-xs">
+            <div class="px-2 py-1 text-gray-400">🪤</div>
+            <div class="px-2 py-1 text-cyan-700 border-b-2 border-cyan-500 font-medium">🔤</div>
+            <div class="px-2 py-1 text-gray-400">📖</div>
+            <div class="px-2 py-1 text-gray-400">🎧</div>
+            <div class="px-2 py-1 text-gray-400">🏷️</div>
+          </div>
+          <div class="p-2 flex flex-col gap-1">
+            <div class="text-xs font-semibold text-cyan-700">Classe grammaticale</div>
+            <div class="flex flex-wrap gap-1">
+              <span class="bg-cyan-600 text-white text-xs px-2 py-0.5 rounded-full">nom</span>
+              <span class="bg-cyan-50 text-cyan-600 text-xs px-1.5 py-0.5 rounded-full border border-cyan-200">adj.</span>
+              <span class="bg-cyan-50 text-cyan-600 text-xs px-1.5 py-0.5 rounded-full border border-cyan-200">verbe</span>
+            </div>
+            <div class="text-xs text-cyan-500 mt-1">↺ revenir à l'auto (adjectif)</div>
+          </div>
+        </div>
+        <!-- Définition -->
+        <div class="bg-white rounded-xl shadow border border-emerald-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold">le prochain</div>
+          <div class="flex border-b border-gray-100 text-xs">
+            <div class="px-2 py-1 text-gray-400">🪤</div>
+            <div class="px-2 py-1 text-gray-400">🔤</div>
+            <div class="px-2 py-1 text-emerald-700 border-b-2 border-emerald-500 font-medium">📖</div>
+            <div class="px-2 py-1 text-gray-400">🎧</div>
+            <div class="px-2 py-1 text-gray-400">🏷️</div>
+          </div>
+          <div class="p-2 flex flex-col gap-1">
+            <div class="text-xs font-semibold text-emerald-700">Définition</div>
+            <textarea class="text-xs border border-emerald-200 rounded bg-emerald-50 w-full p-1.5 resize-none" rows="3" readonly>Qui vient juste après dans le temps</textarea>
+          </div>
+        </div>
+        <!-- Audio -->
+        <div class="bg-white rounded-xl shadow border border-indigo-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold">le prochain</div>
+          <div class="flex border-b border-gray-100 text-xs">
+            <div class="px-2 py-1 text-gray-400">🪤</div>
+            <div class="px-2 py-1 text-gray-400">🔤</div>
+            <div class="px-2 py-1 text-gray-400">📖</div>
+            <div class="px-2 py-1 text-indigo-700 border-b-2 border-indigo-500 font-medium">🎧</div>
+            <div class="px-2 py-1 text-gray-400">🏷️</div>
+          </div>
+          <div class="p-2 flex flex-col gap-1.5">
+            <div class="text-xs font-semibold text-indigo-700">Audio mot</div>
+            <div class="flex items-end gap-px bg-indigo-50 rounded px-2 py-1" style="height:30px;">
+              <span class="inline-block w-1 rounded-sm bg-indigo-300" style="height:8px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-400" style="height:16px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-500" style="height:26px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-400" style="height:20px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-300" style="height:12px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-400" style="height:18px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-500" style="height:24px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-300" style="height:9px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-400" style="height:15px;"></span>
+            </div>
+            <div class="flex gap-1">
+              <button class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">▶ Lire</button>
+              <button class="text-xs bg-red-50 text-red-500 px-2 py-0.5 rounded-full">🗑 Suppr.</button>
+            </div>
+          </div>
+        </div>
+        <!-- Genre -->
+        <div class="bg-white rounded-xl shadow border border-pink-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold">le prochain</div>
+          <div class="flex border-b border-gray-100 text-xs">
+            <div class="px-2 py-1 text-gray-400">🪤</div>
+            <div class="px-2 py-1 text-gray-400">🔤</div>
+            <div class="px-2 py-1 text-gray-400">📖</div>
+            <div class="px-2 py-1 text-gray-400">🎧</div>
+            <div class="px-2 py-1 text-pink-700 border-b-2 border-pink-500 font-medium">🏷️</div>
+          </div>
+          <div class="p-2 flex flex-col gap-2">
+            <div class="text-xs font-semibold text-pink-700">Genre</div>
+            <p class="text-xs text-gray-400">Lecture seule</p>
+            <span class="bg-pink-100 text-pink-700 text-sm px-3 py-0.5 rounded-full font-semibold w-fit">le</span>
+            <p class="text-xs text-gray-400">→ masculin singulier</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!-- VARIANTE 3 — TOUT-EN-UN COMPACT -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <section class="space-y-4">
+      <div>
+        <span class="inline-block bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full mb-1">Variante 3</span>
+        <h2 class="text-lg font-bold text-gray-800">Tout-en-un compact</h2>
+        <p class="text-gray-500 text-sm">5 sections empilées, chacune ~90 px de haut, accordéon visuel. Pas de scroll. Modale ~520×620 px.</p>
+      </div>
+
+      <div class="relative rounded-2xl overflow-hidden bg-black/40 flex items-center justify-center" style="min-height:680px;">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col" style="width:520px;height:620px;">
+
+          <!-- Header -->
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-3 flex items-center justify-between flex-shrink-0">
+            <div>
+              <div class="text-white font-bold text-base">le prochain</div>
+              <div class="text-purple-200 text-xs">Dictée n°3 · mot n°7 · lemme : <em>prochain</em></div>
+            </div>
+            <button class="text-white/70 hover:text-white text-xl">✕</button>
+          </div>
+
+          <!-- Sections empilées -->
+          <div class="flex-1 flex flex-col divide-y divide-gray-100 overflow-hidden">
+
+            <!-- Section Pièges (ouverte / active) -->
+            <div class="bg-amber-50 flex flex-col" style="flex:2;">
+              <div class="flex items-center gap-2 px-4 pt-2.5 pb-1">
+                <span class="text-amber-600 font-bold text-sm">🪤 Pièges</span>
+                <span class="ml-auto text-xs text-amber-400">3 pièges</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5 px-4 pb-1">
+                <span class="flex items-center gap-1 bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">flu (e) <button class="text-amber-400 ml-0.5">✕</button></span>
+                <span class="flex items-center gap-1 bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">floue <button class="text-amber-400 ml-0.5">✕</button></span>
+                <span class="flex items-center gap-1 bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-medium">fou (e) <button class="text-amber-400 ml-0.5">✕</button></span>
+                <button class="text-xs bg-amber-500 text-white px-2.5 py-1 rounded-full">+ Ajouter</button>
+              </div>
+            </div>
+
+            <!-- Section Classe grammaticale (compacte) -->
+            <div class="bg-cyan-50 flex flex-col" style="flex:2;">
+              <div class="flex items-center gap-2 px-4 pt-2.5 pb-1">
+                <span class="text-cyan-600 font-bold text-sm">🔤 Classe grammaticale</span>
+                <span class="ml-auto text-xs text-cyan-400">édité : nom</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5 px-4 pb-1">
+                <span class="bg-cyan-600 text-white text-xs px-2.5 py-1 rounded-full font-medium">nom</span>
+                <span class="bg-white text-cyan-700 text-xs px-2.5 py-1 rounded-full border border-cyan-200">nom propre</span>
+                <span class="bg-white text-cyan-700 text-xs px-2.5 py-1 rounded-full border border-cyan-200">verbe</span>
+                <span class="bg-white text-cyan-700 text-xs px-2.5 py-1 rounded-full border border-cyan-200">adjectif</span>
+                <span class="bg-white text-cyan-700 text-xs px-2.5 py-1 rounded-full border border-cyan-200">déterminant</span>
+                <span class="bg-white text-cyan-700 text-xs px-2.5 py-1 rounded-full border border-cyan-200">pronom</span>
+                <span class="bg-white text-cyan-700 text-xs px-2.5 py-1 rounded-full border border-cyan-200">adverbe</span>
+                <span class="bg-white text-cyan-700 text-xs px-2.5 py-1 rounded-full border border-cyan-200">préposition</span>
+                <span class="bg-white text-cyan-700 text-xs px-2.5 py-1 rounded-full border border-cyan-200">conjonction</span>
+              </div>
+              <div class="px-4 text-xs text-cyan-400 pb-1">↺ revenir à l'auto-détection (adjectif)</div>
+            </div>
+
+            <!-- Section Définition -->
+            <div class="bg-emerald-50 flex items-center gap-3 px-4" style="flex:1; min-height:56px;">
+              <span class="text-emerald-600 font-bold text-sm shrink-0">📖 Définition</span>
+              <div class="flex-1 min-w-0">
+                <div class="border border-emerald-200 rounded-lg px-2.5 py-1.5 bg-white text-xs text-gray-600 truncate">Qui vient juste après dans le temps</div>
+              </div>
+              <button class="text-xs text-emerald-600 font-medium shrink-0">✏️</button>
+            </div>
+
+            <!-- Section Audio -->
+            <div class="bg-indigo-50 flex items-center gap-3 px-4" style="flex:1; min-height:56px;">
+              <span class="text-indigo-600 font-bold text-sm shrink-0">🎧 Audio</span>
+              <div class="flex items-end gap-px flex-1" style="height:28px;">
+                <span class="inline-block w-1 rounded-sm bg-indigo-300" style="height:7px;"></span>
+                <span class="inline-block w-1 rounded-sm bg-indigo-400" style="height:15px;"></span>
+                <span class="inline-block w-1 rounded-sm bg-indigo-500" style="height:24px;"></span>
+                <span class="inline-block w-1 rounded-sm bg-indigo-400" style="height:19px;"></span>
+                <span class="inline-block w-1 rounded-sm bg-indigo-300" style="height:11px;"></span>
+                <span class="inline-block w-1 rounded-sm bg-indigo-400" style="height:17px;"></span>
+                <span class="inline-block w-1 rounded-sm bg-indigo-500" style="height:22px;"></span>
+                <span class="inline-block w-1 rounded-sm bg-indigo-300" style="height:8px;"></span>
+                <span class="inline-block w-1 rounded-sm bg-indigo-400" style="height:14px;"></span>
+                <span class="inline-block w-1 rounded-sm bg-indigo-500" style="height:20px;"></span>
+                <span class="inline-block w-1 rounded-sm bg-indigo-300" style="height:6px;"></span>
+                <span class="inline-block w-1 rounded-sm bg-indigo-400" style="height:16px;"></span>
+              </div>
+              <div class="flex gap-1.5 shrink-0">
+                <button class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-medium">▶</button>
+                <button class="text-xs bg-red-50 text-red-500 px-2 py-1 rounded-full">🗑</button>
+              </div>
+            </div>
+
+            <!-- Section Genre -->
+            <div class="bg-pink-50 flex items-center gap-3 px-4" style="flex:1; min-height:56px;">
+              <span class="text-pink-600 font-bold text-sm shrink-0">🏷️ Genre</span>
+              <span class="bg-pink-100 text-pink-700 text-base px-4 py-1 rounded-full font-bold">le</span>
+              <span class="text-xs text-pink-400">masculin singulier · lecture seule</span>
+            </div>
+
+          </div>
+
+          <!-- Footer -->
+          <div class="border-t border-gray-100 px-5 py-3 flex justify-end gap-2 flex-shrink-0 bg-white">
+            <button class="text-sm text-gray-500 px-4 py-1.5 rounded-lg border border-gray-200">Annuler</button>
+            <button class="text-sm bg-purple-600 text-white px-4 py-1.5 rounded-lg font-medium">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini-vignettes (pour variante 3 les vignettes montrent un focus différent) -->
+      <div class="grid grid-cols-4 gap-3">
+        <!-- Classe active -->
+        <div class="bg-white rounded-xl shadow border border-cyan-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold">le prochain</div>
+          <div class="bg-amber-50 px-2 py-1.5 border-b border-gray-100 text-xs text-amber-500">🪤 flu (e) · floue · fou (e)</div>
+          <div class="bg-cyan-50 px-2 py-1.5 border-b-2 border-cyan-400">
+            <div class="text-xs font-semibold text-cyan-700 mb-1">🔤 Classe gram.</div>
+            <div class="flex flex-wrap gap-1">
+              <span class="bg-cyan-600 text-white text-xs px-1.5 py-0.5 rounded-full">nom</span>
+              <span class="bg-white text-cyan-600 text-xs px-1.5 py-0.5 rounded-full border border-cyan-200">adj.</span>
+              <span class="bg-white text-cyan-600 text-xs px-1.5 py-0.5 rounded-full border border-cyan-200">verbe</span>
+            </div>
+            <div class="text-xs text-cyan-400 mt-0.5">↺ auto: adjectif</div>
+          </div>
+          <div class="bg-emerald-50 px-2 py-1 text-xs text-emerald-500 truncate">📖 Qui vient juste après…</div>
+        </div>
+        <!-- Définition active -->
+        <div class="bg-white rounded-xl shadow border border-emerald-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold">le prochain</div>
+          <div class="bg-amber-50 px-2 py-1.5 border-b border-gray-100 text-xs text-amber-500">🪤 flu (e) · floue · fou (e)</div>
+          <div class="bg-cyan-50 px-2 py-1 border-b border-gray-100 text-xs text-cyan-500">🔤 nom <span class="text-cyan-300">(↺ adj.)</span></div>
+          <div class="bg-emerald-50 px-2 py-1.5 border-b-2 border-emerald-400 flex-1">
+            <div class="text-xs font-semibold text-emerald-700 mb-1">📖 Définition</div>
+            <textarea class="text-xs border border-emerald-200 rounded bg-white w-full p-1 resize-none" rows="2" readonly>Qui vient juste après dans le temps</textarea>
+          </div>
+        </div>
+        <!-- Audio actif -->
+        <div class="bg-white rounded-xl shadow border border-indigo-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold">le prochain</div>
+          <div class="bg-amber-50 px-2 py-1.5 border-b border-gray-100 text-xs text-amber-500">🪤 flu (e) · floue · fou (e)</div>
+          <div class="bg-cyan-50 px-2 py-1 border-b border-gray-100 text-xs text-cyan-500">🔤 nom</div>
+          <div class="bg-emerald-50 px-2 py-1 border-b border-gray-100 text-xs text-emerald-500 truncate">📖 Qui vient juste après…</div>
+          <div class="bg-indigo-50 px-2 py-1.5 border-b-2 border-indigo-400">
+            <div class="text-xs font-semibold text-indigo-700 mb-1">🎧 Audio</div>
+            <div class="flex items-end gap-px mb-1" style="height:20px;">
+              <span class="inline-block w-1 rounded-sm bg-indigo-300" style="height:6px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-400" style="height:12px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-500" style="height:18px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-400" style="height:14px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-300" style="height:8px;"></span>
+              <span class="inline-block w-1 rounded-sm bg-indigo-500" style="height:16px;"></span>
+            </div>
+            <div class="flex gap-1">
+              <button class="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">▶</button>
+              <button class="text-xs bg-red-50 text-red-500 px-1.5 py-0.5 rounded-full">🗑</button>
+            </div>
+          </div>
+        </div>
+        <!-- Genre actif -->
+        <div class="bg-white rounded-xl shadow border border-pink-100 overflow-hidden" style="height:160px;">
+          <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-white text-xs font-semibold">le prochain</div>
+          <div class="bg-amber-50 px-2 py-1.5 border-b border-gray-100 text-xs text-amber-500">🪤 flu (e) · floue · fou (e)</div>
+          <div class="bg-cyan-50 px-2 py-1 border-b border-gray-100 text-xs text-cyan-500">🔤 nom</div>
+          <div class="bg-emerald-50 px-2 py-1 border-b border-gray-100 text-xs text-emerald-500 truncate">📖 Qui vient juste après…</div>
+          <div class="bg-indigo-50 px-2 py-1 border-b border-gray-100 text-xs text-indigo-500">🎧 ▶ waveform</div>
+          <div class="bg-pink-50 px-2 py-1.5 border-b-2 border-pink-400 flex items-center gap-2">
+            <span class="text-xs font-semibold text-pink-700">🏷️ Genre</span>
+            <span class="bg-pink-100 text-pink-700 text-sm px-2 py-0.5 rounded-full font-bold">le</span>
+            <span class="text-xs text-pink-400">masc. sg.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pied de page -->
+    <div class="text-center text-xs text-gray-400 pb-8">
+      Mockup statique · DictéeMaster · lundi 10 mai 2026
+    </div>
+
+  </div>
+</body>
+</html>

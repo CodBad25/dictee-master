@@ -13,6 +13,7 @@ interface SpellingWord {
   word: string;
   definition: string;
   spelling_errors: string[];
+  grammatical_class?: string | null;
 }
 
 export default function SpellingChoiceMode() {
@@ -33,7 +34,7 @@ export default function SpellingChoiceMode() {
       if (!currentList) return;
       const sb = createClient();
       const { data } = await sb.from("dictee_words")
-        .select("word, definition, spelling_errors, position")
+        .select("word, definition, spelling_errors, position, grammatical_class")
         .eq("dictee_id", currentList.id)
         .order("position");
       if (data && data.length > 0) {
@@ -57,7 +58,7 @@ export default function SpellingChoiceMode() {
     let errors = (w.spelling_errors || []).filter(e => e && e.trim() !== w.word);
 
     if (errors.length === 0) {
-      errors = generateDistractors(w.word);
+      errors = generateDistractors(w.word, { grammaticalClass: w.grammatical_class ?? null });
     }
 
     // Take 1-2 wrong choices

@@ -9,6 +9,8 @@ import {
   loadClassDefaultOrder,
   loadAllDicteeOverrides,
   updateActivityOrder,
+  updateClassOptionalActivities,
+  loadClassOptionalActivities,
   saveDicteeOverride,
   deleteDicteeOverride,
   updateWordSpellingErrors,
@@ -63,6 +65,9 @@ export default function ParcoursConfig({
   // Ordre par défaut de la classe (toujours les 8 activités, order = position)
   const [defaultOrder, setDefaultOrder] = useState<string[]>(ALL_ACTIVITIES);
   const [defaultDisabled, setDefaultDisabled] = useState<Set<string>>(new Set());
+  // Activités FACULTATIVES (niveau classe) : visibles côté élève mais ne bloquent
+  // pas la progression vers l'exercice suivant.
+  const [defaultOptional, setDefaultOptional] = useState<Set<string>>(new Set());
   const [defaultOrderDirty, setDefaultOrderDirty] = useState(false);
 
   // Mode : classe entière ou élève spécifique
@@ -117,9 +122,10 @@ export default function ParcoursConfig({
   // Chargement au montage et quand on change d'élève
   useEffect(() => {
     const load = async () => {
-      const [order, allOverrides] = await Promise.all([
+      const [order, allOverrides, optional] = await Promise.all([
         loadClassDefaultOrder(dmClassId),
         loadAllDicteeOverrides(dmClassId, selectedStudentId),
+        loadClassOptionalActivities(dmClassId),
       ]);
       const savedOrder = order || ALL_ACTIVITIES;
       // L'ordre sauvegardé ne contient que les activités actives
@@ -128,6 +134,7 @@ export default function ParcoursConfig({
       const fullOrder = [...savedOrder, ...ALL_ACTIVITIES.filter(a => !savedOrder.includes(a))];
       setDefaultOrder(fullOrder);
       setDefaultDisabled(disabled);
+      setDefaultOptional(new Set(optional));
       setOverrides(allOverrides);
       setLoading(false);
     };
@@ -256,7 +263,11 @@ export default function ParcoursConfig({
     setSaving(true);
     try {
       const activeOrder = defaultOrder.filter(a => !defaultDisabled.has(a));
+      // Une activité désactivée ne peut pas rester marquée facultative.
+      const optional = activeOrder.filter(a => defaultOptional.has(a));
       await updateActivityOrder(dmClassId, activeOrder);
+      await updateClassOptionalActivities(dmClassId, optional);
+      setDefaultOptional(new Set(optional));
       setDefaultOrderDirty(false);
       toast.success("Ordre par défaut sauvegardé");
     } catch {
@@ -504,6 +515,7 @@ export default function ParcoursConfig({
                     const info = ACTIVITY_LABELS[activity];
                     if (!info) return null;
                     const isDisabled = defaultDisabled.has(activity);
+                    const isOptional = defaultOptional.has(activity);
                     return (
                       <Reorder.Item
                         key={activity}
@@ -529,6 +541,35 @@ export default function ParcoursConfig({
                           <p className={`font-semibold ${isDisabled ? "text-gray-400 line-through" : "text-gray-900"}`}>{info.label}</p>
                           <p className={`text-sm ${isDisabled ? "text-gray-300" : "text-gray-600"}`}>{info.desc}</p>
                         </div>
+                        {/* Chip « Facultatif » — l'exercice reste visible mais ne bloque
+                            plus la progression (ex : Dictionnaire facultatif pour les 6A). */}
+                        {!isDisabled && (
+                          <motion.button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDefaultOptional(prev => {
+                                const next = new Set(prev);
+                                if (next.has(activity)) next.delete(activity);
+                                else next.add(activity);
+                                return next;
+                              });
+                              setDefaultOrderDirty(true);
+                            }}
+                            whileTap={{ scale: 0.95 }}
+                            title={
+                              isOptional
+                                ? "Exercice facultatif : l'élève peut le sauter"
+                                : "Exercice obligatoire : il faut le faire pour continuer"
+                            }
+                            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                              isOptional
+                                ? "bg-amber-100 border-amber-300 text-amber-800"
+                                : "bg-white border-gray-200 text-gray-400 hover:border-amber-300 hover:text-amber-700"
+                            }`}
+                          >
+                            {isOptional ? "Facultatif" : "Obligatoire"}
+                          </motion.button>
+                        )}
                         <motion.button
                           onClick={(e) => {
                             e.stopPropagation();

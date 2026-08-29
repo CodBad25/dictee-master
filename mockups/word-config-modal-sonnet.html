@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mockup Variante — Configuration par mot (Sonnet)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: ui-sans-serif, system-ui, sans-serif; }
+
+  /* Chip désactivé */
+  .chip-off { text-decoration: line-through; opacity: 0.45; }
+
+  /* Animation d'ouverture de la modale */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .modal-anim { animation: slideUp 0.18s ease-out; }
+
+  /* Scrollbar fine dans la sidebar */
+  .thin-scroll::-webkit-scrollbar { width: 4px; }
+  .thin-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+  /* Ligne d'exercice sélectionnée */
+  .exo-row-active {
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+  }
+  .exo-row {
+    border-left: 3px solid transparent;
+  }
+</style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+<!-- ===== EN-TÊTE de la page ===== -->
+<header class="bg-slate-800 text-white px-6 py-3 shadow-lg">
+  <div class="max-w-5xl mx-auto flex items-center gap-3">
+    <span class="text-xl">🎯</span>
+    <div>
+      <h1 class="font-bold text-sm">DictéeMaster — Parcours · Classe 6A</h1>
+      <p class="text-xs text-slate-400">Mockup statique · Variante Sonnet · Cliquer sur un mot pour configurer</p>
+    </div>
+    <div class="ml-auto flex gap-2 text-xs text-slate-400">
+      <span class="bg-slate-700 px-2 py-1 rounded-md">Dictée n°1</span>
+    </div>
+  </div>
+</header>
+
+<!-- ===== PAGE PRINCIPALE ===== -->
+<main class="max-w-5xl mx-auto p-6 space-y-5">
+
+  <!-- Carte mots -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+    <div class="flex items-center justify-between mb-1">
+      <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Mots de la dictée</h2>
+      <span id="active-count" class="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">20 / 20 actifs</span>
+    </div>
+    <p class="text-xs text-slate-400 mb-4">
+      <strong>Cliquer sur un mot</strong> → configurer ses exercices. Survoler → ⊘ pour désactiver.
+    </p>
+    <div id="words-grid" class="flex flex-wrap gap-2"></div>
+  </div>
+
+  <!-- Note info -->
+  <div class="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-xs text-blue-800 flex gap-2">
+    <span class="mt-0.5">ℹ️</span>
+    <span><strong>Variante de design</strong> : modale en deux colonnes — navigation des exercices à gauche, panneau de configuration à droite. La colonne gauche reste visible en permanence (pas de panneau qui s'expand). Palette bleu ardoise / teal.</span>
+  </div>
+
+</main>
+
+<!-- ===== FOND DE MODALE ===== -->
+<div id="modal-bg"
+     class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 transition-opacity"
+     onclick="closeModal()"></div>
+
+<!-- ===== MODALE PRINCIPALE ===== -->
+<div id="modal"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+
+  <!-- Conteneur animé -->
+  <div id="modal-box"
+       class="modal-anim bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col pointer-events-auto"
+       onclick="event.stopPropagation()">
+
+    <!-- EN-TÊTE MODALE : informations sur le mot sélectionné -->
+    <div class="flex items-start gap-4 px-6 py-4 border-b border-slate-100 bg-slate-50 rounded-t-2xl">
+      <!-- Badge position -->
+      <div class="shrink-0 w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-black text-sm">
+        <span id="modal-pos-badge">#1</span>
+      </div>
+      <!-- Mot + méta -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-baseline gap-2 flex-wrap">
+          <h2 id="modal-word" class="text-2xl font-black text-slate-800 leading-none"></h2>
+          <span id="modal-lemma" class="text-xs text-slate-400 font-normal">lemma</span>
+        </div>
+        <p id="modal-def" class="text-sm text-slate-500 mt-1 line-clamp-2 italic"></p>
+      </div>
+      <!-- Boutons navigation mot précédent / suivant -->
+      <div class="shrink-0 flex gap-1">
+        <button id="btn-prev" onclick="navigateWord(-1)"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition text-lg font-bold disabled:opacity-30"
+                title="Mot précédent">‹</button>
+        <button id="btn-next" onclick="navigateWord(+1)"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition text-lg font-bold"
+                title="Mot suivant">›</button>
+        <button onclick="closeModal()"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-100 hover:text-red-500 transition ml-2"
+                title="Fermer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- CORPS MODALE : disposition 2 colonnes -->
+    <div class="flex flex-1 min-h-0">
+
+      <!-- COLONNE GAUCHE : liste verticale des 9 exercices -->
+      <nav class="w-52 shrink-0 border-r border-slate-100 py-3 thin-scroll overflow-y-auto bg-slate-50 rounded-bl-2xl">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 mb-2">Exercices</p>
+        <div id="exo-list" class="space-y-0.5 px-2"></div>
+      </nav>
+
+      <!-- COLONNE DROITE : panneau de configuration de l'exercice sélectionné -->
+      <div class="flex-1 min-w-0 overflow-y-auto thin-scroll p-5 rounded-br-2xl">
+        <div id="exo-panel-right">
+          <!-- Affiché par défaut quand aucun exo n'est sélectionné -->
+          <div class="h-full flex flex-col items-center justify-center text-slate-400 pt-10 gap-3">
+            <div class="text-4xl">👈</div>
+            <p class="text-sm">Sélectionner un exercice à gauche pour le configurer.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PIED DE MODALE -->
+    <div class="flex items-center justify-between px-6 py-3 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
+      <p class="text-xs text-slate-400">Les modifications sont enregistrées immédiatement en base.</p>
+      <button onclick="closeModal()"
+              class="px-4 py-1.5 bg-slate-800 text-white text-sm font-semibold rounded-lg hover:bg-slate-700 transition">
+        Fermer
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+
+// ── Données : 20 vrais mots de la dictée n°1 ──────────────────────────────
+const WORDS = [
+  {position:0,  word:"le héros",       lemma:"héros",       article:"le",  traps:["le heros","le héro","le éros"],                    def:"Personnage principal et courageux d'une histoire",         auto:"nom",        manual:null},
+  {position:1,  word:"l'épaule",       lemma:"épaule",       article:"l'", traps:["l'epaule","l'épole","l'épeaule"],                   def:"Partie du corps entre le cou et le bras",                  auto:"nom",        manual:null},
+  {position:2,  word:"dangereux",      lemma:"dangereux",    article:null, traps:["dengereux","dangereu","danngereux"],                 def:"Qui peut causer du mal ou un accident",                    auto:"adjectif",   manual:null},
+  {position:3,  word:"sept",           lemma:"sept",         article:null, traps:["sep","septe"],                                      def:"Le chiffre 7",                                             auto:"determinant",manual:null},
+  {position:4,  word:"la soirée",      lemma:"soirée",       article:"la", traps:["la soiree","la soiré","la soirrée"],                 def:"Moment de la journée entre le soir et la nuit",            auto:"nom",        manual:null},
+  {position:5,  word:"une statue",     lemma:"statue",       article:"une",traps:["une statu","une sttatue","une statuee"],             def:"Sculpture représentant une personne ou un animal",         auto:"nom",        manual:null},
+  {position:6,  word:"un canif",       lemma:"canif",        article:"un", traps:["un cenif","un cannif"],                             def:"Petit couteau de poche qui se replie",                     auto:"nom",        manual:null},
+  {position:7,  word:"une trappe",     lemma:"trappe",       article:"une",traps:["une trape","une trapp"],                            def:"Petite porte dans le sol ou le plafond",                   auto:"nom",        manual:null},
+  {position:8,  word:"une pensée",     lemma:"pensée",       article:"une",traps:["une pensee","une pansée","une ponsée"],              def:"Idée qui vient dans notre esprit",                         auto:"nom",        manual:null},
+  {position:9,  word:"tendrement",     lemma:"tendrement",   article:null, traps:["tendreme","tendrem","tandrement"],                   def:"Avec douceur et affection",                                auto:"adverbe",    manual:null},
+  {position:10, word:"le particulier", lemma:"particulier",  article:"le", traps:["le parrticulier","le particuliere"],                 def:"Ce qui est spécial, propre à quelqu'un",                   auto:"nom",        manual:null},
+  {position:11, word:"ronger",         lemma:"ronger",       article:null, traps:["romger","ranger","ronnger"],                        def:"Manger en grattant avec les dents",                        auto:"verbe",      manual:null},
+  {position:12, word:"le marteau",     lemma:"marteau",      article:"le", traps:["le marto","le martau","le marteo"],                  def:"Outil pour enfoncer les clous",                            auto:"nom",        manual:null},
+  {position:13, word:"le dos",         lemma:"dos",          article:"le", traps:["le do","le dose"],                                  def:"Partie arrière du corps",                                  auto:"nom",        manual:null},
+  {position:14, word:"le prochain",    lemma:"prochain",     article:"le", traps:["le prochaain","le prochaen","le prochin"],           def:"Celui qui va arriver bientôt",                             auto:"adjectif",   manual:"adjectif"},
+  {position:15, word:"voltiger",       lemma:"voltiger",     article:null, traps:["volltiger","voltigere"],                            def:"Voler légèrement dans les airs",                           auto:"verbe",      manual:null},
+  {position:16, word:"s'évanouir",     lemma:"s'évanouir",   article:null, traps:["s'evanouir","s'évenouir","s'évanuir"],               def:"Perdre connaissance pendant un moment",                    auto:"verbe",      manual:null},
+  {position:17, word:"une invitation", lemma:"invitation",   article:"une",traps:["une invitatiom","une invitatian","une ainvitation"], def:"Message demandant à quelqu'un de venir",                   auto:"nom",        manual:null},
+  {position:18, word:"le cadeau",      lemma:"cadeau",       article:"le", traps:["le cado","le cadau","le cadeo"],                    def:"Objet offert à quelqu'un pour lui faire plaisir",          auto:"nom",        manual:null},
+  {position:19, word:"un clairon",     lemma:"clairon",      article:"un", traps:["un clairom","un clairan","un cllairon"],             def:"Instrument de musique à vent en cuivre",                   auto:"nom",        manual:null},
+];
+
+// ── Labels classes grammaticales ──────────────────────────────────────────
+const GC_LABELS = {
+  nom:"Nom", nom_propre:"Nom propre", verbe:"Verbe", adjectif:"Adjectif",
+  determinant:"Déterminant", pronom:"Pronom", adverbe:"Adverbe",
+  preposition:"Préposition", conjonction:"Conjonction"
+};
+const GC_KEYS = Object.keys(GC_LABELS);
+
+// ── Définition des 9 exercices ─────────────────────────────────────────────
+// perWord : false = pas de perso, "traps"|"def"|"gc"|"article"|"audio"|"blank" = perso possible
+const EXOS = [
+  { id:"flashcard",       icon:"🃏", label:"Flashcard",             perWord:false,    color:"slate" },
+  { id:"genre",           icon:"🏷️",  label:"Genre",                 perWord:"article",color:"pink"  },
+  { id:"spelling_choice", icon:"✏️",  label:"Choix orthographique",  perWord:"traps",  color:"amber" },
+  { id:"definitions",     icon:"📖", label:"Définitions",            perWord:"def",    color:"emerald"},
+  { id:"dictionary",      icon:"📚", label:"Dictionnaire",           perWord:false,    color:"slate" },
+  { id:"audio_word",      icon:"🎧", label:"Audio mot",              perWord:"audio",  color:"indigo"},
+  { id:"fill_blanks",     icon:"📝", label:"Texte à trous",          perWord:"blank",  color:"orange"},
+  { id:"audio_dictation", icon:"🎙️", label:"Dictée audio",          perWord:false,    color:"slate" },
+  { id:"grammar_class",   icon:"🔤", label:"Classes grammaticales",  perWord:"gc",     color:"teal"  },
+];
+
+// ── État local ─────────────────────────────────────────────────────────────
+const disabled = new Set();   // positions des mots désactivés
+let activeWordPos = null;      // mot ouvert dans la modale
+let activeExoId   = null;      // exercice sélectionné dans la modale
+
+// ── Rendu de la grille de chips ────────────────────────────────────────────
+function renderGrid() {
+  const el = document.getElementById("words-grid");
+  el.innerHTML = "";
+
+  WORDS.forEach((w) => {
+    const off = disabled.has(w.position);
+    const hasGcEdit  = !!w.manual;
+    const trapCount  = w.traps.length;
+
+    const chip = document.createElement("div");
+    chip.className = [
+      "relative inline-flex items-center gap-1.5 pl-3 pr-1 py-1.5",
+      "rounded-xl border cursor-pointer group select-none transition-all",
+      off
+        ? "border-slate-200 bg-white chip-off text-slate-400"
+        : "border-slate-300 bg-white hover:border-teal-400 hover:shadow-sm text-slate-700"
+    ].join(" ");
+
+    chip.onclick = (e) => {
+      // Le clic sur le bouton ⊘ ne doit pas ouvrir la modale
+      if (e.target.closest(".toggle-btn")) return;
+      openModal(w.position);
+    };
+
+    chip.innerHTML = `
+      <!-- Numéro de position en pastille -->
+      <span class="text-[10px] text-slate-400 font-mono w-4 text-center">${w.position + 1}</span>
+
+      <!-- Mot -->
+      <span class="text-sm font-semibold">${w.word}</span>
+
+      <!-- Indicateurs de perso existante -->
+      ${hasGcEdit
+        ? `<span class="text-[10px] text-teal-600 font-bold bg-teal-50 rounded px-1" title="Classe grammaticale modifiée">🔤</span>`
+        : ""}
+      ${trapCount > 0
+        ? `<span class="text-[10px] text-amber-600 font-bold bg-amber-50 rounded px-1" title="${trapCount} piège(s)">🪤${trapCount}</span>`
+        : ""}
+
+      <!-- Bouton désactivation (apparaît au hover) -->
+      <button class="toggle-btn opacity-0 group-hover:opacity-100 transition
+                     w-5 h-5 flex items-center justify-center rounded-full text-xs
+                     ${off ? "bg-teal-100 text-teal-600 hover:bg-teal-200" : "bg-slate-100 text-slate-500 hover:bg-red-100 hover:text-red-500"}"
+              onclick="toggleWord(${w.position})"
+              title="${off ? "Réactiver" : "Désactiver"}">
+        ${off ? "✓" : "⊘"}
+      </button>
+    `;
+    el.appendChild(chip);
+  });
+
+  const actifs = WORDS.length - disabled.size;
+  document.getElementById("active-count").textContent = `${actifs} / ${WORDS.length} actifs`;
+}
+
+function toggleWord(pos) {
+  if (disabled.has(pos)) disabled.delete(pos); else disabled.add(pos);
+  renderGrid();
+}
+
+// ── Ouverture / fermeture de la modale ────────────────────────────────────
+function openModal(pos) {
+  activeWordPos = pos;
+  activeExoId   = null;
+  refreshModalHeader();
+  renderExoList();
+  // Réinitialise le panneau droit
+  document.getElementById("exo-panel-right").innerHTML = `
+    <div class="h-full flex flex-col items-center justify-center text-slate-400 pt-10 gap-3">
+      <div class="text-4xl">👈</div>
+      <p class="text-sm text-center px-4">Sélectionner un exercice à gauche<br>pour le configurer.</p>
+    </div>`;
+
+  document.getElementById("modal-bg").classList.remove("hidden");
+  document.getElementById("modal").classList.remove("hidden");
+}
+
+function closeModal() {
+  document.getElementById("modal-bg").classList.add("hidden");
+  document.getElementById("modal").classList.add("hidden");
+}
+
+// Navigation mot précédent / suivant depuis la modale
+function navigateWord(delta) {
+  const newPos = (activeWordPos + delta + WORDS.length) % WORDS.length;
+  openModal(newPos);
+}
+
+// Mise à jour de l'en-tête de la modale (mot, lemma, définition)
+function refreshModalHeader() {
+  const w = WORDS[activeWordPos];
+  document.getElementById("modal-pos-badge").textContent = `#${w.position + 1}`;
+  document.getElementById("modal-word").textContent = w.word;
+  document.getElementById("modal-lemma").textContent =
+    `lemma : ${w.lemma}` + (w.article ? ` · article : ${w.article}` : "") + ` · ${GC_LABELS[w.manual || w.auto] || w.auto}`;
+  document.getElementById("modal-def").textContent = `« ${w.def} »`;
+}
+
+// ── Liste des exercices (colonne gauche de la modale) ────────────────────
+function renderExoList() {
+  const w   = WORDS[activeWordPos];
+  const nav = document.getElementById("exo-list");
+  nav.innerHTML = "";
+
+  EXOS.forEach((exo) => {
+    const canCustom = exo.perWord !== false;
+    const hasCustom = exoHasCustom(w, exo);
+    const isActive  = activeExoId === exo.id;
+
+    const row = document.createElement("button");
+    row.className = [
+      "exo-row w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all",
+      isActive
+        ? "exo-row-active text-blue-700 font-semibold"
+        : canCustom
+          ? "text-slate-700 hover:bg-slate-100"
+          : "text-slate-400 cursor-default opacity-70"
+    ].join(" ");
+
+    if (isActive) row.classList.remove("exo-row"); // pas de border transparent si actif
+
+    row.onclick = () => {
+      // Les exos sans perso mot sont quand même cliquables pour afficher un message
+      activeExoId = exo.id;
+      renderExoList();     // re-render pour mettre à jour la sélection
+      renderExoPanelRight(w, exo);
+    };
+
+    row.innerHTML = `
+      <span class="text-base w-5 text-center">${exo.icon}</span>
+      <span class="flex-1 text-xs leading-tight">${exo.label}</span>
+      ${hasCustom
+        ? `<span class="w-4 h-4 rounded-full bg-teal-500 text-white flex items-center justify-center text-[9px] font-bold shrink-0">✓</span>`
+        : canCustom
+          ? `<span class="w-4 h-4 rounded-full border-2 border-slate-200 shrink-0"></span>`
+          : `<span class="text-[9px] text-slate-300 shrink-0">—</span>`
+      }
+    `;
+    nav.appendChild(row);
+  });
+}
+
+// Détermine si un exercice a déjà une personnalisation pour ce mot
+function exoHasCustom(w, exo) {
+  if (exo.perWord === "traps")   return w.traps && w.traps.length > 0;
+  if (exo.perWord === "gc")      return !!w.manual;
+  if (exo.perWord === "def")     return !!w.def;
+  if (exo.perWord === "article") return !!w.article;
+  return false;
+}
+
+// ── Panneau de configuration (colonne droite de la modale) ────────────────
+function renderExoPanelRight(w, exo) {
+  const panel = document.getElementById("exo-panel-right");
+
+  switch (exo.perWord) {
+
+    // ── Pièges : Choix orthographique ──
+    case "traps":
+      panel.innerHTML = `
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-xl">✏️</span>
+            <div>
+              <h3 class="font-bold text-slate-800">Choix orthographique</h3>
+              <p class="text-xs text-slate-500">Orthographes fausses proposées comme distracteurs</p>
+            </div>
+          </div>
+
+          <!-- Liste des pièges existants -->
+          <div class="space-y-2 mb-4" id="traps-list">
+            ${w.traps.map((t, i) => `
+              <div class="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                <span class="text-sm flex-1 font-mono text-amber-900">${t}</span>
+                <button class="text-xs text-slate-400 hover:text-red-500 transition px-1" title="Supprimer ce piège">✕</button>
+              </div>
+            `).join("")}
+          </div>
+
+          <!-- Ajout d'un nouveau piège -->
+          <div class="flex gap-2 items-center">
+            <input id="new-trap-input"
+                   class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-400"
+                   placeholder="Ajouter un piège…" />
+            <button class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-semibold transition shadow-sm">
+              + Ajouter
+            </button>
+          </div>
+
+          <!-- Conseils -->
+          <div class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 space-y-1">
+            <p>💡 <strong>Conseil :</strong> inclure toujours l'article dans le piège (ex. <em>le heros</em> et non <em>heros</em>).</p>
+            <p>Les distracteurs doivent être proches visuellement du mot correct.</p>
+          </div>
+        </div>
+      `;
+      break;
+
+    // ── Classe grammaticale ──
+    case "gc":
+      const current = w.manual || w.auto;
+      panel.innerHTML = `
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-xl">🔤</span>
+            <div>
+              <h3 class="font-bold text-slate-800">Classe grammaticale</h3>
+              <p class="text-xs text-slate-500">
+                Auto-détection : <strong class="text-slate-700">${GC_LABELS[w.auto] || w.auto}</strong>
+                ${w.manual ? ` · Édition manuelle : <strong class="text-teal-700">${GC_LABELS[w.manual]}</strong>` : ""}
+              </p>
+            </div>
+          </div>
+
+          <!-- Boutons classes en grille 3 colonnes -->
+          <div class="grid grid-cols-3 gap-2 mb-4">
+            ${GC_KEYS.map((c) => {
+              const isCurrent = current === c;
+              const isManual  = w.manual === c;
+              return `
+                <button class="px-2 py-2 rounded-xl border-2 text-xs font-semibold transition text-center
+                  ${isCurrent
+                    ? isManual
+                      ? "bg-teal-500 border-teal-600 text-white shadow"
+                      : "bg-teal-100 border-teal-400 text-teal-800"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-teal-300 hover:bg-teal-50"
+                  }">
+                  ${GC_LABELS[c]}
+                  ${isCurrent ? " ✓" : ""}
+                </button>`;
+            }).join("")}
+          </div>
+
+          ${w.manual
+            ? `<button class="text-xs text-teal-700 hover:underline flex items-center gap-1">
+                 <span>↺</span> Revenir à l'auto-détection (${GC_LABELS[w.auto]})
+               </button>`
+            : `<p class="text-xs text-slate-400">Aucune modification manuelle · la classe auto sera utilisée.</p>`}
+        </div>
+      `;
+      break;
+
+    // ── Définition ──
+    case "def":
+      panel.innerHTML = `
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-xl">📖</span>
+            <div>
+              <h3 class="font-bold text-slate-800">Définition</h3>
+              <p class="text-xs text-slate-500">Texte affiché dans le mode « Définitions »</p>
+            </div>
+          </div>
+          <textarea class="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm bg-white
+                           focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
+                           resize-none min-h-[80px]">${w.def}</textarea>
+          <p class="text-xs text-slate-400 mt-2">
+            La définition est partagée entre tous les profs. Garder un niveau adapté 6e.
+          </p>
+          <button class="mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition">
+            Enregistrer
+          </button>
+        </div>
+      `;
+      break;
+
+    // ── Article / Genre ──
+    case "article":
+      const articles = ["le","la","l'","les","un","une","des"];
+      panel.innerHTML = `
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-xl">🏷️</span>
+            <div>
+              <h3 class="font-bold text-slate-800">Article / Genre</h3>
+              <p class="text-xs text-slate-500">Article correct que l'élève doit identifier</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2 mb-4">
+            ${articles.map((a) => `
+              <button class="px-4 py-2 rounded-xl border-2 text-sm font-bold transition
+                ${w.article === a
+                  ? "bg-pink-500 border-pink-600 text-white shadow"
+                  : "bg-white border-slate-200 text-slate-600 hover:border-pink-300 hover:bg-pink-50"
+                }">${a}</button>
+            `).join("")}
+          </div>
+          <p class="text-xs text-slate-400">
+            Changer l'article revient à renommer le mot en base. À faire via Supabase si nécessaire.
+          </p>
+        </div>
+      `;
+      break;
+
+    // ── Audio mot ──
+    case "audio":
+      panel.innerHTML = `
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-xl">🎧</span>
+            <div>
+              <h3 class="font-bold text-slate-800">Audio personnalisé</h3>
+              <p class="text-xs text-slate-500">Fichier audio lu dans le mode « Audio mot »</p>
+            </div>
+          </div>
+
+          <!-- Zone d'upload -->
+          <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center bg-slate-50 mb-4 hover:border-indigo-300 hover:bg-indigo-50 transition cursor-pointer">
+            <div class="text-3xl mb-2">📤</div>
+            <p class="text-sm font-semibold text-slate-700">Glisser un fichier audio ici</p>
+            <p class="text-xs text-slate-400 mt-1">ou cliquer pour parcourir — MP3, WAV, OGG</p>
+          </div>
+
+          <p class="text-xs text-slate-400">
+            Sans fichier personnalisé : la synthèse vocale du navigateur sera utilisée (Web Speech API).
+          </p>
+        </div>
+      `;
+      break;
+
+    // ── Texte à trous ──
+    case "blank":
+      panel.innerHTML = `
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-xl">📝</span>
+            <div>
+              <h3 class="font-bold text-slate-800">Texte à trous</h3>
+              <p class="text-xs text-slate-500">Comportement de ce mot dans le mode Texte à trous</p>
+            </div>
+          </div>
+          <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-orange-900">
+            <p>Ce mot est <strong>actif dans la grille</strong> (chip violet). Dans le mode Texte à trous, il deviendra un trou que l'élève doit compléter.</p>
+            <p class="mt-2 text-xs text-orange-700">Pour l'exclure du mode Texte à trous uniquement, désactiver le mot via ⊘ dans la grille principale.</p>
+          </div>
+        </div>
+      `;
+      break;
+
+    // ── Exercices sans personnalisation par mot ──
+    default:
+      panel.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-48 gap-3 text-center px-4">
+          <span class="text-4xl">${exo.icon}</span>
+          <h3 class="font-bold text-slate-700">${exo.label}</h3>
+          <p class="text-sm text-slate-400">
+            Cet exercice n'a pas de personnalisation au niveau du mot.<br>
+            La configuration se fait au niveau de la dictée ou du parcours global.
+          </p>
+        </div>
+      `;
+  }
+}
+
+// ── Initialisation ─────────────────────────────────────────────────────────
+renderGrid();
+
+</script>
+</body>
+</html>

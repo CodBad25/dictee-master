@@ -308,6 +308,30 @@ export async function updateActivityOrder(classId: string, order: string[]) {
   if (error) throw new Error(error.message);
 }
 
+// Met à jour la liste des activités FACULTATIVES de la classe (niveau classe =
+// s'applique à toutes les dictées). Une activité facultative reste visible côté
+// élève mais ne bloque pas la progression vers l'exercice suivant.
+export async function updateClassOptionalActivities(classId: string, optional: string[]) {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dm_classes")
+    .update({ optional_activities: optional })
+    .eq("id", classId);
+  if (error) throw new Error(error.message);
+}
+
+// Charge les activités facultatives de la classe (niveau classe).
+export async function loadClassOptionalActivities(classId: string): Promise<string[]> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dm_classes")
+    .select("optional_activities")
+    .eq("id", classId)
+    .single();
+  const opt = data?.optional_activities;
+  return Array.isArray(opt) ? opt.filter((a: string) => ALL_ACTIVITIES_CANONICAL.includes(a)) : [];
+}
+
 // === PARCOURS CONFIG ===
 
 export async function loadClassDefaultOrder(classId: string): Promise<string[] | null> {
@@ -448,13 +472,13 @@ export async function loadActivityConfig(
   hubClassId: string,
   dicteeId: string,
   studentId?: string | null,
-): Promise<{ activityOrder: string[]; selectedWords: number[] | null }> {
+): Promise<{ activityOrder: string[]; selectedWords: number[] | null; optionalActivities: string[] }> {
   const sb = createClient();
 
   // Trouver la classe par hub_class_id (clé universelle — jamais par name)
   const { data: cls } = await sb
     .from("dm_classes")
-    .select("id, default_activity_order")
+    .select("id, default_activity_order, optional_activities")
     .eq("hub_class_id", hubClassId)
     .maybeSingle();
 
@@ -462,8 +486,14 @@ export async function loadActivityConfig(
     console.warn(
       `[loadActivityConfig] Classe introuvable pour hub_class_id="${hubClassId}". Fallback activé.`
     );
-    return { activityOrder: DEFAULT_ACTIVITY_ORDER_FALLBACK, selectedWords: null };
+    return { activityOrder: DEFAULT_ACTIVITY_ORDER_FALLBACK, selectedWords: null, optionalActivities: [] };
   }
+
+  // Activités facultatives — réglage au niveau classe (s'applique à toutes les
+  // dictées, quel que soit l'override de parcours).
+  const optionalActivities: string[] = Array.isArray(cls.optional_activities)
+    ? cls.optional_activities.filter((a: string) => ALL_ACTIVITIES_CANONICAL.includes(a))
+    : [];
 
   // Priorité 1 : override spécifique à l'élève
   if (studentId) {
@@ -479,6 +509,7 @@ export async function loadActivityConfig(
       return {
         activityOrder: mergeWithCanonical(studentOverride.activity_order),
         selectedWords: studentOverride.selected_words,
+        optionalActivities,
       };
     }
   }
@@ -496,6 +527,7 @@ export async function loadActivityConfig(
     return {
       activityOrder: mergeWithCanonical(override.activity_order),
       selectedWords: override.selected_words,
+      optionalActivities,
     };
   }
 
@@ -503,6 +535,7 @@ export async function loadActivityConfig(
   return {
     activityOrder: mergeWithCanonical(cls.default_activity_order),
     selectedWords: null,
+    optionalActivities,
   };
 }
 

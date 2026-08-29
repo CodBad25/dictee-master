@@ -21,6 +21,8 @@ interface DicteeDetailProps {
   dicteePosition: number;
   activityOrder: string[];
   selectedWords?: number[] | null;
+  /** Activités facultatives (réglées au niveau classe) : jouables mais ne bloquent pas la progression. */
+  optionalActivities?: string[];
   onBack: () => void;
   onStartActivity: (mode: string, words: DicteeWord[]) => void;
 }
@@ -43,6 +45,7 @@ export default function DicteeDetail({
   dicteePosition,
   activityOrder,
   selectedWords,
+  optionalActivities = [],
   onBack,
   onStartActivity,
 }: DicteeDetailProps) {
@@ -50,7 +53,7 @@ export default function DicteeDetail({
   const isTeacher = user?.role === "teacher";
   const [words, setWords] = useState<DicteeWord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [completedActivities, setCompletedActivities] = useState<number>(0);
+  const [completedModes, setCompletedModes] = useState<Set<string>>(new Set());
   const [allSessions, setAllSessions] = useState<any[]>([]);
   const [sessionAttempts, setSessionAttempts] = useState<Record<string, any[]>>({});
   const [persistentErrors, setPersistentErrors] = useState<{ word: string; count: number; lastAnswer: string }[]>([]);
@@ -84,13 +87,7 @@ export default function DicteeDetail({
         .eq("dictee_id", dicteeId);
 
       if (data) {
-        const completedModes = new Set(data.map(r => r.activity_mode));
-        let completed = 0;
-        for (const mode of activityOrder) {
-          if (completedModes.has(mode)) completed++;
-          else break;
-        }
-        setCompletedActivities(completed);
+        setCompletedModes(new Set(data.map(r => r.activity_mode)));
       }
     };
     checkCompletion();
@@ -190,7 +187,28 @@ export default function DicteeDetail({
     );
   }
 
-  const currentStep = completedActivities;
+  // === Progression avec exercices facultatifs ===
+  // Un exercice facultatif reste jouable mais ne bloque JAMAIS la suite : il est
+  // exclu du calcul de verrouillage. Un exercice est déverrouillé dès que tous
+  // les exercices OBLIGATOIRES qui le précèdent sont terminés.
+  const optionalSet = new Set(optionalActivities);
+  const isOptional = (mode: string) => optionalSet.has(mode);
+  const isUnlockedAt = (index: number): boolean => {
+    for (let j = 0; j < index; j++) {
+      const m = activityOrder[j];
+      if (!isOptional(m) && !completedModes.has(m)) return false;
+    }
+    return true;
+  };
+  // Premier exercice obligatoire restant à faire (= l'étape « courante » mise en avant).
+  let firstPendingRequiredIndex = -1;
+  for (let i = 0; i < activityOrder.length; i++) {
+    const m = activityOrder[i];
+    if (!isOptional(m) && !completedModes.has(m) && isUnlockedAt(i)) {
+      firstPendingRequiredIndex = i;
+      break;
+    }
+  }
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -228,23 +246,31 @@ export default function DicteeDetail({
             </h2>
           {activityOrder.map((mode, index) => {
             const info = ACTIVITY_LABELS[mode] || { label: mode, icon: "📋", desc: "" };
-            const isDone = isTeacher ? false : index < completedActivities;
-            const isCurrent = isTeacher ? true : index === currentStep;
-            const isLocked = isTeacher ? false : index > currentStep;
+            const optional = isOptional(mode);
+            const isDone = isTeacher ? false : completedModes.has(mode);
+            const unlocked = isTeacher ? true : isUnlockedAt(index);
+            const isLocked = !isTeacher && !unlocked;
+            // Étape « courante » mise en avant = premier exercice obligatoire restant.
+            const isCurrent = isTeacher ? true : (unlocked && !isDone && index === firstPendingRequiredIndex);
+            // Exercice facultatif jouable (déverrouillé, pas encore fait) → sautable.
+            const isFacultatif = !isTeacher && unlocked && !isDone && optional;
 
             return (
               <button
                 key={mode}
                 onClick={() => {
-                  if (isCurrent) onStartActivity(mode, words);
+                  // Déverrouillé (courant, facultatif ou déjà validé) → (re)jouable. Verrouillé → rien.
+                  if (isTeacher || unlocked || isDone) onStartActivity(mode, words);
                 }}
-                disabled={isLocked || isDone}
+                disabled={isLocked}
                 className={`
                   w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all
                   ${isCurrent
                     ? "border-purple-500 bg-purple-50 shadow-md shadow-purple-100 hover:shadow-lg cursor-pointer"
                     : isDone
-                    ? "border-emerald-300 bg-emerald-50"
+                    ? "border-emerald-300 bg-emerald-50 hover:bg-emerald-100 hover:shadow-md cursor-pointer"
+                    : isFacultatif
+                    ? "border-amber-300 bg-amber-50 hover:bg-amber-100 hover:shadow-md cursor-pointer"
                     : "border-gray-200 bg-gray-100 opacity-60 cursor-default"
                   }
                 `}
@@ -253,7 +279,7 @@ export default function DicteeDetail({
                 <div
                   className={`
                     w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0
-                    ${isDone ? "bg-emerald-500 text-white" : isCurrent ? "bg-purple-600 text-white" : "bg-gray-300 text-gray-500"}
+                    ${isDone ? "bg-emerald-500 text-white" : isCurrent ? "bg-purple-600 text-white" : isFacultatif ? "bg-amber-400 text-white" : "bg-gray-300 text-gray-500"}
                   `}
                 >
                   {isDone ? <Check className="w-5 h-5" /> : isLocked ? <Lock className="w-4 h-4" /> : info.icon}
@@ -261,17 +287,27 @@ export default function DicteeDetail({
 
                 {/* Label */}
                 <div className="flex-1 min-w-0">
-                  <div className={`font-bold text-sm ${isCurrent ? "text-purple-700" : isDone ? "text-emerald-700" : "text-gray-400"}`}>
+                  <div className={`font-bold text-sm flex items-center gap-2 ${isCurrent ? "text-purple-700" : isDone ? "text-emerald-700" : isFacultatif ? "text-amber-700" : "text-gray-400"}`}>
                     {info.label}
+                    {optional && !isDone && (
+                      <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-wide shrink-0">
+                        Facultatif
+                      </span>
+                    )}
                   </div>
-                  <div className={`text-xs ${isCurrent ? "text-purple-500" : isDone ? "text-emerald-500" : "text-gray-300"}`}>
+                  <div className={`text-xs ${isCurrent ? "text-purple-500" : isDone ? "text-emerald-500" : isFacultatif ? "text-amber-600" : "text-gray-300"}`}>
                     {info.desc}
                   </div>
                 </div>
 
-                {/* Flèche */}
-                {isCurrent && (
-                  <ChevronRight className="w-5 h-5 text-purple-400 shrink-0" />
+                {/* Flèche / Refaire */}
+                {(isCurrent || isFacultatif) && (
+                  <ChevronRight className={`w-5 h-5 shrink-0 ${isCurrent ? "text-purple-400" : "text-amber-400"}`} />
+                )}
+                {isDone && (
+                  <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 shrink-0">
+                    <RotateCcw className="w-3.5 h-3.5" /> Refaire
+                  </span>
                 )}
               </button>
             );
