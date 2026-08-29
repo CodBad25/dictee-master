@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import { createClient } from "@/lib/supabase/client";
+import { dicteeMp3Path } from "@/lib/dictee-service";
 import confetti from "canvas-confetti";
 
 type Phase = "loading" | "firstListen" | "dictation" | "result";
@@ -95,8 +96,8 @@ export default function AudioDictationMode() {
     setPhrases(p);
     setDicteePosition(data.position);
 
-    // Préparer l'audio
-    const audio = new Audio(`/audio/dictees/dictee_${data.position}.mp3`);
+    // Préparer l'audio (chemin dérivé de l'id — les positions ne sont plus uniques entre niveaux)
+    const audio = new Audio(dicteeMp3Path(currentList.id));
     audioRef.current = audio;
 
     audio.addEventListener("loadedmetadata", () => {

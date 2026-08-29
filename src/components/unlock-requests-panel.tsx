@@ -15,6 +15,8 @@ import { Check, X } from "lucide-react";
 
 interface UnlockRequestsPanelProps {
   classId: string | null;
+  // Niveau de la classe : scope les chips d'historique sur le bon corpus
+  level?: "6e" | "5e";
 }
 
 type StudentStats = Record<string, { bestScore: number; attempts: number; lastMode: string }>;
@@ -37,15 +39,15 @@ function relativeTime(iso: string): string {
   return `il y a ${d}j`;
 }
 
-export default function UnlockRequestsPanel({ classId }: UnlockRequestsPanelProps) {
+export default function UnlockRequestsPanel({ classId, level = "6e" }: UnlockRequestsPanelProps) {
   const [requests, setRequests] = useState<UnlockRequest[]>([]);
   const [dictees, setDictees] = useState<Dictee[]>([]);
   const [statsByStudent, setStatsByStudent] = useState<Record<string, StudentStats>>({});
 
-  // Charger la liste des dictées (titre + position) une seule fois
+  // Charger la liste des dictées du niveau de la classe
   useEffect(() => {
-    loadAllDictees().then(setDictees).catch(() => {});
-  }, []);
+    loadAllDictees(level).then(setDictees).catch(() => {});
+  }, [level]);
 
   // Polling 5s sur les demandes pending de la classe sélectionnée
   useEffect(() => {

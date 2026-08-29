@@ -16,12 +16,19 @@ export interface DicteeResult {
   created_at: string;
 }
 
+export type DicteeLevel = "6e" | "5e";
+
 export interface Dictee {
   id: string;
   title: string;
   position: number;
   share_code: string;
   fill_blanks_text: string;
+  level: DicteeLevel;
+  // Métadonnées 5e (NULL sur le corpus 6e)
+  ortho_point?: string | null;
+  lexical_theme?: string | null;
+  star_word?: string | null;
 }
 
 export interface DicteeWord {
@@ -49,12 +56,23 @@ export interface FillBlanksVariant {
 
 // === DICTÉES ===
 
-export async function loadAllDictees(): Promise<Dictee[]> {
+// Chemin du MP3 de la dictée complète, dérivé de l'ID (et non de la position,
+// qui n'est plus unique entre niveaux) : dictee-3 → dictee_3.mp3,
+// dictee-5e-3 → dictee_5e_3.mp3. Fallback Web Speech si le fichier n'existe pas.
+export const dicteeMp3Path = (dicteeId: string) =>
+  `/audio/dictees/${dicteeId.replace(/-/g, "_")}.mp3`;
+
+// Sans argument : tout le corpus (vues admin). Avec un niveau : uniquement
+// les dictées de ce niveau — à utiliser partout où une classe est en jeu
+// (grilles, notes /20, exports), sinon les dénominateurs sont faux.
+export async function loadAllDictees(level?: DicteeLevel): Promise<Dictee[]> {
   const sb = createClient();
-  const { data } = await sb
+  let query = sb
     .from("dictees")
-    .select("id, title, position, share_code, fill_blanks_text")
+    .select("id, title, position, share_code, fill_blanks_text, level, ortho_point, lexical_theme, star_word")
     .order("position");
+  if (level) query = query.eq("level", level);
+  const { data } = await query;
   return data || [];
 }
 
@@ -141,6 +159,21 @@ export async function getDmClassIdByHub(hubClassId: string): Promise<string | nu
     .eq("hub_class_id", hubClassId)
     .maybeSingle();
   return data?.id ?? null;
+}
+
+// Variante qui remonte aussi le niveau de la classe (source de vérité du
+// filtrage des dictées côté élève — ne jamais déduire le niveau du localStorage).
+export async function getDmClassByHub(
+  hubClassId: string
+): Promise<{ id: string; level: DicteeLevel } | null> {
+  const sb = createClient();
+  const { data } = await sb
+    .from("dm_classes")
+    .select("id, level")
+    .eq("hub_class_id", hubClassId)
+    .maybeSingle();
+  if (!data) return null;
+  return { id: data.id, level: (data.level as DicteeLevel) || "6e" };
 }
 
 export async function saveResult(params: {
@@ -274,13 +307,14 @@ export async function loadTeacherClasses(teacherId: string) {
   return data || [];
 }
 
-export async function createClass(teacherId: string, name: string) {
+export async function createClass(teacherId: string, name: string, level: DicteeLevel = "6e") {
   const sb = createClient();
   const { data, error } = await sb
     .from("dm_classes")
     .insert({
       teacher_id: teacherId,
       name,
+      level,
       unlocked_dictees: [1],
       default_activity_order: ["flashcard", "genre", "spelling_choice", "definitions", "fill_blanks", "audio_word", "audio_dictation"],
     })

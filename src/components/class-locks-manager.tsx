@@ -10,12 +10,14 @@ interface Dictee {
   id: string;
   title: string;
   position: number;
+  level?: string;
 }
 
 interface DmClass {
   id: string;
   name: string;
   unlocked_dictees: number[];
+  level?: string;
 }
 
 export default function ClassLocksManager() {
@@ -30,10 +32,10 @@ export default function ClassLocksManager() {
       setLoading(true);
       const sb = createClient();
 
-      // Charger les dictées
+      // Charger les dictées (tous niveaux — filtrées au rendu selon la classe)
       const { data: dicts } = await sb
         .from("dictees")
-        .select("id, title, position")
+        .select("id, title, position, level")
         .order("position");
 
       if (dicts) {
@@ -43,7 +45,7 @@ export default function ClassLocksManager() {
       // Charger les classes
       const { data: cls } = await sb
         .from("dm_classes")
-        .select("id, name, unlocked_dictees")
+        .select("id, name, unlocked_dictees, level")
         .order("created_at");
 
       if (cls) {
@@ -129,7 +131,7 @@ export default function ClassLocksManager() {
             <div className="space-y-3">
               <h2 className="font-semibold text-lg mb-4">Dictées</h2>
               <div className="grid gap-2">
-                {dictees.map((d) => {
+                {dictees.filter((d) => (d.level || "6e") === (currentClass.level || "6e")).map((d) => {
                   const isUnlocked = currentClass.unlocked_dictees.includes(d.position);
                   return (
                     <button

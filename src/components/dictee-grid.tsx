@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { loadStudentDicteeStats, createUnlockRequest, getDmClassIdByHub } from "@/lib/dictee-service";
+import { loadStudentDicteeStats, createUnlockRequest, getDmClassByHub } from "@/lib/dictee-service";
 import { useAppStore } from "@/lib/store";
 import { getLevel, computeXPFromStats } from "@/lib/gamification";
 import { Loader2 } from "lucide-react";
@@ -47,10 +47,22 @@ export default function DicteeGrid({ unlockedPositions = [1, 2, 3], onCardClick 
     const load = async () => {
       const sb = createClient();
 
-      // Charger les dictées
+      // Résoudre d'abord la classe de l'élève : son niveau détermine le corpus.
+      // Fallback '6e' (visiteur/démo sans dm_classes, ex. classeId "test").
+      let level: "6e" | "5e" = "6e";
+      if (connectedEleve) {
+        const dmClass = await getDmClassByHub(connectedEleve.classeId);
+        if (dmClass) {
+          setClassId(dmClass.id);
+          level = dmClass.level;
+        }
+      }
+
+      // Charger les dictées du niveau de la classe
       const { data: dicts } = await sb
         .from("dictees")
         .select("id, title, position, share_code, fill_blanks_text")
+        .eq("level", level)
         .order("position");
 
       if (dicts) {
@@ -73,12 +85,6 @@ export default function DicteeGrid({ unlockedPositions = [1, 2, 3], onCardClick 
       if (connectedEleve) {
         const s = await loadStudentDicteeStats(connectedEleve.eleveId);
         setStats(s);
-      }
-
-      // Récupérer la dm_classes correspondant à la classe Hub de l'élève (pour les unlock requests)
-      if (connectedEleve) {
-        const id = await getDmClassIdByHub(connectedEleve.classeId);
-        if (id) setClassId(id);
       }
 
       setLoading(false);

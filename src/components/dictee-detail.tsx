@@ -52,6 +52,12 @@ export default function DicteeDetail({
   const { connectedEleve, user } = useAppStore();
   const isTeacher = user?.role === "teacher";
   const [words, setWords] = useState<DicteeWord[]>([]);
+  // Métadonnées pédagogiques (renseignées sur le corpus 5e, NULL en 6e)
+  const [dicteeMeta, setDicteeMeta] = useState<{
+    ortho_point?: string | null;
+    lexical_theme?: string | null;
+    star_word?: string | null;
+  }>({});
   const [loading, setLoading] = useState(true);
   const [completedModes, setCompletedModes] = useState<Set<string>>(new Set());
   const [allSessions, setAllSessions] = useState<any[]>([]);
@@ -71,6 +77,12 @@ export default function DicteeDetail({
         .eq("dictee_id", dicteeId)
         .order("position");
       if (data) setWords(data);
+      const { data: meta } = await sb
+        .from("dictees")
+        .select("ortho_point, lexical_theme, star_word")
+        .eq("id", dicteeId)
+        .maybeSingle();
+      if (meta) setDicteeMeta(meta);
       setLoading(false);
     };
     load();
@@ -222,17 +234,36 @@ export default function DicteeDetail({
             <div className="flex items-center gap-2">
               <span className="text-xs text-purple-600 font-bold uppercase">N°{dicteePosition}</span>
               <h1 className="text-xl font-bold text-gray-800">{dicteeTitle}</h1>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                dicteePosition <= 8 ? "bg-emerald-100 text-emerald-700" :
-                dicteePosition <= 16 ? "bg-amber-100 text-amber-700" :
-                "bg-purple-100 text-purple-700"
-              }`}>
-                {dicteePosition <= 8 ? "🟢 Découverte" :
-                 dicteePosition <= 16 ? "🟡 Consolidation" :
-                 "🟣 Maîtrise"}
-              </span>
+              {(() => {
+                // Paliers relatifs à la taille du corpus : 6e = 26 dictées
+                // (seuils historiques 8/16), 5e = 16 dictées (seuils 5/11)
+                const is5e = dicteeId.startsWith("dictee-5e");
+                const [t1, t2] = is5e ? [5, 11] : [8, 16];
+                return (
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    dicteePosition <= t1 ? "bg-emerald-100 text-emerald-700" :
+                    dicteePosition <= t2 ? "bg-amber-100 text-amber-700" :
+                    "bg-purple-100 text-purple-700"
+                  }`}>
+                    {dicteePosition <= t1 ? "🟢 Découverte" :
+                     dicteePosition <= t2 ? "🟡 Consolidation" :
+                     "🟣 Maîtrise"}
+                  </span>
+                );
+              })()}
               <span className="text-xs text-gray-400">{words.length} mots</span>
             </div>
+            {(dicteeMeta.ortho_point || dicteeMeta.star_word) && (
+              <div className="mt-1 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 inline-flex flex-wrap items-center gap-x-3">
+                {dicteeMeta.ortho_point && (
+                  <span><span className="font-semibold">Orthographe :</span> {dicteeMeta.ortho_point}</span>
+                )}
+                {dicteeMeta.star_word && (
+                  <span>⭐ Mot vedette : <span className="font-semibold">{dicteeMeta.star_word}</span></span>
+                )}
+                {dicteeMeta.lexical_theme && <span className="text-amber-600">({dicteeMeta.lexical_theme})</span>}
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { dicteeMp3Path } from "@/lib/dictee-service";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -166,8 +167,8 @@ export default function FillBlanksMode() {
     }
     stopAudio();
 
-    if (dicteePosition) {
-      const audio = new Audio(`/audio/dictees/dictee_${dicteePosition}.mp3`);
+    if (currentList) {
+      const audio = new Audio(dicteeMp3Path(currentList.id));
       dicteeAudioRef.current = audio;
       audio.onplay = () => setIsPlaying(true);
       audio.onended = () => { setIsPlaying(false); dicteeAudioRef.current = null; };

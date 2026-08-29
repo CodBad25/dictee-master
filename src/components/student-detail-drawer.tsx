@@ -200,10 +200,19 @@ export default function StudentDetailDrawer({
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
+      // Niveau de la classe → corpus de dictées correspondant
+      const { data: dmClass } = await supabase
+        .from("dm_classes")
+        .select("level")
+        .eq("id", classId)
+        .maybeSingle();
+      const classLevel = (dmClass?.level as string) || "6e";
+
       const [dicteesRes, studentRes, classRes] = await Promise.all([
         supabase
           .from("dictees")
           .select("id, title, position, share_code, fill_blanks_text")
+          .eq("level", classLevel)
           .order("position"),
         supabase
           .from("dm_results")

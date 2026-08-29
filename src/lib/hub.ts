@@ -53,10 +53,14 @@ async function hubFetch(path: string, options?: RequestInit) {
   return response.json();
 }
 
-// GET classes for 6eme
+// GET classes — 6e et 5e (le corpus de dictées existe pour ces deux niveaux)
 export async function getClasses(): Promise<HubClasse[]> {
-  const data = await hubFetch("/classes?niveau=6eme");
-  return data.classes || [];
+  const [six, cinq] = await Promise.all([
+    hubFetch("/classes?niveau=6eme"),
+    // Tolérant : si le Hub ne connaît pas encore de 5e, on continue avec les 6e
+    hubFetch("/classes?niveau=5eme").catch(() => ({ classes: [] })),
+  ]);
+  return [...(six.classes || []), ...(cinq.classes || [])];
 }
 
 // GET students of a class

@@ -143,10 +143,20 @@ export default function StudentFullPage() {
         setClassResults((cResults || []) as DicteeResult[]);
       }
 
-      // 3) dictées
+      // 3) dictées — corpus du niveau de la classe de l'élève
+      let classLevel = "6e";
+      if (cid) {
+        const { data: dmClass } = await supabase
+          .from("dm_classes")
+          .select("level")
+          .eq("id", cid)
+          .maybeSingle();
+        classLevel = (dmClass?.level as string) || "6e";
+      }
       const { data: dicteesData } = await supabase
         .from("dictees")
         .select("id, title, position, share_code, fill_blanks_text")
+        .eq("level", classLevel)
         .order("position");
       setDictees((dicteesData || []) as Dictee[]);
 

@@ -81,7 +81,13 @@ interface Dictee {
   id: string;
   title: string;
   position: number;
+  level?: string; // '6e' (défaut) ou '5e'
 }
+
+// Niveau d'une classe Hub : champ `niveau` de l'API en priorité, sinon
+// première lettre du nom (« 5T » → 5e). Tout ce qui n'est pas 5 = 6e.
+const levelFromClasse = (nom: string, niveau?: string): "6e" | "5e" =>
+  (niveau || nom).trim().startsWith("5") ? "5e" : "6e";
 
 interface StudentRow {
   id: string;
@@ -123,8 +129,9 @@ export default function TeacherPage() {
   const anon = useAnonymize();
   const dn = useDisplayName();
 
-  // Data state
-  const [dictees, setDictees] = useState<Dictee[]>([]);
+  // Data state — corpus complet en mémoire, filtré par le niveau de la classe
+  const [allDictees, setAllDictees] = useState<Dictee[]>([]);
+  const [classLevel, setClassLevel] = useState<"6e" | "5e">("6e");
   const [results, setResults] = useState<Record<string, DicteeResult>>({});
   const [wordAttempts, setWordAttempts] = useState<Record<string, any>>({});
 
@@ -167,7 +174,7 @@ export default function TeacherPage() {
         .order("position", { ascending: true });
 
       if (dicteesData) {
-        setDictees(dicteesData);
+        setAllDictees(dicteesData);
       }
 
       const { data: resultsData } = await supabase
@@ -214,7 +221,7 @@ export default function TeacherPage() {
           ? filteredClasses.find((c) => c.id === lastSelectedClasseId)
           : null;
         const target = remembered ?? filteredClasses[0];
-        pickClass(target.id, target.nom);
+        pickClass(target.id, target.nom, target.niveau);
       }
     } catch (error) {
       console.error("Error loading Hub classes:", error);
@@ -223,11 +230,12 @@ export default function TeacherPage() {
   };
 
   // Pick a class and load its students
-  const pickClass = async (classId: string, className: string) => {
+  const pickClass = async (classId: string, className: string, hubNiveau?: string) => {
     try {
       setSelectedClasse(classId);
       setSelectedClasseName(className);
       setLastSelectedClasseId(classId);
+      const derivedLevel = levelFromClasse(className, hubNiveau);
 
       const students = await getEleves(classId);
       const studentsMap: Record<string, { id: string; name: string }> = {};
@@ -251,15 +259,19 @@ export default function TeacherPage() {
       if (dmClassData) {
         setDmClassId(dmClassData.id);
         setUnlockedPos(dmClassData.unlocked_dictees || [1]);
+        // La base fait foi (backfill migration-level.sql), fallback sur le Hub
+        setClassLevel((dmClassData.level as "6e" | "5e") || derivedLevel);
         loadStudentsWithOverrides(dmClassData.id).then(setStudentsWithOverrides).catch(() => {});
       } else {
         // Auto-créer la classe si elle n'existe pas
+        setClassLevel(derivedLevel);
         const { data: newClass } = await supabase
           .from("dm_classes")
           .insert({
             teacher_id: user.id,
             hub_class_id: classId,
             name: className,
+            level: derivedLevel,
             unlocked_dictees: [1],
             default_activity_order: ["flashcard", "genre", "spelling_choice", "definitions", "dictionary", "audio_word", "fill_blanks", "audio_dictation"],
           })
@@ -345,6 +357,10 @@ export default function TeacherPage() {
     );
   }
 
+  // Corpus visible = uniquement les dictées du niveau de la classe sélectionnée
+  // (grille, note /20, exports, bilans — tous les dénominateurs en dépendent)
+  const dictees = allDictees.filter((d) => (d.level || "6e") === classLevel);
+
   // Build student rows
   const getStudentRows = (): StudentRow[] => {
     const maxDictees = dictees.length;
@@ -421,7 +437,7 @@ export default function TeacherPage() {
           {hubClasses.map((hc) => (
             <button
               key={hc.id}
-              onClick={() => pickClass(hc.id, hc.nom)}
+              onClick={() => pickClass(hc.id, hc.nom, hc.niveau)}
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 selectedClasse === hc.id
                   ? "bg-white text-purple-600"
@@ -435,6 +451,23 @@ export default function TeacherPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
+              // Lambda est inscrit en 6T et en 5T : on injecte celui du niveau
+              // de la classe sélectionnée pour voir la bonne grille élève.
+              if (classLevel === "5e") {
+                const cinqT = hubClasses.find((c) => c.nom === "5T");
+                if (cinqT) {
+                  setConnectedEleve({
+                    eleveId: "0242ceab-2f0d-49e6-8f44-12328657d312",
+                    prenom: "Lambda",
+                    nom: "BELHAJ",
+                    classe: "5T",
+                    classeId: cinqT.id,
+                  });
+                  router.push("/student");
+                  return;
+                }
+                toast.error("Classe 5T introuvable dans le Hub — test avec Lambda 6T (grille 6e)");
+              }
               setConnectedEleve({
                 eleveId: "cmn2ca8bp00rt01rx2gxh72nw",
                 prenom: "Lambda",
@@ -496,8 +529,8 @@ export default function TeacherPage() {
       {/* Lock bar */}
       <div data-tour="lock-bar" className="bg-gray-50 border-b px-4 py-3 flex items-center gap-2 overflow-x-auto flex-shrink-0">
         <div className="flex items-center gap-2 flex-1">
-          {Array.from({ length: 26 }).map((_, i) => {
-            const pos = i + 1;
+          {dictees.map((d) => {
+            const pos = d.position;
             const isUnlocked = unlockedPos.includes(pos);
             return (
               <button
@@ -557,7 +590,7 @@ export default function TeacherPage() {
       </div>
 
       {/* Demandes de déverrouillage (s'auto-cache si aucune en attente) */}
-      <UnlockRequestsPanel classId={dmClassId} />
+      <UnlockRequestsPanel classId={dmClassId} level={classLevel} />
 
       {/* Main content */}
       <div className="flex-1 overflow-hidden flex flex-col">
