@@ -225,9 +225,11 @@ export default function TeacherPage() {
   const loadHub = async () => {
     try {
       const classes = await getClasses();
+      // Visiteur (RGPD) : uniquement les classes de test « 6T », « 5T »…
+      // (élèves fictifs Lambda, Gamma, Beta, Oméga), jamais une vraie classe.
       const filteredClasses =
         user?.id === "visitor"
-          ? classes.filter((c) => c.nom === "6T")
+          ? classes.filter((c) => /^\dT$/i.test(c.nom.trim()))
           : classes;
       setHubClasses(filteredClasses);
 
