@@ -364,7 +364,7 @@ export async function createClass(teacherId: string, name: string, level: Dictee
       // "genre" et "dictionary" sont volontairement absents : désactivés par défaut
       // (demande de la collègue du 06/09/2026, elle ne les utilise pas). Le code des
       // deux modes est conservé et ils restent réactivables dans 🎯 Parcours.
-      default_activity_order: ["flashcard", "grammar_class", "spelling_choice", "definitions", "fill_blanks", "audio_word", "audio_dictation"],
+      default_activity_order: ["flashcard", "grammar_class", "spelling_choice", "definitions", "lexique", "fill_blanks", "audio_word", "audio_dictation"],
     })
     .select()
     .single();
@@ -411,7 +411,10 @@ export async function loadClassOptionalActivities(classId: string): Promise<stri
     .eq("id", classId)
     .single();
   const opt = data?.optional_activities;
-  return Array.isArray(opt) ? opt.filter((a: string) => ALL_ACTIVITIES_CANONICAL.includes(a)) : [];
+  const stored = Array.isArray(opt) ? opt.filter((a: string) => ALL_ACTIVITIES_CANONICAL.includes(a)) : [];
+  // Aucun réglage enregistré → « Famille & synonymes » est facultatif par défaut
+  // (décision du 19/09/2026) : il ne bloque jamais la progression.
+  return stored.length > 0 ? stored : [...DEFAULT_OPTIONAL_ACTIVITIES];
 }
 
 // === COMMENTAIRES D'ERREURS (mnémoniques) ===
@@ -541,14 +544,17 @@ export async function loadStudentsWithOverrides(classId: string): Promise<Set<st
 }
 
 const DEFAULT_ACTIVITY_ORDER_FALLBACK = [
-  "flashcard", "genre", "grammar_class", "spelling_choice", "definitions",
+  "flashcard", "genre", "grammar_class", "spelling_choice", "definitions", "lexique",
   "dictionary", "audio_word", "fill_blanks", "audio_dictation",
 ];
+
+// Activités facultatives quand la classe n'a aucun réglage enregistré.
+const DEFAULT_OPTIONAL_ACTIVITIES = ["lexique"];
 
 // Liste canonique de toutes les activités existantes — source de vérité pour
 // valider les ids stockés et pour le cas « aucune config » (on renvoie tout).
 const ALL_ACTIVITIES_CANONICAL = [
-  "flashcard", "genre", "grammar_class", "spelling_choice", "definitions",
+  "flashcard", "genre", "grammar_class", "spelling_choice", "definitions", "lexique",
   "dictionary", "audio_word", "fill_blanks", "audio_dictation",
 ];
 

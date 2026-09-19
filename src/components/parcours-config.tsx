@@ -38,6 +38,7 @@ const ACTIVITY_LABELS: Record<string, { label: string; icon: string; desc: strin
   fill_blanks: { label: "Texte à trous", icon: "📝", desc: "Complète le texte avec les bons mots", color: "from-orange-400 to-orange-600" },
   audio_dictation: { label: "Dictée audio", icon: "🎙️", desc: "Écoute la dictée phrase par phrase et écris", color: "from-purple-400 to-purple-600" },
   grammar_class: { label: "Classes grammaticales", icon: "🔤", desc: "Choisis la classe grammaticale du mot", color: "from-cyan-400 to-cyan-600" },
+  lexique: { label: "Famille & synonymes", icon: "🧩", desc: "Classe les étiquettes : même famille, synonyme ou intrus (mots validés uniquement)", color: "from-violet-400 to-violet-600" },
 };
 
 const ALL_ACTIVITIES = Object.keys(ACTIVITY_LABELS);

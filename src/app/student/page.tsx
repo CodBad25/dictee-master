@@ -19,6 +19,7 @@ import DictionaryMode from "@/components/dictionary-mode";
 import AudioWordMode from "@/components/audio-word-mode";
 import AudioDictationMode from "@/components/audio-dictation-mode";
 import GrammarClassMode from "@/components/grammar-class-mode";
+import LexiqueMode from "@/components/lexique-mode";
 import type { WordList, Word } from "@/types/database";
 import {
   saveResult,
@@ -38,6 +39,7 @@ const DEFAULT_ACTIVITY_ORDER = [
   "grammar_class",
   "spelling_choice",
   "definitions",
+  "lexique",
   "audio_word",
   "fill_blanks",
   "audio_dictation",
@@ -176,6 +178,7 @@ export default function StudentPage() {
       fill_blanks: "fill-blanks",
       audio_dictation: "audio-dictation",
       grammar_class: "grammar-class",
+      lexique: "lexique",
     };
 
     const v1Mode = modeMap[mode] || "flashcard";
@@ -261,6 +264,9 @@ export default function StudentPage() {
     }
     if (currentList.mode === "grammar-class") {
       return <GrammarClassMode />;
+    }
+    if (currentList.mode === "lexique") {
+      return <LexiqueMode />;
     }
     return <TrainingMode />;
   }

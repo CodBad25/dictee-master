@@ -13,6 +13,9 @@ interface DicteeWord {
   definition: string;
   spelling_errors: string[];
   position: number;
+  word_family?: string[];
+  synonyms?: string[];
+  lexicon_validated?: boolean;
 }
 
 interface DicteeDetailProps {
@@ -37,13 +40,14 @@ const ACTIVITY_LABELS: Record<string, { label: string; icon: string; desc: strin
   fill_blanks: { label: "Texte à trous", icon: "📝", desc: "Complète le texte avec les bons mots" },
   audio_dictation: { label: "Dictée audio", icon: "🎙️", desc: "Écoute la dictée phrase par phrase et écris" },
   grammar_class: { label: "Classes grammaticales", icon: "🔤", desc: "Choisis la classe grammaticale du mot" },
+  lexique: { label: "Famille & synonymes", icon: "🧩", desc: "Classe les étiquettes : même famille, synonyme ou intrus" },
 };
 
 export default function DicteeDetail({
   dicteeId,
   dicteeTitle,
   dicteePosition,
-  activityOrder,
+  activityOrder: activityOrderProp,
   selectedWords,
   optionalActivities = [],
   onBack,
@@ -52,6 +56,13 @@ export default function DicteeDetail({
   const { connectedEleve, user } = useAppStore();
   const isTeacher = user?.role === "teacher";
   const [words, setWords] = useState<DicteeWord[]>([]);
+  // « Famille & synonymes » n'apparaît que si la dictée a au moins un mot dont
+  // le lexique a été VALIDÉ par le prof (sinon l'exercice serait vide).
+  const hasLexique = words.some(
+    (w) => w.lexicon_validated && ((w.word_family?.length ?? 0) > 0 || (w.synonyms?.length ?? 0) > 0),
+  );
+  const activityOrder = hasLexique ? activityOrderProp : activityOrderProp.filter((m) => m !== "lexique");
+
   // Métadonnées pédagogiques (renseignées sur le corpus 5e, NULL en 6e)
   const [dicteeMeta, setDicteeMeta] = useState<{
     ortho_point?: string | null;
@@ -73,7 +84,7 @@ export default function DicteeDetail({
       const sb = createClient();
       const { data } = await sb
         .from("dictee_words")
-        .select("word, definition, spelling_errors, position")
+        .select("word, definition, spelling_errors, position, word_family, synonyms, lexicon_validated")
         .eq("dictee_id", dicteeId)
         .order("position");
       if (data) setWords(data);

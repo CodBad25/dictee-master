@@ -2,7 +2,7 @@
 
 export type UserRole = 'teacher' | 'student';
 
-export type TrainingMode = 'flashcard' | 'genre' | 'audio' | 'audio-word' | 'audio-dictation' | 'progression' | 'fill-blanks' | 'definition' | 'spelling-choice' | 'dictionary' | 'grammar-class';
+export type TrainingMode = 'flashcard' | 'genre' | 'audio' | 'audio-word' | 'audio-dictation' | 'progression' | 'fill-blanks' | 'definition' | 'spelling-choice' | 'dictionary' | 'grammar-class' | 'lexique';
 
 export interface User {
   id: string;

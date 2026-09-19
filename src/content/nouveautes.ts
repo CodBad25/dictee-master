@@ -23,6 +23,16 @@ export interface Nouveaute {
 
 export const NOUVEAUTES: Nouveaute[] = [
   {
+    id: "2026-09-19-exercice-famille-synonymes",
+    date: "2026-09-19",
+    icone: "🎒",
+    titre: "Nouvel exercice élève : Famille & synonymes",
+    description:
+      "Pour chaque mot, l'élève classe des étiquettes dans trois cases : Même famille, Synonyme, Intrus — puis voit la correction. Seuls les mots que tu as validés dans l'onglet 🧩 sont utilisés, et l'exercice reste invisible dans une dictée tant qu'aucun mot n'y est validé. Il est facultatif par défaut (il ne bloque pas la suite du parcours). Dans les classes dont le parcours a déjà été personnalisé, il faut l'activer une fois dans 🎯 Parcours (ligne 🧩).",
+    action: "parcours",
+    actionLibelle: "Ouvrir le Parcours",
+  },
+  {
     id: "2026-09-19-famille-synonymes",
     date: "2026-09-19",
     icone: "🧩",
