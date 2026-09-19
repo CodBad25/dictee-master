@@ -34,6 +34,20 @@ function lemmaOf(row: Row): string {
     .trim();
 }
 
+// Les listes de mots des dictées sont saisies groupées par classe grammaticale
+// (tous les verbes, puis tous les adjectifs, etc.). Garder cet ordre donnerait
+// la réponse à l'élève : on mélange donc les mots à chaque passage.
+// Mélange aléatoire (et non déterministe comme `shuffleChoices`) pour que
+// l'ordre change à chaque nouvelle tentative.
+function shuffleRows(rows: Row[]): Row[] {
+  const out = [...rows];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
 export default function GrammarClassMode() {
   const { currentList, clearCurrentTraining, connectedEleve } = useAppStore();
   const [rows, setRows] = useState<Row[]>([]);
@@ -58,7 +72,7 @@ export default function GrammarClassMode() {
         if (selectedPositions) {
           filtered = filtered.filter(w => selectedPositions.includes(w.position));
         }
-        setRows(filtered);
+        setRows(shuffleRows(filtered));
       });
   }, [currentList]);
 
@@ -132,7 +146,7 @@ export default function GrammarClassMode() {
           const wrong = answers.filter(a => !a.isCorrect).map(a => a.word);
           const filtered = rows.filter(r => wrong.includes(r.word));
           if (filtered.length) {
-            setRows(filtered);
+            setRows(shuffleRows(filtered));
             setCurrentIndex(0);
             setScore(0);
             setAnswers([]);
@@ -142,6 +156,7 @@ export default function GrammarClassMode() {
           }
         }}
         onRetryAll={() => {
+          setRows(shuffleRows(rows));
           setCurrentIndex(0);
           setScore(0);
           setAnswers([]);

@@ -11,6 +11,8 @@ import {
   updateActivityOrder,
   updateClassOptionalActivities,
   loadClassOptionalActivities,
+  updateClassMnemonicsEnabled,
+  loadClassMnemonicsEnabled,
   saveDicteeOverride,
   deleteDicteeOverride,
   updateWordSpellingErrors,
@@ -40,6 +42,13 @@ const ACTIVITY_LABELS: Record<string, { label: string; icon: string; desc: strin
 
 const ALL_ACTIVITIES = Object.keys(ACTIVITY_LABELS);
 
+// Activités ACTIVES par défaut, quand la classe n'a encore aucun parcours enregistré.
+// "genre" et "dictionary" en sont exclus : la collègue ne les utilise pas (06/09/2026).
+// Ils restent listés dans ALL_ACTIVITIES, donc visibles et réactivables d'un clic ici.
+const DEFAULT_ENABLED_ACTIVITIES = ALL_ACTIVITIES.filter(
+  (a) => a !== "genre" && a !== "dictionary"
+);
+
 interface ParcoursConfigProps {
   open: boolean;
   onClose: () => void;
@@ -63,11 +72,13 @@ export default function ParcoursConfig({
   const [saving, setSaving] = useState(false);
 
   // Ordre par défaut de la classe (toujours les 8 activités, order = position)
-  const [defaultOrder, setDefaultOrder] = useState<string[]>(ALL_ACTIVITIES);
+  const [defaultOrder, setDefaultOrder] = useState<string[]>(DEFAULT_ENABLED_ACTIVITIES);
   const [defaultDisabled, setDefaultDisabled] = useState<Set<string>>(new Set());
   // Activités FACULTATIVES (niveau classe) : visibles côté élève mais ne bloquent
   // pas la progression vers l'exercice suivant.
   const [defaultOptional, setDefaultOptional] = useState<Set<string>>(new Set());
+  // Commentaires explicatifs d'erreurs côté élève (défaut OFF, cf. 06/09/2026).
+  const [mnemonicsEnabled, setMnemonicsEnabled] = useState(false);
   const [defaultOrderDirty, setDefaultOrderDirty] = useState(false);
 
   // Mode : classe entière ou élève spécifique
@@ -122,12 +133,13 @@ export default function ParcoursConfig({
   // Chargement au montage et quand on change d'élève
   useEffect(() => {
     const load = async () => {
-      const [order, allOverrides, optional] = await Promise.all([
+      const [order, allOverrides, optional, mnemonics] = await Promise.all([
         loadClassDefaultOrder(dmClassId),
         loadAllDicteeOverrides(dmClassId, selectedStudentId),
         loadClassOptionalActivities(dmClassId),
+        loadClassMnemonicsEnabled(dmClassId),
       ]);
-      const savedOrder = order || ALL_ACTIVITIES;
+      const savedOrder = order || DEFAULT_ENABLED_ACTIVITIES;
       // L'ordre sauvegardé ne contient que les activités actives
       // Reconstruire l'ordre complet : actives en premier (dans l'ordre), puis désactivées
       const disabled = new Set(ALL_ACTIVITIES.filter(a => !savedOrder.includes(a)));
@@ -135,6 +147,7 @@ export default function ParcoursConfig({
       setDefaultOrder(fullOrder);
       setDefaultDisabled(disabled);
       setDefaultOptional(new Set(optional));
+      setMnemonicsEnabled(mnemonics);
       setOverrides(allOverrides);
       setLoading(false);
     };
@@ -501,6 +514,41 @@ export default function ParcoursConfig({
                       Enregistrer
                     </motion.button>
                   )}
+                </div>
+                {/* Commentaires explicatifs d'erreurs côté élève.
+                    Réglage de classe, sauvegarde immédiate (pas de bouton Enregistrer) :
+                    c'est un interrupteur, pas un ordre à réorganiser.
+                    Demande de la collègue du 06/09/2026 : les explications sont parfois
+                    fausses, donc masquées par défaut, mais la fonction est conservée. */}
+                <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                  <span className="text-sm text-gray-700">
+                    💬 Commentaires d&apos;erreurs affichés à l&apos;élève
+                  </span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const next = !mnemonicsEnabled;
+                      setMnemonicsEnabled(next);
+                      try {
+                        await updateClassMnemonicsEnabled(dmClassId, next);
+                        toast.success(next ? "Commentaires affichés" : "Commentaires masqués");
+                      } catch {
+                        setMnemonicsEnabled(!next);
+                        toast.error("Erreur de sauvegarde");
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-semibold border transition-colors ${
+                      mnemonicsEnabled
+                        ? "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200"
+                        : "bg-white text-gray-500 border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    {mnemonicsEnabled ? "Affichés" : "Masqués"}
+                  </button>
+                  <span className="text-xs text-gray-500">
+                    Explications automatiques des fautes sur l&apos;écran de résultats.
+                    Côté enseignant, elles restent toujours visibles.
+                  </span>
                 </div>
                 <Reorder.Group
                   axis="y"

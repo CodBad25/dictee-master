@@ -302,7 +302,8 @@ export default function TeacherPage() {
             name: className,
             level: derivedLevel,
             unlocked_dictees: [1],
-            default_activity_order: ["flashcard", "genre", "spelling_choice", "definitions", "dictionary", "audio_word", "fill_blanks", "audio_dictation"],
+            // "genre" et "dictionary" désactivés par défaut (cf. dictee-service.ts)
+            default_activity_order: ["flashcard", "grammar_class", "spelling_choice", "definitions", "audio_word", "fill_blanks", "audio_dictation"],
           })
           .select()
           .single();

@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, RotateCcw, Check, X } from "lucide-react";
 import { findMnemonicForError, summarizeErrors } from "@/lib/mnemonics";
+import { useAppStore } from "@/lib/store";
+import { getDmClassIdByHub, loadClassMnemonicsEnabled } from "@/lib/dictee-service";
 
 interface Answer {
   word: string;
@@ -30,6 +33,28 @@ export default function DicteeResults({
   onRetryAll,
   onNext,
 }: DicteeResultsProps) {
+  // Commentaires explicatifs d'erreurs : affichés seulement si la classe les a
+  // activés (réglage prof, défaut OFF — demande de la collègue du 06/09/2026,
+  // les explications étant parfois fausses).
+  const connectedEleve = useAppStore((s) => s.connectedEleve);
+  const [showMnemonics, setShowMnemonics] = useState(false);
+
+  useEffect(() => {
+    if (!connectedEleve?.classeId) return;
+    let cancelled = false;
+    getDmClassIdByHub(connectedEleve.classeId)
+      .then((classId) => (classId ? loadClassMnemonicsEnabled(classId) : false))
+      .then((enabled) => {
+        if (!cancelled) setShowMnemonics(enabled);
+      })
+      .catch(() => {
+        /* réglage illisible : on reste sur le défaut (masqué) */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [connectedEleve?.classeId]);
+
   const correct = answers.filter((a) => a.isCorrect).length;
   const total = answers.length;
   const pct = Math.round((correct / total) * 100);
@@ -93,8 +118,9 @@ export default function DicteeResults({
             </div>
           ) : (
             <div className="space-y-2">
-              {/* Résumé par catégorie d'erreur */}
-              {(() => {
+              {/* Résumé par catégorie d'erreur — même moteur d'interprétation que
+                  les commentaires détaillés, donc soumis au même réglage. */}
+              {showMnemonics && (() => {
                 const summary = summarizeErrors(errors);
                 return summary.length > 0 ? (
                   <div className="flex flex-wrap gap-1.5 mb-2">
@@ -126,7 +152,7 @@ export default function DicteeResults({
                   const isGrammarMode = !!a.correctAnswer;
                   const correctDisplay = a.correctAnswer ?? a.word;
                   // Pas de mnémonique orthographique en mode classe grammaticale
-                  const mnemonic = isGrammarMode
+                  const mnemonic = isGrammarMode || !showMnemonics
                     ? null
                     : findMnemonicForError(a.word, a.userAnswer);
                   return (

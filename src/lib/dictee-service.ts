@@ -316,7 +316,10 @@ export async function createClass(teacherId: string, name: string, level: Dictee
       name,
       level,
       unlocked_dictees: [1],
-      default_activity_order: ["flashcard", "genre", "spelling_choice", "definitions", "fill_blanks", "audio_word", "audio_dictation"],
+      // "genre" et "dictionary" sont volontairement absents : désactivés par défaut
+      // (demande de la collègue du 06/09/2026, elle ne les utilise pas). Le code des
+      // deux modes est conservé et ils restent réactivables dans 🎯 Parcours.
+      default_activity_order: ["flashcard", "grammar_class", "spelling_choice", "definitions", "fill_blanks", "audio_word", "audio_dictation"],
     })
     .select()
     .single();
@@ -364,6 +367,34 @@ export async function loadClassOptionalActivities(classId: string): Promise<stri
     .single();
   const opt = data?.optional_activities;
   return Array.isArray(opt) ? opt.filter((a: string) => ALL_ACTIVITIES_CANONICAL.includes(a)) : [];
+}
+
+// === COMMENTAIRES D'ERREURS (mnémoniques) ===
+// Réglage de classe : affiche ou masque, CÔTÉ ÉLÈVE uniquement, les commentaires
+// explicatifs d'erreurs sur l'écran de résultats. Demande de la collègue du
+// 06/09/2026 : les explications sont parfois fausses, on garde la fonction mais
+// elle est désactivable. Côté prof les mnémoniques restent toujours affichées.
+// Défaut false (masqué) tant que la qualité des explications n'est pas validée.
+export async function loadClassMnemonicsEnabled(classId: string): Promise<boolean> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from("dm_classes")
+    .select("mnemonics_enabled")
+    .eq("id", classId)
+    .single();
+  // Colonne absente (migration-mnemonics-toggle.sql pas encore appliquée) :
+  // on retombe sur le comportement demandé, c'est-à-dire masqué.
+  if (error || !data) return false;
+  return data.mnemonics_enabled === true;
+}
+
+export async function updateClassMnemonicsEnabled(classId: string, enabled: boolean) {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dm_classes")
+    .update({ mnemonics_enabled: enabled })
+    .eq("id", classId);
+  if (error) throw new Error(error.message);
 }
 
 // === PARCOURS CONFIG ===

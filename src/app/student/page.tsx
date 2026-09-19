@@ -29,13 +29,15 @@ import {
 import { toast } from "sonner";
 import { pingPresence } from "@/lib/presence";
 
+// Ordre par défaut quand la classe n'a aucune config de parcours enregistrée.
+// "genre" et "dictionary" en sont volontairement absents : désactivés par défaut
+// (demande de la collègue du 06/09/2026). Le code des deux modes est conservé,
+// ils restent réactivables dans 🎯 Parcours — cf. ALL_ACTIVITIES dans parcours-config.tsx.
 const DEFAULT_ACTIVITY_ORDER = [
   "flashcard",
-  "genre",
   "grammar_class",
   "spelling_choice",
   "definitions",
-  "dictionary",
   "audio_word",
   "fill_blanks",
   "audio_dictation",
