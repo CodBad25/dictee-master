@@ -14,6 +14,7 @@ import {
   type GrammaticalClass,
 } from "@/lib/grammar-classifier";
 import AudioRecorder from "@/components/audio-recorder";
+import LexiconEditor from "@/components/lexicon-editor";
 
 export type WordConfigRow = {
   word: string;
@@ -24,6 +25,9 @@ export type WordConfigRow = {
   article?: string | null;
   definition?: string | null;
   audio_url?: string | null;
+  word_family?: string[];
+  synonyms?: string[];
+  lexicon_validated?: boolean;
 };
 
 interface WordConfigModalProps {
@@ -44,7 +48,8 @@ type ExoId =
   | "audio_word"
   | "fill_blanks"
   | "audio_dictation"
-  | "grammar_class";
+  | "grammar_class"
+  | "lexique";
 
 type ExoDef = {
   id: ExoId;
@@ -63,6 +68,7 @@ const EXOS: ExoDef[] = [
   { id: "fill_blanks",     icon: "📝", label: "Texte à trous",        perWord: false },
   { id: "audio_dictation", icon: "🎙️", label: "Dictée audio",        perWord: false },
   { id: "grammar_class",   icon: "🔤", label: "Classes gram.",        perWord: true  },
+  { id: "lexique",         icon: "🧩", label: "Famille & synonymes",  perWord: true  },
 ];
 
 export default function WordConfigModal({
@@ -92,6 +98,7 @@ export default function WordConfigModal({
     if (exoId === "definitions")     return !!w.definition;
     if (exoId === "audio_word")      return !!w.audio_url;
     if (exoId === "genre")           return !!w.article;
+    if (exoId === "lexique")         return !!w.lexicon_validated;
     return false;
   };
 
@@ -246,6 +253,19 @@ function ExoPanel({
       return <GrammarEditor word={word} dicteeId={dicteeId} onUpdate={onUpdate} />;
     case "definitions":
       return <DefinitionEditor word={word} dicteeId={dicteeId} onUpdate={onUpdate} />;
+    case "lexique":
+      return (
+        <LexiconEditor
+          dicteeId={dicteeId}
+          position={word.position}
+          word={word.word}
+          family={word.word_family ?? []}
+          synonyms={word.synonyms ?? []}
+          validated={!!word.lexicon_validated}
+          onChange={(patch) => onUpdate(patch)}
+          layout="card"
+        />
+      );
     case "audio_word":
       return (
         <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">

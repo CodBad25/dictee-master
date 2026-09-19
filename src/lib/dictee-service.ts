@@ -37,6 +37,16 @@ export interface DicteeWord {
   definition: string;
   spelling_errors: string[];
   position: number;
+  // Lexique (famille + synonymes) — contenu IA à valider par l'enseignant.
+  word_family: string[];
+  synonyms: string[];
+  lexicon_validated: boolean;
+}
+
+export interface WordLexiconPatch {
+  word_family?: string[];
+  synonyms?: string[];
+  lexicon_validated?: boolean;
 }
 
 import type { VariantType } from "./variant-types";
@@ -80,10 +90,45 @@ export async function loadDicteeWords(dicteeId: string): Promise<DicteeWord[]> {
   const sb = createClient();
   const { data } = await sb
     .from("dictee_words")
-    .select("dictee_id, word, definition, spelling_errors, position")
+    .select("dictee_id, word, definition, spelling_errors, position, word_family, synonyms, lexicon_validated")
     .eq("dictee_id", dicteeId)
     .order("position");
-  return data || [];
+  return (data || []).map((w) => ({
+    ...w,
+    spelling_errors: Array.isArray(w.spelling_errors) ? w.spelling_errors : [],
+    word_family: Array.isArray(w.word_family) ? w.word_family : [],
+    synonyms: Array.isArray(w.synonyms) ? w.synonyms : [],
+    lexicon_validated: !!w.lexicon_validated,
+  }));
+}
+
+// Met à jour le lexique d'un mot (famille, synonymes, validation).
+// Édition globale partagée entre tous les profs, comme les pièges.
+export async function updateWordLexicon(
+  dicteeId: string,
+  position: number,
+  patch: WordLexiconPatch,
+): Promise<void> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dictee_words")
+    .update(patch)
+    .eq("dictee_id", dicteeId)
+    .eq("position", position);
+  if (error) throw new Error(error.message);
+}
+
+// Marque validés (ou non) tous les mots d'une dictée d'un coup.
+export async function setDicteeLexiconValidated(
+  dicteeId: string,
+  validated: boolean,
+): Promise<void> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dictee_words")
+    .update({ lexicon_validated: validated })
+    .eq("dictee_id", dicteeId);
+  if (error) throw new Error(error.message);
 }
 
 // Met à jour la liste des distracteurs (spelling_errors) pour un mot donné.

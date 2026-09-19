@@ -6,6 +6,7 @@ import {
   updateWordSpellingErrors,
   updateWordGrammaticalClass,
   updateWordDefinition,
+  setDicteeLexiconValidated,
   type FillBlanksVariant,
 } from "@/lib/dictee-service";
 import { classifyWord, GRAMMAR_LABELS, type GrammaticalClass } from "@/lib/grammar-classifier";
@@ -14,13 +15,15 @@ import { playWordAudio } from "@/lib/audio";
 import AudioRecorder from "@/components/audio-recorder";
 import type { WordConfigRow } from "@/components/word-config-modal";
 import VariantesTab from "@/components/variantes-tab";
+import LexiconEditor from "@/components/lexicon-editor";
 
-type TabId = "spelling_choice" | "grammar_class" | "definitions" | "audio_word" | "genre" | "variantes";
+type TabId = "spelling_choice" | "grammar_class" | "definitions" | "lexique" | "audio_word" | "genre" | "variantes";
 
 const TABS: { id: TabId; icon: string; label: string; short: string }[] = [
   { id: "spelling_choice", icon: "✏️", label: "Choix orthographique",  short: "Pièges" },
   { id: "grammar_class",   icon: "🔤", label: "Classes grammaticales", short: "Classe gram." },
   { id: "definitions",     icon: "📖", label: "Définitions",           short: "Définitions" },
+  { id: "lexique",         icon: "🧩", label: "Famille & synonymes",   short: "Famille/syn." },
   { id: "audio_word",      icon: "🎧", label: "Audio mot",             short: "Audio mot" },
   { id: "genre",           icon: "🏷️", label: "Genre",                 short: "Genre" },
   { id: "variantes",       icon: "📝", label: "Variantes texte à trous", short: "Variantes" },
@@ -48,6 +51,11 @@ const TAB_COLORS: Record<TabId, { active: string; banner: string; chip: string }
     active: "border-b-[3px] border-emerald-400 bg-emerald-50 text-emerald-900",
     banner: "bg-emerald-50 border-emerald-100 text-emerald-800",
     chip: "bg-emerald-100 text-emerald-700 border border-emerald-300",
+  },
+  lexique: {
+    active: "border-b-[3px] border-violet-400 bg-violet-50 text-violet-900",
+    banner: "bg-violet-50 border-violet-100 text-violet-800",
+    chip: "bg-violet-100 text-violet-700 border border-violet-300",
   },
   audio_word: {
     active: "border-b-[3px] border-indigo-400 bg-indigo-50 text-indigo-900",
@@ -201,6 +209,23 @@ export default function WordConfigSection({
     }
   };
 
+  // ── Lexique : validation de toute la dictée ────────────────────────────────
+
+  const [validatingAll, setValidatingAll] = useState(false);
+  const setAllLexiconValidated = async (validated: boolean) => {
+    setValidatingAll(true);
+    try {
+      await setDicteeLexiconValidated(dicteeId, validated);
+      setLocalWords((ws) => ws.map((w) => ({ ...w, lexicon_validated: validated })));
+      for (const w of localWords) onUpdated({ ...w, lexicon_validated: validated });
+      toast.success(validated ? "Tous les mots de la dictée sont validés" : "Validation retirée pour toute la dictée");
+    } catch {
+      toast.error("Erreur lors de la validation");
+    } finally {
+      setValidatingAll(false);
+    }
+  };
+
   // ── Compteurs pour les tabs ───────────────────────────────────────────────
 
   const count = (tab: TabId): number => {
@@ -208,6 +233,7 @@ export default function WordConfigSection({
       case "spelling_choice": return localWords.filter((w) => w.spelling_errors.length > 0).length;
       case "grammar_class":   return localWords.filter((w) => w.grammatical_class).length;
       case "definitions":     return localWords.filter((w) => w.definition).length;
+      case "lexique":         return localWords.filter((w) => w.lexicon_validated).length;
       case "audio_word":      return localWords.filter((w) => w.audio_url).length;
       case "genre":           return localWords.filter((w) => w.article).length;
       case "variantes":       return variants.filter((v) => v.status === "validated").length;
@@ -349,6 +375,24 @@ export default function WordConfigSection({
       );
     }
 
+    if (activeTab === "lexique") {
+      return (
+        <LexiconEditor
+          dicteeId={dicteeId}
+          position={w.position}
+          word={w.word}
+          family={w.word_family ?? []}
+          synonyms={w.synonyms ?? []}
+          validated={!!w.lexicon_validated}
+          onChange={(patch) => {
+            patchWord(w.position, patch);
+            onUpdated({ ...w, ...patch });
+          }}
+          layout="row"
+        />
+      );
+    }
+
     if (activeTab === "audio_word") {
       return (
         <div className="flex items-start gap-3 py-1 w-full">
@@ -458,13 +502,26 @@ export default function WordConfigSection({
           {activeTab === "spelling_choice" && "· Saisis tes propres pièges, ou laisse vide pour utiliser ceux générés automatiquement (en gris pointillé)."}
           {activeTab === "grammar_class"   && "· Cliquez sur un mot pour choisir sa classe grammaticale."}
           {activeTab === "definitions"     && "· Saisissez une définition courte. Validation sur Entrée ou perte de focus."}
+          {activeTab === "lexique"         && "· Contenu proposé par l'IA à partir des définitions : relis, corrige, puis valide chaque mot. Seuls les mots validés sont proposés aux élèves."}
           {activeTab === "audio_word"      && "· Clique sur ▶ pour écouter la prononciation actuelle. Utilise le micro pour enregistrer ta propre voix."}
           {activeTab === "genre"           && "· Article issu du fichier source. Non modifiable ici."}
           {activeTab === "variantes"       && "· Générez et validez des variantes du texte à trous (pluriel, imparfait)."}
         </span>
-        <span className={`ml-auto text-xs font-medium px-2 py-0.5 rounded-full ${colors.chip}`}>
+        {activeTab === "lexique" && (
+          <button
+            onClick={() => setAllLexiconValidated(count("lexique") < n)}
+            disabled={validatingAll}
+            className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-lg border border-violet-300 bg-white text-violet-700 hover:bg-violet-100 transition disabled:opacity-50 inline-flex items-center gap-1"
+          >
+            {validatingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+            {count("lexique") < n ? `✓ Valider les ${n} mots` : "↺ Tout remettre à relire"}
+          </button>
+        )}
+        <span className={`${activeTab === "lexique" ? "" : "ml-auto "}text-xs font-medium px-2 py-0.5 rounded-full ${colors.chip}`}>
           {activeTab === "variantes"
             ? `${count("variantes")} / ${variants.length} validée${variants.length !== 1 ? "s" : ""}`
+            : activeTab === "lexique"
+            ? `${count("lexique")} / ${n} mots validés`
             : `${count(activeTab)} / ${n} mots configurés`}
         </span>
       </div>
@@ -492,6 +549,7 @@ export default function WordConfigSection({
             {activeTab === "spelling_choice" && "Pièges (distracteurs)"}
             {activeTab === "grammar_class"   && "Classe grammaticale"}
             {activeTab === "definitions"     && "Définition"}
+            {activeTab === "lexique"         && "Famille de mots · Synonymes"}
             {activeTab === "audio_word"      && "Audio"}
             {activeTab === "genre"           && "Article"}
           </span>
@@ -508,6 +566,7 @@ export default function WordConfigSection({
             activeTab === "spelling_choice" ? w.spelling_errors.length > 0 :
             activeTab === "grammar_class"   ? !!w.grammatical_class :
             activeTab === "definitions"     ? !!w.definition :
+            activeTab === "lexique"         ? !!w.lexicon_validated :
             activeTab === "audio_word"      ? !!w.audio_url :
             activeTab === "genre"           ? !!w.article : false;
 
@@ -519,7 +578,7 @@ export default function WordConfigSection({
             <div
               key={w.position}
               className={`grid px-5 py-1 border-b border-gray-100 transition-colors
-                ${activeTab === "audio_word" ? "items-start" : "items-center"}
+                ${activeTab === "audio_word" || activeTab === "lexique" ? "items-start" : "items-center"}
                 ${idx % 2 === 1 ? "bg-gray-50" : "bg-white"} hover:bg-blue-50`}
               style={{ gridTemplateColumns: "28px 48px 150px 1fr 80px", minHeight: "36px" }}
             >
@@ -535,9 +594,12 @@ export default function WordConfigSection({
                     {activeTab === "spelling_choice" && `${w.spelling_errors.length} piège${w.spelling_errors.length > 1 ? "s" : ""}`}
                     {activeTab === "grammar_class"   && "✓"}
                     {activeTab === "definitions"     && "✓"}
+                    {activeTab === "lexique"         && "✓ validé"}
                     {activeTab === "audio_word"      && "✓"}
                     {activeTab === "genre"           && w.article}
                   </span>
+                ) : activeTab === "lexique" ? (
+                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">à relire</span>
                 ) : (
                   <span className="text-[10px] text-gray-300">—</span>
                 )}
