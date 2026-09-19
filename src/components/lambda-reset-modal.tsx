@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Loader2, X, Trash2, RotateCcw } from "lucide-react";
 
-const LAMBDA_ID_6T = "cmn2ca8bp00rt01rx2gxh72nw";
 
 interface DicteeResults {
   dicteeId: string;
@@ -18,9 +17,18 @@ interface DicteeResults {
 interface LambdaResetModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // Résout l'ID Hub de Lambda pour le niveau affiché (plus d'ID codé en dur :
+  // le Hub régénère ses classes de test chaque année).
+  resolveStudentId: () => Promise<string | null>;
+  levelLabel: string; // « 6T » ou « 5T »
 }
 
-export default function LambdaResetModal({ isOpen, onClose }: LambdaResetModalProps) {
+export default function LambdaResetModal({ isOpen, onClose, resolveStudentId, levelLabel }: LambdaResetModalProps) {
+  const [studentId, setStudentId] = useState<string | null>(null);
+  // Ref : loadResults est mémoïsé avec [] ; on lit toujours la dernière version
+  // du résolveur (qui dépend du niveau affiché) sans relancer l'effet.
+  const resolveRef = useRef(resolveStudentId);
+  resolveRef.current = resolveStudentId;
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState<DicteeResults[]>([]);
   const [resettingId, setResettingId] = useState<string | null>(null);
@@ -30,12 +38,15 @@ export default function LambdaResetModal({ isOpen, onClose }: LambdaResetModalPr
   const loadResults = useCallback(async () => {
     setLoading(true);
     try {
+      const id = await resolveRef.current();
+      setStudentId(id);
+      if (!id) { setResults([]); return; }
       const sb = createClient();
       // 1) Récupérer tous les résultats Lambda
       const { data: rows, error: rowsErr } = await sb
         .from("dm_results")
         .select("dictee_id, percentage")
-        .eq("student_id", LAMBDA_ID_6T);
+        .eq("student_id", id);
 
       if (rowsErr) {
         console.error("[lambda-reset] dm_results:", rowsErr);
@@ -106,10 +117,11 @@ export default function LambdaResetModal({ isOpen, onClose }: LambdaResetModalPr
   }, [isOpen, loadResults]);
 
   const reset = async (dicteeId: string | null) => {
+    if (!studentId) { toast.error("Lambda introuvable dans le Hub"); return; }
     setResettingId(dicteeId ?? "ALL");
     try {
       const teacherPassword = process.env.NEXT_PUBLIC_TEACHER_PASSWORD || "";
-      const body: Record<string, string> = { studentId: LAMBDA_ID_6T };
+      const body: Record<string, string> = { studentId };
       if (dicteeId) body.dicteeId = dicteeId;
 
       const res = await fetch("/api/student-results/reset", {
@@ -149,7 +161,7 @@ export default function LambdaResetModal({ isOpen, onClose }: LambdaResetModalPr
               🗑️ Réinitialiser Lambda
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
-              Lambda BELHAJ — Classe 6T · <span className="text-amber-700">compte partagé entre tous les profs</span>
+              Lambda BELHAJ — Classe {levelLabel} · <span className="text-amber-700">compte partagé entre tous les profs</span>
             </p>
           </div>
           <button

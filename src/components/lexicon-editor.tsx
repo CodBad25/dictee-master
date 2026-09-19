@@ -70,8 +70,8 @@ export default function LexiconEditor({
     try {
       await updateWordLexicon(dicteeId, position, patch);
       onChange(patch);
-    } catch (e: any) {
-      toast.error("Erreur : " + (e?.message || "sauvegarde impossible"));
+    } catch (e) {
+      toast.error("Erreur : " + (e instanceof Error ? e.message : "sauvegarde impossible"));
       rollback();
     } finally {
       setSaving(false);
@@ -182,7 +182,7 @@ export default function LexiconEditor({
           <div>
             <h4 className="font-bold text-violet-900">🧩 Famille & synonymes</h4>
             <p className="text-xs text-violet-800 mt-0.5">
-              Contenu proposé par l'IA à partir de la définition. Relis, corrige, puis valide :
+              Contenu proposé par l&apos;IA à partir de la définition. Relis, corrige, puis valide :
               seuls les mots validés sont proposés aux élèves.
             </p>
           </div>

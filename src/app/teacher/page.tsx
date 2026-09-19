@@ -258,6 +258,35 @@ export default function TeacherPage() {
     }
   };
 
+  // Résout l'élève de test Lambda pour un niveau : classe « 6T » / « 5T » du
+  // Hub, puis l'élève dont le prénom est Lambda. null (+ toast) si introuvable.
+  const resolveLambda = async (level: "6e" | "5e") => {
+    const testName = level === "5e" ? "5T" : "6T";
+    const testClass = hubClasses.find((c) => c.nom.trim().toUpperCase() === testName);
+    if (!testClass) {
+      toast.error(`Classe ${testName} introuvable dans le Hub`);
+      return null;
+    }
+    try {
+      const eleves = await getEleves(testClass.id);
+      const lambda = eleves.find((e) => e.prenom.trim().toLowerCase() === "lambda");
+      if (!lambda) {
+        toast.error(`Aucun élève « Lambda » dans la classe ${testName} du Hub`);
+        return null;
+      }
+      return {
+        eleveId: lambda.id,
+        prenom: lambda.prenom,
+        nom: lambda.nom,
+        classe: testClass.nom,
+        classeId: testClass.id,
+      };
+    } catch {
+      toast.error("Hub injoignable — impossible de charger Lambda");
+      return null;
+    }
+  };
+
   // Pick a class and load its students
   const pickClass = async (classId: string, className: string, hubNiveau?: string) => {
     try {
@@ -510,31 +539,14 @@ export default function TeacherPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              // Lambda est inscrit en 6T et en 5T : on injecte celui du niveau
-              // de la classe sélectionnée pour voir la bonne grille élève.
-              if (classLevel === "5e") {
-                const cinqT = hubClasses.find((c) => c.nom === "5T");
-                if (cinqT) {
-                  setConnectedEleve({
-                    eleveId: "0242ceab-2f0d-49e6-8f44-12328657d312",
-                    prenom: "Lambda",
-                    nom: "BELHAJ",
-                    classe: "5T",
-                    classeId: cinqT.id,
-                  });
-                  router.push("/student");
-                  return;
-                }
-                toast.error("Classe 5T introuvable dans le Hub — test avec Lambda 6T (grille 6e)");
-              }
-              setConnectedEleve({
-                eleveId: "cmn2ca8bp00rt01rx2gxh72nw",
-                prenom: "Lambda",
-                nom: "BELHAJ",
-                classe: "6T",
-                classeId: "cmn2c6ta500rs01rxg75gtr3m",
-              });
+            onClick={async () => {
+              // Lambda (élève fictif de test) est résolu dynamiquement dans le
+              // Hub : classe « 5T » ou « 6T » selon le niveau affiché, puis
+              // élève prénommé Lambda. Plus aucun ID codé en dur : le Hub
+              // régénère ses classes de test chaque année.
+              const lambda = await resolveLambda(classLevel === "5e" ? "5e" : "6e");
+              if (!lambda) return;
+              setConnectedEleve(lambda);
               router.push("/student");
             }}
             className="px-3 py-1 rounded text-sm hover:bg-white/10"
@@ -904,7 +916,12 @@ export default function TeacherPage() {
 
       {/* Admin Bugs Modal */}
       <AdminBugs open={showBugs} onClose={() => setShowBugs(false)} />
-      <LambdaResetModal isOpen={showLambdaResetModal} onClose={() => setShowLambdaResetModal(false)} />
+      <LambdaResetModal
+        isOpen={showLambdaResetModal}
+        onClose={() => setShowLambdaResetModal(false)}
+        resolveStudentId={async () => (await resolveLambda(classLevel === "5e" ? "5e" : "6e"))?.eleveId ?? null}
+        levelLabel={classLevel === "5e" ? "5T" : "6T"}
+      />
 
       {/* Aperçu Évaluation Modal */}
       {showEvalPreview && (
