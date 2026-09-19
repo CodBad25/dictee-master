@@ -86,7 +86,11 @@ interface Props {
   variants?: FillBlanksVariant[];
   teacherPassword?: string;
   onVariantsChange?: (variants: FillBlanksVariant[]) => void;
+  // Onglet ouvert au montage (ex. "lexique" depuis le panneau Nouveautés)
+  initialTab?: TabId;
 }
+
+export type WordConfigTabId = TabId;
 
 export default function WordConfigSection({
   dicteeId,
@@ -97,8 +101,9 @@ export default function WordConfigSection({
   variants = [],
   teacherPassword = "",
   onVariantsChange,
+  initialTab,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<TabId>("spelling_choice");
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab ?? "spelling_choice");
   const [localWords, setLocalWords] = useState<WordConfigRow[]>(words);
   const [saving, setSaving] = useState<Record<number, boolean>>({});
   // State for inline "add piège" input per word position
@@ -470,6 +475,7 @@ export default function WordConfigSection({
           return (
             <button
               key={tab.id}
+              data-tour={`words-tab-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 transition border-b-[3px] flex-shrink-0 text-left
                 ${isActive ? c.active : "border-transparent text-gray-500 hover:bg-gray-100"}`}
@@ -509,6 +515,7 @@ export default function WordConfigSection({
         </span>
         {activeTab === "lexique" && (
           <button
+            data-tour="lexique-validate-all"
             onClick={() => setAllLexiconValidated(count("lexique") < n)}
             disabled={validatingAll}
             className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-lg border border-violet-300 bg-white text-violet-700 hover:bg-violet-100 transition disabled:opacity-50 inline-flex items-center gap-1"

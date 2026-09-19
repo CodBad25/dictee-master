@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -26,7 +26,11 @@ import {
 import BilanPreview from "@/components/bilan-preview";
 import AdminBugs from "@/components/admin-bugs";
 import ParcoursConfig from "@/components/parcours-config";
-import GuidedTour, { shouldShowTour, type TourStep } from "@/components/guided-tour";
+import GuidedTour, { shouldShowTour, resetTour, type TourStep } from "@/components/guided-tour";
+import NouveautesPanel from "@/components/nouveautes-panel";
+import type { NouveauteAction } from "@/content/nouveautes";
+import { loadDerniereNouveauteVue, marquerNouveautesVues, compterNonLues } from "@/lib/nouveautes-service";
+import type { WordConfigTabId } from "@/components/word-config-section";
 import ErrorTabs from "@/components/error-tabs";
 import EvalPreviewModal from "@/components/eval-preview-modal";
 import UnlockRequestsPanel from "@/components/unlock-requests-panel";
@@ -73,6 +77,20 @@ const PARCOURS_TOUR_STEPS: TourStep[] = [
     description: "Cliquez sur un mot pour l'activer ou le désactiver. Les mots désactivés ne seront pas travaillés dans les exercices. Utilisez « Tous » ou « Aucun » pour aller plus vite.",
     position: "top",
     clickBefore: "dictee-first-button",
+  },
+  {
+    target: "words-tab-lexique",
+    title: "Nouveau : Famille & synonymes",
+    description: "Dans « Personnaliser les mots », l'onglet 🧩 propose pour chaque mot des mots de la même famille et des synonymes, rédigés par l'IA à partir des définitions. Rien n'est montré aux élèves tant que vous n'avez pas validé.",
+    position: "bottom",
+    clickBefore: "words-config-button",
+  },
+  {
+    target: "lexique-validate-all",
+    title: "Relire, corriger, valider",
+    description: "Retirez un mot avec sa croix, ajoutez-en avec « + ajouter », puis cliquez « Valider » sur chaque mot — ou ce bouton pour valider toute la dictée d'un coup. Seuls les mots validés alimenteront l'exercice élève.",
+    position: "bottom",
+    clickBefore: "words-tab-lexique",
   },
 ];
 
@@ -174,6 +192,11 @@ export default function TeacherPage() {
   const [showEvalPreview, setShowEvalPreview] = useState(false);
   const [showLambdaResetModal, setShowLambdaResetModal] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  // Journal ✨ Nouveautés : curseur de lecture par enseignant (cf. nouveautes-service)
+  const [nouveautesOpen, setNouveautesOpen] = useState(false);
+  const [nouveautesNonLues, setNouveautesNonLues] = useState(0);
+  const nouveautesToastShown = useRef(false);
+  const [parcoursWordsTab, setParcoursWordsTab] = useState<WordConfigTabId | undefined>(undefined);
   const [studentsWithOverrides, setStudentsWithOverrides] = useState<Set<string>>(new Set());
   const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
     null
@@ -410,6 +433,43 @@ export default function TeacherPage() {
     init();
   }, [_hasHydrated]);
 
+  // Nouveautés non lues → pastille + un seul toast par session (jamais de modale bloquante)
+  useEffect(() => {
+    if (!_hasHydrated || !user?.id) return;
+    loadDerniereNouveauteVue(user.id)
+      .then((id) => {
+        const n = compterNonLues(id);
+        setNouveautesNonLues(n);
+        if (n > 0 && !nouveautesToastShown.current) {
+          nouveautesToastShown.current = true;
+          toast(`${n} nouveauté${n > 1 ? "s" : ""} sur le site depuis ta dernière visite`, {
+            icon: "✨",
+            duration: 8000,
+            action: { label: "Voir", onClick: () => setNouveautesOpen(true) },
+          });
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [_hasHydrated, user?.id]);
+
+  const marquerNouveautesLues = () => {
+    if (!user?.id) return;
+    marquerNouveautesVues(user.id).then(() => setNouveautesNonLues(0)).catch(() => {});
+  };
+
+  const onNouveauteAction = (action: NouveauteAction) => {
+    if (action === "tour") {
+      resetTour("parcours");
+      setShowParcours(false);
+      setShowTour(true);
+      return;
+    }
+    if (!dmClassId) { toast.error("Sélectionne d'abord une classe"); return; }
+    setParcoursWordsTab(action === "parcours-lexique" ? "lexique" : undefined);
+    setShowParcours(true);
+  };
+
   if (loading) {
     return (
       <div className="h-dvh flex items-center justify-center bg-gray-50">
@@ -540,6 +600,18 @@ export default function TeacherPage() {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setNouveautesOpen(true)}
+            className="relative px-3 py-1 rounded text-sm hover:bg-white/10"
+            title="Nouveautés du site"
+          >
+            ✨ Nouveautés
+            {nouveautesNonLues > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-400 text-purple-900 text-[11px] font-bold flex items-center justify-center shadow">
+                {nouveautesNonLues}
+              </span>
+            )}
+          </button>
           <button
             onClick={async () => {
               // Lambda (élève fictif de test) est résolu dynamiquement dans le
@@ -918,6 +990,14 @@ export default function TeacherPage() {
 
       {/* Admin Bugs Modal */}
       <AdminBugs open={showBugs} onClose={() => setShowBugs(false)} />
+      <NouveautesPanel
+        open={nouveautesOpen}
+        onClose={() => setNouveautesOpen(false)}
+        nonLues={nouveautesNonLues}
+        onToutLu={marquerNouveautesLues}
+        onAction={onNouveauteAction}
+      />
+
       <LambdaResetModal
         isOpen={showLambdaResetModal}
         onClose={() => setShowLambdaResetModal(false)}
@@ -939,7 +1019,8 @@ export default function TeacherPage() {
       {showParcours && dmClassId !== null && dmClassId !== "" && (
         <ParcoursConfig
           open={showParcours}
-          onClose={() => { setShowParcours(false); if (dmClassId) loadStudentsWithOverrides(dmClassId).then(setStudentsWithOverrides).catch(() => {}); }}
+          onClose={() => { setShowParcours(false); setParcoursWordsTab(undefined); if (dmClassId) loadStudentsWithOverrides(dmClassId).then(setStudentsWithOverrides).catch(() => {}); }}
+          initialWordsTab={parcoursWordsTab}
           dmClassId={dmClassId}
           className={selectedClasseName}
           dictees={dictees.map(d => ({ id: d.id, title: d.title, position: d.position }))}

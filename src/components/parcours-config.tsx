@@ -26,7 +26,7 @@ import {
   type GrammaticalClass,
 } from "@/lib/grammar-classifier";
 import WordConfigModal, { type WordConfigRow } from "@/components/word-config-modal";
-import WordConfigSection from "@/components/word-config-section";
+import WordConfigSection, { type WordConfigTabId } from "@/components/word-config-section";
 
 const ACTIVITY_LABELS: Record<string, { label: string; icon: string; desc: string; color: string }> = {
   flashcard: { label: "Flashcard", icon: "🃏", desc: "Mémorise l'orthographe de chaque mot", color: "from-blue-400 to-blue-600" },
@@ -57,6 +57,9 @@ interface ParcoursConfigProps {
   dictees: { id: string; title: string; position: number }[];
   students?: { id: string; name: string }[];
   displayName?: (name: string) => string;
+  // Ouverture directe sur « Personnaliser les mots » de la 1re dictée, sur
+  // l'onglet demandé (depuis le panneau ✨ Nouveautés).
+  initialWordsTab?: WordConfigTabId;
 }
 
 export default function ParcoursConfig({
@@ -67,6 +70,7 @@ export default function ParcoursConfig({
   dictees,
   students = [],
   displayName = (n) => n,
+  initialWordsTab,
 }: ParcoursConfigProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -113,6 +117,15 @@ export default function ParcoursConfig({
 
   // Section « Personnaliser les mots » (Variante 2 — tabs horizontales)
   const [showWordConfigSection, setShowWordConfigSection] = useState(false);
+
+  // Accès direct (Nouveautés) : sélectionne la 1re dictée et ouvre la section mots.
+  useEffect(() => {
+    if (!open || !initialWordsTab || dictees.length === 0) return;
+    const first = [...dictees].sort((a, b) => a.position - b.position)[0];
+    setSelectedDicteeId(first.id);
+    setShowWordConfigSection(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialWordsTab]);
 
   // Variantes du texte à trous (onglet Variantes dans WordConfigSection)
   const [variants, setVariants] = useState<FillBlanksVariant[]>([]);
@@ -718,6 +731,7 @@ export default function ParcoursConfig({
                       variants={variants}
                       teacherPassword={teacherPassword}
                       onVariantsChange={setVariants}
+                      initialTab={initialWordsTab}
                     />
                   </div>
                 )}
@@ -746,6 +760,7 @@ export default function ParcoursConfig({
                       <div className="flex items-center gap-2">
                         {dicteeWords.length > 0 && (
                           <motion.button
+                            data-tour="words-config-button"
                             onClick={() => setShowWordConfigSection(true)}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
