@@ -40,12 +40,14 @@ export interface DicteeWord {
   // Lexique (famille + synonymes) — contenu IA à valider par l'enseignant.
   word_family: string[];
   synonyms: string[];
+  intrus: string[];          // intrus précalculés (autres dictées), modifiables
   lexicon_validated: boolean;
 }
 
 export interface WordLexiconPatch {
   word_family?: string[];
   synonyms?: string[];
+  intrus?: string[];
   lexicon_validated?: boolean;
 }
 
@@ -90,7 +92,7 @@ export async function loadDicteeWords(dicteeId: string): Promise<DicteeWord[]> {
   const sb = createClient();
   const { data } = await sb
     .from("dictee_words")
-    .select("dictee_id, word, definition, spelling_errors, position, word_family, synonyms, lexicon_validated")
+    .select("dictee_id, word, definition, spelling_errors, position, word_family, synonyms, intrus, lexicon_validated")
     .eq("dictee_id", dicteeId)
     .order("position");
   return (data || []).map((w) => ({
@@ -98,6 +100,7 @@ export async function loadDicteeWords(dicteeId: string): Promise<DicteeWord[]> {
     spelling_errors: Array.isArray(w.spelling_errors) ? w.spelling_errors : [],
     word_family: Array.isArray(w.word_family) ? w.word_family : [],
     synonyms: Array.isArray(w.synonyms) ? w.synonyms : [],
+    intrus: Array.isArray(w.intrus) ? w.intrus : [],
     lexicon_validated: !!w.lexicon_validated,
   }));
 }

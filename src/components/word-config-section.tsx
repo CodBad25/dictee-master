@@ -388,6 +388,7 @@ export default function WordConfigSection({
           word={w.word}
           family={w.word_family ?? []}
           synonyms={w.synonyms ?? []}
+          intrus={w.intrus ?? []}
           validated={!!w.lexicon_validated}
           onChange={(patch) => {
             patchWord(w.position, patch);

@@ -183,7 +183,7 @@ export default function ParcoursConfig({
       const [wordsData, loadedVariants] = await Promise.all([
         sb
           .from("dictee_words")
-          .select("word, position, spelling_errors, grammatical_class, lemma, article, definition, audio_url, word_family, synonyms, lexicon_validated")
+          .select("word, position, spelling_errors, grammatical_class, lemma, article, definition, audio_url, word_family, synonyms, intrus, lexicon_validated")
           .eq("dictee_id", selectedDicteeId)
           .order("position"),
         loadFillBlanksVariants(selectedDicteeId),
@@ -200,6 +200,7 @@ export default function ParcoursConfig({
           audio_url: w.audio_url || null,
           word_family: Array.isArray(w.word_family) ? w.word_family : [],
           synonyms: Array.isArray(w.synonyms) ? w.synonyms : [],
+          intrus: Array.isArray(w.intrus) ? w.intrus : [],
           lexicon_validated: !!w.lexicon_validated,
         })),
       );

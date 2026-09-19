@@ -27,6 +27,7 @@ export type WordConfigRow = {
   audio_url?: string | null;
   word_family?: string[];
   synonyms?: string[];
+  intrus?: string[];
   lexicon_validated?: boolean;
 };
 
@@ -261,6 +262,7 @@ function ExoPanel({
           word={word.word}
           family={word.word_family ?? []}
           synonyms={word.synonyms ?? []}
+          intrus={word.intrus ?? []}
           validated={!!word.lexicon_validated}
           onChange={(patch) => onUpdate(patch)}
           layout="card"

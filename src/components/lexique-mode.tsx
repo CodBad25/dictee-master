@@ -11,12 +11,11 @@ import DicteeResults from "@/components/dictee-results";
 //
 // Pour chaque mot de la dictée, l'élève classe des étiquettes dans trois cases :
 // Même famille / Synonyme / Intrus. Les étiquettes viennent EXCLUSIVEMENT des
-// listes validées par l'enseignant (dictee_words.word_family / synonyms avec
-// lexicon_validated = true). Les intrus sont pris dans les listes des AUTRES
-// mots de la même dictée (d'abord leurs familles, lexicalement éloignées, puis
-// leurs synonymes), en excluant tout ce qui figure dans les listes du mot cible
-// et les mots cibles eux-mêmes — les dictées sont thématiques, un mot cible
-// est souvent synonyme d'un autre.
+// listes validées par l'enseignant (dictee_words.word_family / synonyms / intrus
+// avec lexicon_validated = true). Les intrus sont précalculés depuis les
+// familles d'AUTRES dictées (champ lexical disjoint) et relus : tirer dans la
+// même dictée donnait des mots voisins par le sens (chaque dictée est un
+// champ lexical homogène).
 //
 // Score = étiquettes bien classées. Résultat enregistré dans dm_results avec
 // activity_mode "lexique" (score = étiquettes justes, total = étiquettes).
@@ -54,21 +53,21 @@ const sample = <T,>(arr: T[], n: number) => shuffle(arr).slice(0, n);
 const hasContent = (w: DicteeWord) => w.word_family.length > 0 || w.synonyms.length > 0;
 const hasLexique = (w: DicteeWord) => w.lexicon_validated && hasContent(w);
 
-// Construit une manche pour `word` à partir de l'ensemble des mots validés.
+// Construit une manche pour `word`. Les intrus viennent de la liste `intrus`
+// stockée sur le mot (précalculée depuis d'autres dictées et relue). Si elle
+// est trop courte, on complète avec les intrus des autres mots de la dictée,
+// en excluant tout ce qui touche au mot cible (mot, famille, synonymes).
 function buildRound(word: DicteeWord, all: DicteeWord[]): Round {
-  const own = new Set([...word.word_family, ...word.synonyms].map((s) => s.toLowerCase()));
-  const targets = new Set(all.map((w) => bare(w.word).toLowerCase()));
-  const excluded = (s: string) => own.has(s.toLowerCase()) || targets.has(s.toLowerCase());
-
-  const others = all.filter((w) => w !== word);
-  const intrusFamille = shuffle(others.flatMap((w) => w.word_family)).filter((s) => !excluded(s));
-  const intrusSyn = shuffle(others.flatMap((w) => w.synonyms)).filter((s) => !excluded(s));
-  const intrus: string[] = [];
-  for (const s of [...intrusFamille, ...intrusSyn]) {
-    if (intrus.length >= INTRUS_PAR_MOT) break;
-    if (!intrus.includes(s)) intrus.push(s);
+  const own = new Set([bare(word.word), ...word.word_family, ...word.synonyms].map((s) => s.toLowerCase()));
+  let intrus = sample(word.intrus, INTRUS_PAR_MOT);
+  if (intrus.length < INTRUS_PAR_MOT) {
+    const extra = shuffle(all.filter((w) => w !== word).flatMap((w) => w.intrus))
+      .filter((s) => !own.has(s.toLowerCase()) && !intrus.includes(s));
+    for (const s of extra) {
+      if (intrus.length >= INTRUS_PAR_MOT) break;
+      intrus.push(s);
+    }
   }
-
   const tags: Tag[] = [
     ...sample(word.word_family, FAMILLE_PAR_MOT).map((text) => ({ text, bin: "famille" as Bin })),
     ...sample(word.synonyms, SYNONYMES_PAR_MOT).map((text) => ({ text, bin: "synonyme" as Bin })),

@@ -13,6 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 import { LEXIQUE_5E_ENTRIES } from "./lexique-5e-data.mjs";
+import { INTRUS_5E } from "./intrus-5e-data.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const envText = fs.readFileSync(path.join(__dirname, "..", ".env.local"), "utf8");
@@ -47,7 +48,8 @@ for (const e of LEXIQUE_5E_ENTRIES) {
     continue;
   }
   if (row.lexicon_validated && !force) { skipped++; continue; }
-  const patch = { word_family: e.famille, synonyms: e.synonymes };
+  const intrus = INTRUS_5E[e.dicteeId]?.find((x) => x.position === e.position)?.intrus ?? [];
+  const patch = { word_family: e.famille, synonyms: e.synonymes, intrus };
   if (resetValidation) patch.lexicon_validated = false;
   if (!dryRun) {
     const { error: upErr } = await sb

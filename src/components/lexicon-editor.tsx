@@ -9,7 +9,7 @@ import { updateWordLexicon, type WordLexiconPatch } from "@/lib/dictee-service";
 // modale par mot (WordConfigModal, layout "card"). Chaque ajout / suppression
 // est sauvegardé immédiatement, comme les pièges.
 
-type ListKey = "word_family" | "synonyms";
+type ListKey = "word_family" | "synonyms" | "intrus";
 
 interface LexiconEditorProps {
   dicteeId: string;
@@ -17,6 +17,7 @@ interface LexiconEditorProps {
   word: string;
   family: string[];
   synonyms: string[];
+  intrus: string[];
   validated: boolean;
   onChange: (patch: WordLexiconPatch) => void;
   layout?: "row" | "card";
@@ -37,6 +38,13 @@ const LISTS: { key: ListKey; label: string; chip: string; add: string; placehold
     add: "border-fuchsia-300 text-fuchsia-500 hover:bg-fuchsia-50",
     placeholder: "synonyme…",
   },
+  {
+    key: "intrus",
+    label: "Intrus",
+    chip: "bg-gray-100 text-gray-700 border border-gray-300",
+    add: "border-gray-300 text-gray-500 hover:bg-gray-50",
+    placeholder: "intrus (ni famille ni synonyme)…",
+  },
 ];
 
 export default function LexiconEditor({
@@ -45,11 +53,12 @@ export default function LexiconEditor({
   word,
   family,
   synonyms,
+  intrus,
   validated,
   onChange,
   layout = "row",
 }: LexiconEditorProps) {
-  const [lists, setLists] = useState<Record<ListKey, string[]>>({ word_family: family, synonyms });
+  const [lists, setLists] = useState<Record<ListKey, string[]>>({ word_family: family, synonyms, intrus });
   const [isValidated, setIsValidated] = useState(validated);
   const [saving, setSaving] = useState(false);
   const [adding, setAdding] = useState<ListKey | null>(null);
@@ -58,12 +67,12 @@ export default function LexiconEditor({
 
   // Resynchronise si le parent change de mot (modale) ou recharge les données.
   useEffect(() => {
-    setLists({ word_family: family, synonyms });
+    setLists({ word_family: family, synonyms, intrus });
     setIsValidated(validated);
     setAdding(null);
     setDraft("");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [position, family.join("|"), synonyms.join("|"), validated]);
+  }, [position, family.join("|"), synonyms.join("|"), intrus.join("|"), validated]);
 
   const persist = async (patch: WordLexiconPatch, rollback: () => void) => {
     setSaving(true);
@@ -182,8 +191,9 @@ export default function LexiconEditor({
           <div>
             <h4 className="font-bold text-violet-900">🧩 Famille & synonymes</h4>
             <p className="text-xs text-violet-800 mt-0.5">
-              Contenu proposé par l&apos;IA à partir de la définition. Relis, corrige, puis valide :
-              seuls les mots validés sont proposés aux élèves.
+              Famille et synonymes proposés par l&apos;IA à partir de la définition ; intrus pris dans
+              d&apos;autres dictées (ni famille ni synonyme). Relis, corrige, puis valide : seuls les mots
+              validés sont proposés aux élèves.
             </p>
           </div>
           {validateButton}
