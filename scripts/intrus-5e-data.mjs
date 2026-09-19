@@ -7,100 +7,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "scruter",
    "intrus": [
-    "éclairer",
-    "étrangement",
-    "rayonner",
-    "apaisant"
+    "astuce",
+    "affaiblir",
+    "réflexion",
+    "porter"
    ]
   },
   {
    "position": 1,
    "word": "examiner",
    "intrus": [
-    "oublier",
-    "disparition",
-    "habitude",
-    "illumination"
+    "consolant",
+    "affaiblir",
+    "lumière",
+    "entourer"
    ]
   },
   {
    "position": 2,
    "word": "apercevoir",
    "intrus": [
-    "ombrage",
-    "feinte",
-    "consolateur",
-    "imprudence"
+    "sournoisement",
+    "courroucer",
+    "manigance",
+    "voile"
    ]
   },
   {
    "position": 3,
    "word": "observer",
    "intrus": [
-    "reflet",
-    "hargneux",
-    "scintillement",
-    "persévérant"
+    "porter",
+    "tenir",
+    "surplomb",
+    "alléger"
    ]
   },
   {
    "position": 4,
    "word": "un détail",
    "intrus": [
-    "réflecteur",
-    "exaspération",
-    "éblouissant",
-    "affaiblir"
+    "saisissant",
+    "émerveillement",
+    "astuce",
+    "merveilleux"
    ]
   },
   {
    "position": 5,
    "word": "un indice",
    "intrus": [
-    "nostalgique",
-    "exploration",
-    "éclatant",
-    "bruit"
+    "ténacité",
+    "forcer",
+    "radiation",
+    "bruyant"
    ]
   },
   {
    "position": 6,
    "word": "le regard",
    "intrus": [
-    "alléger",
-    "irritant",
-    "détourner",
-    "profession"
+    "magnanime",
+    "fasciner",
+    "renforcer",
+    "versement"
    ]
   },
   {
    "position": 7,
    "word": "curieux",
    "intrus": [
-    "mémoriser",
-    "tourner",
-    "choisir",
-    "merveille"
+    "oubliette",
+    "serpent",
+    "majesté",
+    "faiblement"
    ]
   },
   {
    "position": 8,
    "word": "visible",
    "intrus": [
-    "merveille",
-    "aguets",
     "délasser",
-    "réconfort"
+    "décourager",
+    "consolant",
+    "mémoire"
    ]
   },
   {
    "position": 9,
    "word": "attentivement",
    "intrus": [
-    "irraisonné",
-    "pays",
-    "mémorisation",
-    "immémorial"
+    "exaspérer",
+    "légèreté",
+    "défiance",
+    "modération"
    ]
   }
  ],
@@ -109,100 +109,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "arpenter",
    "intrus": [
-    "perception",
-    "irréfléchi",
-    "tumultueux",
-    "aguets"
+    "culminant",
+    "tenue",
+    "ébruiter",
+    "radiation"
    ]
   },
   {
    "position": 1,
    "word": "contourner",
    "intrus": [
-    "élevage",
-    "guet-apens",
-    "tumultueux",
-    "tenue"
+    "courroucer",
+    "ébruiter",
+    "mémorable",
+    "force"
    ]
   },
   {
    "position": 2,
    "word": "s'aventurer",
    "intrus": [
-    "abruptement",
-    "professer",
-    "jugement",
-    "ombragé"
+    "gronderie",
+    "rayonnement",
+    "apparemment",
+    "taper"
    ]
   },
   {
    "position": 3,
    "word": "un sentier",
    "intrus": [
-    "malicieusement",
-    "scintillement",
-    "assurance",
-    "étude"
+    "veilleur",
+    "leurre",
+    "remémorer",
+    "paix"
    ]
   },
   {
    "position": 4,
    "word": "un périple",
    "intrus": [
-    "s'émerveiller",
-    "dévoilement",
-    "jugement",
-    "réfléchir"
+    "hargneux",
+    "dissimulation",
+    "savant",
+    "clarté"
    ]
   },
   {
    "position": 5,
    "word": "un détour",
    "intrus": [
-    "énigme",
-    "consolateur",
-    "élevage",
-    "malavisé"
+    "irraisonné",
+    "aperçu",
+    "renforcer",
+    "approfondissement"
    ]
   },
   {
    "position": 6,
    "word": "un paysage",
    "intrus": [
-    "perceptible",
-    "luire",
-    "irraisonné",
-    "léger"
+    "courroucer",
+    "indicateur",
+    "serpentin",
+    "rayonnant"
    ]
   },
   {
    "position": 7,
    "word": "un itinéraire",
    "intrus": [
-    "entreprenant",
-    "sonner",
-    "visiblement",
-    "assurer"
+    "luminosité",
+    "versement",
+    "rageur",
+    "réfléchir"
    ]
   },
   {
    "position": 8,
    "word": "isolé",
    "intrus": [
-    "étudier",
-    "hargneusement",
-    "tenir",
-    "faiblement"
+    "imprudemment",
+    "vaincre",
+    "assurer",
+    "convaincre"
    ]
   },
   {
    "position": 9,
    "word": "inexploré",
    "intrus": [
-    "réfléchir",
-    "contemplatif",
-    "rappel",
-    "lumière"
+    "nostalgique",
+    "avertir",
+    "légèreté",
+    "oublieux"
    ]
   }
  ],
@@ -211,100 +211,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "présager",
    "intrus": [
-    "surgissement",
-    "renforcer",
-    "effort",
-    "étrangement"
+    "oublier",
+    "évocateur",
+    "contemplateur",
+    "affaiblir"
    ]
   },
   {
    "position": 1,
    "word": "se méfier",
    "intrus": [
-    "éclatement",
-    "déverser",
-    "professoral",
-    "détourner"
+    "encourager",
+    "exaspération",
+    "mésaventure",
+    "réflexion"
    ]
   },
   {
    "position": 2,
    "word": "se dissimuler",
    "intrus": [
-    "paix",
-    "étrangeté",
-    "effort",
-    "bruire"
+    "explorateur",
+    "bruit",
+    "connaître",
+    "aventureux"
    ]
   },
   {
    "position": 3,
    "word": "guetter",
    "intrus": [
-    "sourdement",
-    "sereinement",
-    "reluire",
-    "exaspérant"
+    "admiration",
+    "bruyant",
+    "confort",
+    "sonner"
    ]
   },
   {
    "position": 4,
    "word": "une menace",
    "intrus": [
-    "exploration",
-    "clémence",
-    "paisiblement",
-    "courageux"
+    "confortable",
+    "détermination",
+    "enseignement",
+    "irraisonné"
    ]
   },
   {
    "position": 5,
    "word": "la vigilance",
    "intrus": [
-    "entreprise",
-    "luisant",
-    "mémorable",
-    "envoûtement"
+    "éblouissant",
+    "sournoiserie",
+    "assurance",
+    "décourager"
    ]
   },
   {
    "position": 6,
    "word": "l'inquiétude",
    "intrus": [
-    "reluisant",
-    "éclater",
-    "envoûter",
-    "paysan"
+    "remémorer",
+    "immodéré",
+    "serpent",
+    "lumière"
    ]
   },
   {
    "position": 7,
    "word": "une alerte",
    "intrus": [
-    "ombrelle",
-    "courageux",
-    "stratégie",
-    "apaisement"
+    "renverser",
+    "éclatant",
+    "vaincre",
+    "paix"
    ]
   },
   {
    "position": 8,
    "word": "inhabituel",
    "intrus": [
-    "tenir",
-    "verser",
-    "mémoriser",
-    "oublieux"
+    "paix",
+    "profession",
+    "tenue",
+    "irritable"
    ]
   },
   {
    "position": 9,
    "word": "prudemment",
    "intrus": [
-    "mémoriser",
-    "visiblement",
-    "pacifier",
-    "éblouissement"
+    "oublieux",
+    "enseignant",
+    "connaisseur",
+    "sérénité"
    ]
   }
  ],
@@ -313,100 +313,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "irradier",
    "intrus": [
-    "malveillance",
-    "sourd",
-    "sournoisement",
-    "profession"
+    "apparent",
+    "contour",
+    "inquiétant",
+    "serpent"
    ]
   },
   {
    "position": 1,
    "word": "scintiller",
    "intrus": [
-    "perfide",
-    "aplomb",
-    "imperceptible",
-    "dissimulateur"
+    "apaisement",
+    "résonance",
+    "scrutateur",
+    "paysan"
    ]
   },
   {
    "position": 2,
    "word": "refléter",
    "intrus": [
-    "convaincant",
-    "irréfléchi",
-    "mémorable",
-    "détermination"
+    "énigme",
+    "courageux",
+    "tumultueusement",
+    "menaçant"
    ]
   },
   {
    "position": 3,
    "word": "illuminer",
    "intrus": [
-    "confiance",
-    "force",
-    "oubliette",
-    "furie"
+    "résolu",
+    "commémorer",
+    "reconnaître",
+    "merveilleux"
    ]
   },
   {
    "position": 4,
    "word": "faiblir",
    "intrus": [
-    "examinateur",
-    "profession",
-    "furibond",
-    "vision"
+    "nostalgique",
+    "veille",
+    "oublier",
+    "dissimulé"
    ]
   },
   {
    "position": 5,
    "word": "la pénombre",
    "intrus": [
-    "stratège",
-    "rageusement",
-    "commémorer",
-    "appellation"
+    "étudier",
+    "élevage",
+    "mémoriser",
+    "alerter"
    ]
   },
   {
    "position": 6,
    "word": "une lueur",
    "intrus": [
-    "apparemment",
-    "oubliette",
-    "plomb",
-    "généreux"
+    "sérénité",
+    "mémorable",
+    "pacifier",
+    "mémoire"
    ]
   },
   {
    "position": 7,
    "word": "un rayon",
    "intrus": [
-    "approfondissement",
-    "bruyant",
-    "clémence",
-    "imprudemment"
+    "persévérant",
+    "enseigne",
+    "chant",
+    "contemplateur"
    ]
   },
   {
    "position": 8,
    "word": "un éclat",
    "intrus": [
-    "charité",
-    "évocateur",
-    "présage",
-    "visiblement"
+    "aplomb",
+    "voilé",
+    "fureur",
+    "connaître"
    ]
   },
   {
    "position": 9,
    "word": "éblouissant",
    "intrus": [
-    "rage",
-    "jugement",
-    "encouragement",
-    "dépaysement"
+    "menaçant",
+    "habitude",
+    "disparition",
+    "détaillé"
    ]
   }
  ],
@@ -415,100 +415,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "un enchantement",
    "intrus": [
-    "prudence",
-    "examiner",
-    "apparition",
-    "paix"
+    "éclater",
+    "immodéré",
+    "ombre",
+    "léger"
    ]
   },
   {
    "position": 1,
    "word": "admirer",
    "intrus": [
-    "irritant",
-    "paisiblement",
-    "paraître",
-    "arpenteur"
+    "ombrage",
+    "détailler",
+    "lucide",
+    "résonateur"
    ]
   },
   {
    "position": 2,
    "word": "contempler",
    "intrus": [
-    "courroucé",
-    "évocateur",
-    "malavisé",
-    "perfide"
+    "éclatement",
+    "leurre",
+    "doucement",
+    "assurément"
    ]
   },
   {
    "position": 3,
    "word": "s'émerveiller",
    "intrus": [
-    "lumière",
-    "convaincre",
-    "jugement",
-    "lassitude"
+    "modéré",
+    "irritant",
+    "menaçant",
+    "saisissable"
    ]
   },
   {
    "position": 4,
    "word": "s'extasier",
    "intrus": [
-    "paraître",
-    "inconnu",
-    "profession",
-    "scintillement"
+    "imprudence",
+    "index",
+    "quiétude",
+    "rager"
    ]
   },
   {
    "position": 5,
    "word": "une merveille",
    "intrus": [
-    "encouragement",
-    "détermination",
-    "assurance",
-    "arpentage"
+    "dissimulé",
+    "voile",
+    "détourner",
+    "sourd"
    ]
   },
   {
    "position": 6,
    "word": "un éblouissement",
    "intrus": [
-    "force",
-    "irrésolu",
-    "tranquillement",
-    "sourd"
+    "irritation",
+    "commémorer",
+    "arpenteur",
+    "apparemment"
    ]
   },
   {
    "position": 7,
    "word": "fascinant",
    "intrus": [
-    "isoler",
-    "voile",
-    "fureur",
-    "exaspérer"
+    "tumultueux",
+    "opiniâtreté",
+    "réflecteur",
+    "sournoisement"
    ]
   },
   {
    "position": 8,
    "word": "envoûtant",
    "intrus": [
-    "éclairer",
-    "enragé",
-    "ébruiter",
-    "courageux"
+    "tapageur",
+    "gronderie",
+    "explorateur",
+    "tranquillisant"
    ]
   },
   {
    "position": 9,
    "word": "profondément",
    "intrus": [
-    "majesté",
-    "malveillance",
-    "parfois",
-    "clarté"
+    "malicieux",
+    "dissimulation",
+    "apparaître",
+    "rassurant"
    ]
   }
  ],
@@ -517,100 +517,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "la persévérance",
    "intrus": [
-    "stratège",
-    "similaire",
-    "astuce",
-    "surplomb"
+    "fracasser",
+    "surdité",
+    "éclatement",
+    "mémoriser"
    ]
   },
   {
    "position": 1,
    "word": "entreprendre",
    "intrus": [
-    "scintillation",
-    "paix",
-    "observation",
-    "oubli"
+    "assurer",
+    "dissimulateur",
+    "enseigne",
+    "observable"
    ]
   },
   {
    "position": 2,
    "word": "s'efforcer",
    "intrus": [
-    "scrutin",
-    "habitude",
-    "convaincre",
-    "ombre"
+    "inconsolable",
+    "similaire",
+    "rassurant",
+    "mémorisation"
    ]
   },
   {
    "position": 3,
    "word": "le courage",
    "intrus": [
-    "jugement",
-    "souvenir",
-    "appellation",
-    "oubliette"
+    "perfidement",
+    "rappel",
+    "indulgence",
+    "dépayser"
    ]
   },
   {
    "position": 4,
    "word": "un effort",
    "intrus": [
-    "exaspérer",
-    "voiler",
-    "pacifier",
-    "itinérant"
+    "simuler",
+    "reflet",
+    "scrutateur",
+    "similaire"
    ]
   },
   {
    "position": 5,
    "word": "déterminé",
    "intrus": [
-    "disparition",
-    "majestueux",
-    "élevage",
-    "dissimulé"
+    "rappel",
+    "approfondir",
+    "connaisseur",
+    "contour"
    ]
   },
   {
    "position": 6,
    "word": "opiniâtre",
    "intrus": [
+    "oubli",
     "souvenir",
-    "éblouir",
-    "connaître",
-    "contemplatif"
+    "attention",
+    "menaçant"
    ]
   },
   {
    "position": 7,
    "word": "tenace",
    "intrus": [
-    "ombragé",
-    "hargneusement",
-    "prudent",
-    "rayon"
+    "tapageur",
+    "prudence",
+    "charité",
+    "verser"
    ]
   },
   {
    "position": 8,
    "word": "résolument",
    "intrus": [
-    "culminant",
-    "luminosité",
-    "lucidement",
-    "réfléchir"
+    "étudier",
+    "oublier",
+    "ombrage",
+    "léger"
    ]
   },
   {
    "position": 9,
    "word": "inlassablement",
    "intrus": [
-    "plomber",
-    "merveilleusement",
-    "raison",
-    "porter"
+    "tourner",
+    "observateur",
+    "éclatant",
+    "sereinement"
    ]
   }
  ],
@@ -619,100 +619,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "serpenter",
    "intrus": [
-    "lucide",
-    "envoûtement",
-    "connaître",
-    "enseigne"
+    "commémorer",
+    "observatoire",
+    "aventure",
+    "choisir"
    ]
   },
   {
    "position": 1,
    "word": "s'élever",
    "intrus": [
-    "examen",
-    "éclat",
-    "sourdement",
-    "surdité"
+    "retentissant",
+    "choisir",
+    "sournoiserie",
+    "adoucissant"
    ]
   },
   {
    "position": 2,
    "word": "surplomber",
    "intrus": [
-    "examen",
-    "disparu",
-    "apprendre",
-    "observateur"
+    "sûreté",
+    "retentissement",
+    "jugement",
+    "imprudence"
    ]
   },
   {
    "position": 3,
    "word": "culminer",
    "intrus": [
-    "envoûteur",
-    "soulagement",
-    "inhabituellement",
-    "observable"
+    "ressurgir",
+    "similaire",
+    "apaiser",
+    "isoler"
    ]
   },
   {
    "position": 4,
    "word": "un sommet",
    "intrus": [
-    "irradiation",
-    "assimilation",
-    "veiller",
-    "irascibilité"
+    "surgissement",
+    "sérénité",
+    "encouragement",
+    "fureur"
    ]
   },
   {
    "position": 5,
    "word": "un versant",
    "intrus": [
-    "merveilleux",
-    "saisie",
-    "exaspérer",
-    "paysagiste"
+    "rayonner",
+    "ombragé",
+    "souvenir",
+    "raisonner"
    ]
   },
   {
    "position": 6,
    "word": "une falaise",
    "intrus": [
-    "sûreté",
-    "aperçu",
-    "exaspération",
-    "habitude"
+    "indication",
+    "doucement",
+    "réconfort",
+    "nostalgique"
    ]
   },
   {
    "position": 7,
    "word": "escarpé",
    "intrus": [
-    "mémorisation",
-    "détournement",
-    "retentissant",
-    "appellation"
+    "mémoriser",
+    "feinte",
+    "oubli",
+    "isolation"
    ]
   },
   {
    "position": 8,
    "word": "abrupt",
    "intrus": [
-    "étudier",
-    "bruit",
-    "réflexion",
-    "détailler"
+    "pacification",
+    "éclatement",
+    "résoudre",
+    "étudiant"
    ]
   },
   {
    "position": 9,
    "word": "majestueusement",
    "intrus": [
-    "connaisseur",
-    "merveilleusement",
-    "aviser",
-    "étrangement"
+    "hargneux",
+    "irradier",
+    "manigance",
+    "entourer"
    ]
   }
  ],
@@ -721,100 +721,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "énigmatique",
    "intrus": [
-    "inattention",
-    "malin",
-    "exaspérant",
-    "mémoriser"
+    "perfidement",
+    "faible",
+    "merveilleux",
+    "confortable"
    ]
   },
   {
    "position": 1,
    "word": "disparaître",
    "intrus": [
-    "scrutateur",
-    "paix",
-    "prudence",
-    "tumultueux"
+    "éclairer",
+    "tourner",
+    "explorer",
+    "admirable"
    ]
   },
   {
    "position": 2,
    "word": "surgir",
    "intrus": [
-    "enseignant",
-    "paisible",
-    "imprudence",
-    "étudiant"
+    "apaisant",
+    "mémoire",
+    "rageur",
+    "modérateur"
    ]
   },
   {
    "position": 3,
    "word": "déceler",
    "intrus": [
-    "étudiant",
-    "escarpement",
-    "inattention",
-    "opiniâtreté"
+    "gronderie",
+    "évocateur",
+    "reluisant",
+    "hargneux"
    ]
   },
   {
    "position": 4,
    "word": "dévoiler",
    "intrus": [
-    "émerveillement",
-    "raison",
-    "appel",
-    "pacifique"
+    "dépaysement",
+    "charitablement",
+    "emporté",
+    "malin"
    ]
   },
   {
    "position": 5,
    "word": "une silhouette",
    "intrus": [
-    "visibilité",
-    "modération",
-    "aguets",
-    "envoûter"
+    "déverser",
+    "bienveillant",
+    "aventurier",
+    "apprendre"
    ]
   },
   {
    "position": 6,
    "word": "une apparition",
    "intrus": [
-    "irritant",
-    "force",
-    "rayonner",
-    "encourageant"
+    "forcer",
+    "méconnaissance",
+    "éclatant",
+    "réflexe"
    ]
   },
   {
    "position": 7,
    "word": "étrange",
    "intrus": [
-    "malicieux",
-    "mémoire",
-    "réflexion",
-    "méconnaissance"
+    "contemplation",
+    "mémorable",
+    "approfondissement",
+    "renforcer"
    ]
   },
   {
    "position": 8,
    "word": "insaisissable",
    "intrus": [
-    "tranquillement",
-    "clairvoyance",
-    "pays",
-    "entourer"
+    "perfide",
+    "ombragé",
+    "déverser",
+    "commémorer"
    ]
   },
   {
    "position": 9,
    "word": "mystérieusement",
    "intrus": [
-    "lassitude",
-    "détournement",
-    "éblouissant",
-    "réconfortant"
+    "sournoiserie",
+    "irritation",
+    "clémence",
+    "clarté"
    ]
   }
  ],
@@ -823,100 +823,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "la perfidie",
    "intrus": [
-    "hargneux",
-    "plomber",
-    "résonance",
-    "parfois"
+    "mémoire",
+    "scrutateur",
+    "mystère",
+    "menacer"
    ]
   },
   {
    "position": 1,
    "word": "leurrer",
    "intrus": [
-    "pacification",
-    "reflet",
-    "étude",
-    "tumultueux"
+    "approfondissement",
+    "entrepreneur",
+    "sonore",
+    "lasser"
    ]
   },
   {
    "position": 2,
    "word": "feindre",
    "intrus": [
-    "consolant",
-    "rayonner",
-    "connaisseur",
-    "indication"
+    "indiquer",
+    "regarder",
+    "contour",
+    "furibond"
    ]
   },
   {
    "position": 3,
    "word": "manigancer",
    "intrus": [
-    "réexaminer",
-    "érudit",
-    "éclatement",
-    "envoûtement"
+    "indicateur",
+    "confort",
+    "généreux",
+    "aviser"
    ]
   },
   {
    "position": 4,
    "word": "dissimuler",
    "intrus": [
-    "disparition",
-    "modéré",
-    "fulminant",
-    "taper"
+    "ombragé",
+    "paisiblement",
+    "éclaircir",
+    "fulminant"
    ]
   },
   {
    "position": 5,
    "word": "un stratagème",
    "intrus": [
-    "réflecteur",
-    "élevage",
-    "immodéré",
-    "indécelable"
+    "exploration",
+    "mystérieux",
+    "sereinement",
+    "indiquer"
    ]
   },
   {
    "position": 6,
    "word": "la malice",
    "intrus": [
-    "serpentin",
-    "pacification",
-    "mémoire",
-    "bruissement"
+    "inattentif",
+    "charitablement",
+    "retentissant",
+    "assurer"
    ]
   },
   {
    "position": 7,
    "word": "fourbe",
    "intrus": [
-    "veille",
-    "bruire",
-    "consoler",
-    "douceur"
+    "contemplatif",
+    "oubli",
+    "élevage",
+    "méfiance"
    ]
   },
   {
    "position": 8,
    "word": "sournois",
    "intrus": [
-    "lucidement",
-    "nostalgique",
-    "menacer",
-    "effort"
+    "oublieux",
+    "dépaysement",
+    "rage",
+    "charité"
    ]
   },
   {
    "position": 9,
    "word": "astucieusement",
    "intrus": [
-    "exaspérer",
-    "profondeur",
-    "saisissable",
-    "extatique"
+    "résolu",
+    "admirable",
+    "paysan",
+    "scintillement"
    ]
   }
  ],
@@ -925,100 +925,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "la nostalgie",
    "intrus": [
-    "forcer",
-    "rayonnement",
-    "exaspération",
-    "encourager"
+    "fourberie",
+    "dévoilement",
+    "irraisonné",
+    "dissimulé"
    ]
   },
   {
    "position": 1,
    "word": "évoquer",
    "intrus": [
-    "merveilleux",
-    "ombrage",
-    "isolation",
-    "étranger"
+    "menaçant",
+    "avertissement",
+    "indécelable",
+    "consolateur"
    ]
   },
   {
    "position": 2,
    "word": "se remémorer",
    "intrus": [
-    "ombragé",
-    "assourdissement",
-    "étude",
-    "retentissement"
+    "effort",
+    "habituellement",
+    "lucide",
+    "doucement"
    ]
   },
   {
    "position": 3,
    "word": "se rappeler",
    "intrus": [
-    "étrangeté",
-    "émerveillement",
-    "scrutateur",
-    "approfondissement"
+    "déverser",
+    "bruit",
+    "profond",
+    "saisir"
    ]
   },
   {
    "position": 4,
    "word": "se souvenir",
    "intrus": [
-    "renseigner",
-    "détourner",
-    "énigme",
-    "pacifique"
+    "contour",
+    "indication",
+    "légèreté",
+    "méconnaissance"
    ]
   },
   {
    "position": 5,
    "word": "la mémoire",
    "intrus": [
-    "réfléchir",
-    "soulagement",
-    "attentif",
-    "visibilité"
+    "explorer",
+    "attention",
+    "habituel",
+    "entreprise"
    ]
   },
   {
    "position": 6,
    "word": "mémorable",
    "intrus": [
-    "indiquer",
-    "effort",
-    "conviction",
-    "chant"
+    "astuce",
+    "malin",
+    "consoler",
+    "entreprise"
    ]
   },
   {
    "position": 7,
    "word": "inoubliable",
    "intrus": [
-    "merveilleusement",
-    "examiner",
-    "saisissable",
-    "tranquillisant"
+    "rayonnement",
+    "irritant",
+    "versement",
+    "menaçant"
    ]
   },
   {
    "position": 8,
    "word": "oublieux",
    "intrus": [
-    "guet",
-    "éclat",
-    "forcément",
-    "entrepreneur"
+    "examinateur",
+    "indulgence",
+    "doucement",
+    "verser"
    ]
   },
   {
    "position": 9,
    "word": "autrefois",
    "intrus": [
-    "paraître",
-    "ombrelle",
-    "aguets",
-    "décourager"
+    "confort",
+    "indulgence",
+    "déverser",
+    "irradier"
    ]
   }
  ],
@@ -1027,100 +1027,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "la bienveillance",
    "intrus": [
-    "tapageur",
-    "affaiblissement",
-    "nostalgique",
-    "inattention"
+    "culminant",
+    "aplomb",
+    "évocation",
+    "retentissant"
    ]
   },
   {
    "position": 1,
    "word": "encourager",
    "intrus": [
-    "éclatant",
-    "sournoisement",
-    "lasser",
-    "explorer"
+    "détaillant",
+    "paysagiste",
+    "illumination",
+    "s'efforcer"
    ]
   },
   {
    "position": 2,
    "word": "réconforter",
    "intrus": [
-    "modération",
-    "aventurier",
-    "irraisonné",
-    "adoucissement"
+    "simuler",
+    "indéterminé",
+    "exaspérer",
+    "opiniâtreté"
    ]
   },
   {
    "position": 3,
    "word": "rassurer",
    "intrus": [
-    "remémorer",
-    "invisible",
-    "plomb",
-    "préavis"
+    "attention",
+    "furieux",
+    "emporté",
+    "percevoir"
    ]
   },
   {
    "position": 4,
    "word": "l'altruisme",
    "intrus": [
-    "clarté",
-    "immémorial",
-    "résonateur",
-    "commémorer"
+    "extase",
+    "entreprenant",
+    "élévation",
+    "majestueux"
    ]
   },
   {
    "position": 5,
    "word": "la magnanimité",
    "intrus": [
-    "assourdissement",
-    "invisible",
-    "voile",
-    "irritable"
+    "luisant",
+    "explorateur",
+    "tapageusement",
+    "lasser"
    ]
   },
   {
    "position": 6,
    "word": "indulgent",
    "intrus": [
-    "présage",
-    "judicieusement",
-    "envoûtement",
-    "réflexe"
+    "étrangement",
+    "élevé",
+    "vigilant",
+    "dissimulé"
    ]
   },
   {
    "position": 7,
    "word": "clément",
    "intrus": [
-    "dissimulateur",
-    "observable",
-    "doucement",
-    "paysan"
+    "culminant",
+    "éclairage",
+    "veilleur",
+    "scintillement"
    ]
   },
   {
    "position": 8,
    "word": "charitable",
    "intrus": [
-    "arpent",
-    "détaillant",
-    "modéré",
-    "exaspérant"
+    "imperceptible",
+    "rager",
+    "ébruiter",
+    "examinateur"
    ]
   },
   {
    "position": 9,
    "word": "généreusement",
    "intrus": [
-    "paix",
-    "disparu",
-    "vision",
-    "appel"
+    "renforcer",
+    "emporté",
+    "curiosité",
+    "avertir"
    ]
   }
  ],
@@ -1129,100 +1129,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "le tumulte",
    "intrus": [
-    "quelquefois",
-    "plomb",
-    "reconnaître",
-    "stratégique"
+    "confort",
+    "adoucissement",
+    "éblouir",
+    "connaisseur"
    ]
   },
   {
    "position": 1,
    "word": "résonner",
    "intrus": [
-    "apaisement",
-    "jugement",
-    "dissimulation",
-    "perception"
+    "abruptement",
+    "étude",
+    "voyant",
+    "malicieusement"
    ]
   },
   {
    "position": 2,
    "word": "éclater",
    "intrus": [
-    "lasser",
-    "irréfléchi",
-    "étude",
-    "merveilleusement"
+    "approfondir",
+    "tranquillement",
+    "faible",
+    "force"
    ]
   },
   {
    "position": 3,
    "word": "gronder",
    "intrus": [
-    "assimilable",
-    "forcément",
-    "sereinement",
-    "érudit"
+    "paisible",
+    "douceur",
+    "mystère",
+    "envoûter"
    ]
   },
   {
    "position": 4,
    "word": "retentir",
    "intrus": [
-    "tourner",
-    "décourager",
-    "commémorer",
-    "veille"
+    "réflexion",
+    "admirable",
+    "douceur",
+    "abruptement"
    ]
   },
   {
    "position": 5,
    "word": "le vacarme",
    "intrus": [
-    "mésaventure",
-    "déraisonnable",
-    "escarpement",
-    "simuler"
+    "malin",
+    "veiller",
+    "réexaminer",
+    "mystère"
    ]
   },
   {
    "position": 6,
    "word": "le fracas",
    "intrus": [
-    "apprendre",
-    "imprudent",
-    "dépayser",
-    "inquiet"
+    "aviser",
+    "menacer",
+    "éclairer",
+    "dévoilement"
    ]
   },
   {
    "position": 7,
    "word": "le tapage",
    "intrus": [
-    "courageux",
-    "clarté",
-    "énigme",
-    "élève"
+    "affaiblir",
+    "surélever",
+    "élévation",
+    "lasser"
    ]
   },
   {
    "position": 8,
    "word": "assourdissant",
    "intrus": [
-    "faiblement",
-    "pacifique",
-    "plomber",
-    "examinateur"
+    "apaisant",
+    "observation",
+    "disparu",
+    "itinérant"
    ]
   },
   {
    "position": 9,
    "word": "bruyamment",
    "intrus": [
-    "élevé",
-    "opiniâtreté",
-    "regarder",
-    "profession"
+    "paysan",
+    "décourager",
+    "surplomb",
+    "malavisé"
    ]
   }
  ],
@@ -1231,100 +1231,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "furieusement",
    "intrus": [
-    "aventurier",
-    "consolant",
-    "tapageur",
-    "perfide"
+    "rayon",
+    "connaître",
+    "charité",
+    "stratégique"
    ]
   },
   {
    "position": 1,
    "word": "s'emporter",
    "intrus": [
-    "éclairer",
-    "paysagiste",
-    "fascination",
-    "stratège"
+    "rayonner",
+    "perfidement",
+    "abruptement",
+    "inquiéter"
    ]
   },
   {
    "position": 2,
    "word": "s'irriter",
    "intrus": [
-    "tapageusement",
-    "faiblement",
-    "bienveillant",
-    "évocation"
+    "profondeur",
+    "dissimulé",
+    "éblouir",
+    "mémoriser"
    ]
   },
   {
    "position": 3,
    "word": "enrager",
    "intrus": [
-    "juger",
-    "indiquer",
-    "attentif",
-    "consolant"
+    "enchanter",
+    "appeler",
+    "magnanime",
+    "versement"
    ]
   },
   {
    "position": 4,
    "word": "fulminer",
    "intrus": [
-    "appellation",
-    "pacification",
-    "oubliette",
-    "visiblement"
+    "assurance",
+    "oubli",
+    "prudent",
+    "perfide"
    ]
   },
   {
    "position": 5,
    "word": "l'animosité",
    "intrus": [
-    "choisir",
-    "tranquilliser",
-    "éblouir",
-    "détaillé"
+    "arpentage",
+    "apparaître",
+    "réflecteur",
+    "verser"
    ]
   },
   {
    "position": 6,
    "word": "le courroux",
    "intrus": [
-    "détourner",
-    "observation",
-    "commémorer",
-    "éclairage"
+    "majestueux",
+    "inattention",
+    "observable",
+    "serpentin"
    ]
   },
   {
    "position": 7,
    "word": "la hargne",
    "intrus": [
-    "radiation",
-    "sourd",
-    "jugement",
-    "réflecteur"
+    "vision",
+    "appel",
+    "paysan",
+    "enseignement"
    ]
   },
   {
    "position": 8,
    "word": "irascible",
    "intrus": [
-    "habituer",
-    "grondement",
-    "pacifique",
-    "préavis"
+    "reluire",
+    "paraître",
+    "vigilant",
+    "malin"
    ]
   },
   {
    "position": 9,
    "word": "exaspéré",
    "intrus": [
-    "émerveillement",
-    "aplomb",
-    "reluire",
-    "souvenir"
+    "inhabituellement",
+    "dévoilement",
+    "rayonnant",
+    "enseignant"
    ]
   }
  ],
@@ -1333,100 +1333,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "l'érudition",
    "intrus": [
-    "évocation",
-    "itinérance",
-    "raisonner",
-    "bruyant"
+    "bruyant",
+    "isoler",
+    "assourdir",
+    "astuce"
    ]
   },
   {
    "position": 1,
    "word": "assimiler",
    "intrus": [
-    "juger",
-    "approfondir",
-    "indication",
-    "fasciner"
+    "surdité",
+    "aventureux",
+    "tumultueusement",
+    "inquiéter"
    ]
   },
   {
    "position": 2,
    "word": "enseigner",
    "intrus": [
-    "arpentage",
-    "malveillance",
-    "observateur",
-    "dissimulateur"
+    "force",
+    "indéterminé",
+    "appellation",
+    "sereinement"
    ]
   },
   {
    "position": 3,
    "word": "un professeur",
    "intrus": [
-    "tapageur",
-    "culminant",
-    "s'émerveiller",
-    "inquiéter"
+    "perfide",
+    "appellation",
+    "remémorer",
+    "verser"
    ]
   },
   {
    "position": 4,
    "word": "une connaissance",
    "intrus": [
-    "dévoilement",
-    "fureur",
-    "paix",
-    "dissimulateur"
+    "étranger",
+    "inquiétant",
+    "dissimulateur",
+    "apparition"
    ]
   },
   {
    "position": 5,
    "word": "une leçon",
    "intrus": [
-    "fulminant",
-    "apaiser",
-    "force",
-    "saisissable"
+    "paisiblement",
+    "lumineux",
+    "irradiation",
+    "saisissant"
    ]
   },
   {
    "position": 6,
    "word": "averti",
    "intrus": [
-    "nostalgique",
-    "appeler",
-    "élève",
-    "faible"
+    "scintillement",
+    "encourageant",
+    "dissimulation",
+    "inquiéter"
    ]
   },
   {
    "position": 7,
    "word": "éclairé",
    "intrus": [
-    "résonateur",
-    "extatique",
-    "indécelable",
-    "immodéré"
+    "quiétude",
+    "arpentage",
+    "encouragement",
+    "ténacité"
    ]
   },
   {
    "position": 8,
    "word": "studieux",
    "intrus": [
-    "saisie",
-    "paysagiste",
-    "ombragé",
-    "inattention"
+    "alléger",
+    "réflecteur",
+    "générosité",
+    "méfiance"
    ]
   },
   {
    "position": 9,
    "word": "savamment",
    "intrus": [
-    "indication",
-    "examinatrice",
-    "contemplateur",
-    "faible"
+    "dévoilement",
+    "inquiéter",
+    "habitude",
+    "élevé"
    ]
   }
  ],
@@ -1435,100 +1435,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "la lucidité",
    "intrus": [
-    "aperçu",
-    "méfiant",
-    "lumineux",
-    "contourner"
+    "perfide",
+    "éclatant",
+    "feinte",
+    "douceur"
    ]
   },
   {
    "position": 1,
    "word": "s'assurer",
    "intrus": [
-    "rager",
-    "contourner",
-    "habituer",
-    "approfondir"
+    "appellation",
+    "mémoriser",
+    "entourer",
+    "paix"
    ]
   },
   {
    "position": 2,
    "word": "un examen",
    "intrus": [
-    "apparemment",
-    "détaillant",
-    "aperçu",
-    "méconnaissance"
+    "sonner",
+    "oublieux",
+    "menacer",
+    "culminant"
    ]
   },
   {
    "position": 3,
    "word": "un raisonnement",
    "intrus": [
-    "imprudence",
-    "surplomb",
-    "rayonner",
-    "envoûtement"
+    "imprudemment",
+    "contour",
+    "mémorisation",
+    "astuce"
    ]
   },
   {
    "position": 4,
    "word": "un choix",
    "intrus": [
-    "opinion",
-    "mémoire",
-    "imprudemment",
-    "tapageusement"
+    "astucieux",
+    "imprudence",
+    "leurre",
+    "stratégique"
    ]
   },
   {
    "position": 5,
    "word": "réfléchi",
    "intrus": [
-    "entrepreneur",
-    "emporté",
-    "mémoriser",
-    "manigance"
+    "assourdissement",
+    "charité",
+    "apaiser",
+    "disparition"
    ]
   },
   {
    "position": 6,
    "word": "avisé",
    "intrus": [
-    "oubliette",
-    "aventureux",
-    "perfide",
-    "courage"
+    "apaisant",
+    "inquiet",
+    "évocateur",
+    "s'émerveiller"
    ]
   },
   {
    "position": 7,
    "word": "judicieux",
    "intrus": [
-    "furie",
-    "apparemment",
-    "arpent",
-    "apaisant"
+    "approfondissement",
+    "contour",
+    "extase",
+    "saisissant"
    ]
   },
   {
    "position": 8,
    "word": "clairvoyant",
    "intrus": [
-    "éclairage",
-    "menacer",
-    "résoudre",
-    "indicateur"
+    "admirable",
+    "pacifier",
+    "mésaventure",
+    "voile"
    ]
   },
   {
    "position": 9,
    "word": "convaincu",
    "intrus": [
-    "inconsolable",
-    "escarpement",
-    "adoucissement",
-    "tranquillisant"
+    "isolation",
+    "bienveillant",
+    "sournoiserie",
+    "parfois"
    ]
   }
  ],
@@ -1537,100 +1537,100 @@ export const INTRUS_5E = {
    "position": 0,
    "word": "la quiétude",
    "intrus": [
-    "surplomb",
-    "serpentin",
-    "vision",
-    "résoudre"
+    "feinte",
+    "savoir",
+    "conviction",
+    "étude"
    ]
   },
   {
    "position": 1,
    "word": "apaiser",
    "intrus": [
-    "irradier",
-    "menacer",
-    "contemplateur",
-    "paysagiste"
+    "éclairage",
+    "juger",
+    "menaçant",
+    "réexaminer"
    ]
   },
   {
    "position": 2,
    "word": "adoucir",
    "intrus": [
-    "guetteur",
-    "emporté",
-    "apparition",
-    "juge"
+    "merveilleusement",
+    "déterminer",
+    "convaincant",
+    "indication"
    ]
   },
   {
    "position": 3,
    "word": "modérer",
    "intrus": [
-    "oublieux",
-    "apparition",
-    "évocation",
-    "entreprise"
+    "connaître",
+    "fourberie",
+    "radieux",
+    "gronderie"
    ]
   },
   {
    "position": 4,
    "word": "pacifier",
    "intrus": [
-    "luminaire",
-    "surgissement",
-    "hargneux",
-    "déraisonnable"
+    "encourager",
+    "dissimulateur",
+    "détourner",
+    "rappel"
    ]
   },
   {
    "position": 5,
    "word": "soulager",
    "intrus": [
-    "voyant",
-    "juger",
-    "ombragé",
-    "astuce"
+    "réflexion",
+    "dissimulé",
+    "éblouissant",
+    "studieusement"
    ]
   },
   {
    "position": 6,
    "word": "une consolation",
    "intrus": [
-    "irradiation",
-    "dévoilement",
-    "apparent",
-    "forcément"
+    "disparu",
+    "leurre",
+    "stratège",
+    "astucieux"
    ]
   },
   {
    "position": 7,
    "word": "la tranquillité",
    "intrus": [
-    "mésaventure",
-    "rayonnement",
-    "mémoire",
-    "voyant"
+    "malicieusement",
+    "aventure",
+    "saisie",
+    "similaire"
    ]
   },
   {
    "position": 8,
    "word": "paisible",
    "intrus": [
-    "disparition",
-    "porter",
-    "préavis",
-    "malicieux"
+    "résonance",
+    "choisir",
+    "avertissement",
+    "éblouissement"
    ]
   },
   {
    "position": 9,
    "word": "serein",
    "intrus": [
-    "retentissant",
-    "apparaître",
-    "irréfléchi",
-    "détourner"
+    "saisissable",
+    "similaire",
+    "oubliette",
+    "chant"
    ]
   }
  ]
