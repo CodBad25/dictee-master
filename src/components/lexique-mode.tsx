@@ -51,8 +51,8 @@ function shuffle<T>(arr: T[]): T[] {
 }
 const sample = <T,>(arr: T[], n: number) => shuffle(arr).slice(0, n);
 
-const hasLexique = (w: DicteeWord) =>
-  w.lexicon_validated && (w.word_family.length > 0 || w.synonyms.length > 0);
+const hasContent = (w: DicteeWord) => w.word_family.length > 0 || w.synonyms.length > 0;
+const hasLexique = (w: DicteeWord) => w.lexicon_validated && hasContent(w);
 
 // Construit une manche pour `word` à partir de l'ensemble des mots validés.
 function buildRound(word: DicteeWord, all: DicteeWord[]): Round {
@@ -78,8 +78,10 @@ function buildRound(word: DicteeWord, all: DicteeWord[]): Round {
 }
 
 export default function LexiqueMode() {
-  const { currentList, clearCurrentTraining, connectedEleve } = useAppStore();
+  const { currentList, clearCurrentTraining, connectedEleve, user } = useAppStore();
+  const isTeacher = user?.role === "teacher";
   const [pool, setPool] = useState<DicteeWord[] | null>(null);
+  const [previewMode, setPreviewMode] = useState(false); // prof : mots non validés inclus
   const [rounds, setRounds] = useState<Round[]>([]);
   const [index, setIndex] = useState(0);
   const [placed, setPlaced] = useState<Record<string, Bin>>({});   // tag → case choisie
@@ -96,6 +98,12 @@ export default function LexiqueMode() {
     const selectedPositions = useAppStore.getState().selectedWordPositions;
     loadDicteeWords(currentList.id).then((words) => {
       let filtered = words.filter(hasLexique);
+      // Aperçu prof (🧪 Tester) : si rien n'est validé, on joue quand même sur
+      // les mots qui ont un lexique, pour voir l'exercice avant de valider.
+      if (filtered.length === 0 && isTeacher) {
+        filtered = words.filter(hasContent);
+        setPreviewMode(true);
+      }
       if (selectedPositions) filtered = filtered.filter((w) => selectedPositions.includes(w.position));
       setPool(filtered);
       setRounds(shuffle(filtered).map((w) => buildRound(w, filtered)));
@@ -232,6 +240,11 @@ export default function LexiqueMode() {
       <div className="h-1.5 bg-gray-100">
         <div className="h-full bg-violet-500 transition-all" style={{ width: `${progress}%` }} />
       </div>
+      {previewMode && (
+        <div className="bg-amber-50 border-b border-amber-200 text-amber-800 text-xs text-center px-4 py-1.5">
+          👀 Aperçu prof : aucun mot validé dans cette dictée, l&apos;exercice utilise les propositions non relues. Les élèves ne le verront qu&apos;après validation dans l&apos;onglet 🧩.
+        </div>
+      )}
 
       <div className="flex-1 flex flex-col items-center p-4 sm:p-6 gap-5 w-full max-w-3xl mx-auto">
         <div className="text-center">

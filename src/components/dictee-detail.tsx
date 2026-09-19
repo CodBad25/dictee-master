@@ -55,13 +55,21 @@ export default function DicteeDetail({
 }: DicteeDetailProps) {
   const { connectedEleve, user } = useAppStore();
   const isTeacher = user?.role === "teacher";
+  // Lambda (élève fictif de test, compte partagé par les profs) n'est jamais
+  // bloqué par l'ordre du parcours : il garde l'affichage élève (étapes faites,
+  // étape courante) mais toutes les étapes sont jouables — pour tester un
+  // exercice sans refaire tous les précédents. Ses résultats restent enregistrés.
+  const isLambda = connectedEleve?.prenom?.trim().toLowerCase() === "lambda";
+  const freeAccess = isTeacher || isLambda;
   const [words, setWords] = useState<DicteeWord[]>([]);
   // « Famille & synonymes » n'apparaît que si la dictée a au moins un mot dont
   // le lexique a été VALIDÉ par le prof (sinon l'exercice serait vide).
   const hasLexique = words.some(
     (w) => w.lexicon_validated && ((w.word_family?.length ?? 0) > 0 || (w.synonyms?.length ?? 0) > 0),
   );
-  const activityOrder = hasLexique ? activityOrderProp : activityOrderProp.filter((m) => m !== "lexique");
+  // Le prof (🧪 Tester) voit toujours l'étape : le mode lui sert d'aperçu,
+  // y compris sur des mots pas encore validés.
+  const activityOrder = hasLexique || isTeacher ? activityOrderProp : activityOrderProp.filter((m) => m !== "lexique");
 
   // Métadonnées pédagogiques (renseignées sur le corpus 5e, NULL en 6e)
   const [dicteeMeta, setDicteeMeta] = useState<{
@@ -290,8 +298,8 @@ export default function DicteeDetail({
             const info = ACTIVITY_LABELS[mode] || { label: mode, icon: "📋", desc: "" };
             const optional = isOptional(mode);
             const isDone = isTeacher ? false : completedModes.has(mode);
-            const unlocked = isTeacher ? true : isUnlockedAt(index);
-            const isLocked = !isTeacher && !unlocked;
+            const unlocked = freeAccess ? true : isUnlockedAt(index);
+            const isLocked = !unlocked;
             // Étape « courante » mise en avant = premier exercice obligatoire restant.
             const isCurrent = isTeacher ? true : (unlocked && !isDone && index === firstPendingRequiredIndex);
             // Exercice facultatif jouable (déverrouillé, pas encore fait) → sautable.
@@ -302,7 +310,7 @@ export default function DicteeDetail({
                 key={mode}
                 onClick={() => {
                   // Déverrouillé (courant, facultatif ou déjà validé) → (re)jouable. Verrouillé → rien.
-                  if (isTeacher || unlocked || isDone) onStartActivity(mode, words);
+                  if (unlocked || isDone) onStartActivity(mode, words);
                 }}
                 disabled={isLocked}
                 className={`
