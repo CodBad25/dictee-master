@@ -82,11 +82,16 @@ def supabase_patch(path: str, payload: dict) -> None:
     urllib.request.urlopen(req).read()
 
 
-def tts(texte: str, destination: Path) -> None:
+def tts(texte: str, destination: Path, speed: float = 1.0) -> None:
+    reglages = {"stability": 0.5, "similarity_boost": 0.75}
+    if speed != 1.0:
+        # 0.85 : rythme mesuré au plus près d'un vrai professeur (pause médiane
+        # 0,81 s contre 0,82 s). Plage acceptée par ElevenLabs : 0.7 à 1.2.
+        reglages["speed"] = speed
     corps = json.dumps({
         "text": texte,
         "model_id": MODEL_ID,
-        "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
+        "voice_settings": reglages,
     }).encode("utf-8")
     req = urllib.request.Request(
         f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}",
@@ -110,26 +115,68 @@ def texte_lu(marked: str) -> str:
     return marked.replace("«", "").replace("»", "").strip()
 
 
-def texte_pour_voix(phrase: str) -> str:
+def texte_pour_voix(phrase: str, derniere: bool = False) -> tuple:
     """Version LUE d'une phrase : la ponctuation est énoncée, comme un professeur
-    qui dicte en classe.
+    qui dicte en classe. Retourne (texte à envoyer au TTS, faut-il couper la fin).
 
     Demandé par Nadia le 20/09/2026 : « dans une des phrases, il y a deux
     propositions séparées par deux points et ça porte à confusion ». Les signes
     ne s'entendent pas, l'élève ne peut pas les deviner.
 
+    Les « ... » créent les pauses : mesurées à 0,81 s, contre 0,82 s chez un vrai
+    professeur (analyse d'une dictée du collège Picasso, 20/09/2026).
+
+    Le mot « point » isolé en fin de phrase est sur-articulé par le moteur, qui
+    dit « pointe ». En français le t tombe devant une consonne : on fait donc
+    suivre le mot d'une phrase à consonne, coupée ensuite du fichier. La dernière
+    phrase de chaque texte dit « point final », la vraie formule en classe, qui
+    ne pose pas ce problème.
+
     Appliqué UNIQUEMENT aux fichiers par phrase. Le fichier complet garde une
-    lecture naturelle : la première écoute sert à comprendre le texte, pas à
-    l'écrire, et « virgule » toutes les trois secondes la rendrait pénible.
+    lecture naturelle : la première écoute sert à comprendre le texte.
     """
     t = phrase.strip()
-    t = re.sub(r"\s*:\s*", " deux points ", t)
-    t = re.sub(r"\s*;\s*", " point virgule ", t)
-    t = t.replace(",", " virgule")
-    t = re.sub(r"\s*!\s*$", " point d'exclamation", t)
-    t = re.sub(r"\s*\?\s*$", " point d'interrogation", t)
-    t = re.sub(r"\s*\.\s*$", " point", t)
-    return re.sub(r"\s+", " ", t).strip()
+    t = re.sub(r"\s*:\s*", "... deux points... ", t)
+    t = re.sub(r"\s*;\s*", "... point virgule... ", t)
+    t = t.replace(",", "... virgule...")
+
+    if t.endswith("!"):
+        return re.sub(r"\s*!\s*$", "... point d'exclamation.", t), False
+    if t.endswith("?"):
+        return re.sub(r"\s*\?\s*$", "... point d'interrogation.", t), False
+
+    corps = re.sub(r"\s*\.\s*$", "", t)
+    if derniere:
+        return f"{corps}... point final.", False
+    # « Fermez le cahier » ne sera jamais entendu : coupé au silence qui précède.
+    return f"{corps}... point. Fermez le cahier.", True
+
+
+def couper_apres_point(fichier: Path) -> None:
+    """Retire la phrase ajoutée pour faire tomber le t de « point ».
+
+    On coupe au dernier silence qui laisse encore de l'audio derrière lui — donc
+    celui qui sépare « point » de la phrase parasite, et non le silence final.
+    """
+    import subprocess
+    duree = float(subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(fichier)],
+        capture_output=True, text=True).stdout.strip())
+    sortie = subprocess.run(
+        ["ffmpeg", "-hide_banner", "-nostats", "-i", str(fichier),
+         "-af", "silencedetect=noise=-35dB:d=0.3", "-f", "null", "-"],
+        capture_output=True, text=True).stderr
+    debuts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", sortie)]
+    candidats = [d for d in debuts if d < duree - 0.8]
+    if not candidats:
+        print(f"    ⚠ {fichier.name} : aucun silence exploitable, fichier laissé tel quel")
+        return
+    coupe = max(candidats)
+    tmp = fichier.with_suffix(".tmp.mp3")
+    subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", str(fichier),
+                    "-t", f"{coupe:.3f}", "-c", "copy", str(tmp), "-y"], check=True)
+    tmp.replace(fichier)
+    print(f"    coupé à {coupe:.2f}s (sur {duree:.2f}s)")
 
 
 def decouper_phrases(texte: str) -> list:
@@ -178,9 +225,11 @@ for d in avec_texte:
         if dest_p.exists() and dest_p.stat().st_size > 10_000 and not FORCE:
             print(f"  {nom_p} : déjà présent, ignoré")
         else:
-            lu = texte_pour_voix(phrase)
+            lu, a_couper = texte_pour_voix(phrase, derniere=(n == len(phrases)))
             print(f"  {nom_p} : génération → « {lu} »")
-            tts(lu, dest_p)
+            tts(lu, dest_p, speed=0.85)
+            if a_couper:
+                couper_apres_point(dest_p)
             print(f"  {nom_p} : OK ({dest_p.stat().st_size // 1024} Ko)")
             time.sleep(1)
         urls_phrases.append(f"/audio/dictees/{nom_p}")
