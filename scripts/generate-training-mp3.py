@@ -110,13 +110,39 @@ def texte_lu(marked: str) -> str:
     return marked.replace("«", "").replace("»", "").strip()
 
 
+def texte_pour_voix(phrase: str) -> str:
+    """Version LUE d'une phrase : la ponctuation est énoncée, comme un professeur
+    qui dicte en classe.
+
+    Demandé par Nadia le 20/09/2026 : « dans une des phrases, il y a deux
+    propositions séparées par deux points et ça porte à confusion ». Les signes
+    ne s'entendent pas, l'élève ne peut pas les deviner.
+
+    Appliqué UNIQUEMENT aux fichiers par phrase. Le fichier complet garde une
+    lecture naturelle : la première écoute sert à comprendre le texte, pas à
+    l'écrire, et « virgule » toutes les trois secondes la rendrait pénible.
+    """
+    t = phrase.strip()
+    t = re.sub(r"\s*:\s*", " deux points ", t)
+    t = re.sub(r"\s*;\s*", " point virgule ", t)
+    t = t.replace(",", " virgule")
+    t = re.sub(r"\s*!\s*$", " point d'exclamation", t)
+    t = re.sub(r"\s*\?\s*$", " point d'interrogation", t)
+    t = re.sub(r"\s*\.\s*$", " point", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
 def decouper_phrases(texte: str) -> list:
     """Découpage identique à splitIntoPhrases() côté client (audio-dictation-mode).
     Toute divergence décalerait les fichiers par rapport aux phrases affichées."""
     return [p for p in re.split(r"(?<=[.!?])\s+", texte) if p.strip()]
 
 
-cible = sys.argv[1] if len(sys.argv) > 1 else None
+# --force régénère les fichiers par phrase déjà présents (ex : changement de
+# la façon d'énoncer la ponctuation).
+FORCE = "--force" in sys.argv
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
+cible = args[0] if args else None
 filtre = f"&id=eq.{cible}" if cible else ""
 dictees = supabase_get(f"dictees?select=id,title,training_text{filtre}&order=position")
 avec_texte = [d for d in dictees if d.get("training_text") and d["training_text"].get("marked")]
@@ -149,11 +175,12 @@ for d in avec_texte:
     for n, phrase in enumerate(phrases, start=1):
         nom_p = f"{d['id'].replace('-', '_')}_entrainement_p{n}.mp3"
         dest_p = AUDIO_DIR / nom_p
-        if dest_p.exists() and dest_p.stat().st_size > 10_000:
+        if dest_p.exists() and dest_p.stat().st_size > 10_000 and not FORCE:
             print(f"  {nom_p} : déjà présent, ignoré")
         else:
-            print(f"  {nom_p} : génération ({len(phrase)} caractères)…")
-            tts(phrase, dest_p)
+            lu = texte_pour_voix(phrase)
+            print(f"  {nom_p} : génération → « {lu} »")
+            tts(lu, dest_p)
             print(f"  {nom_p} : OK ({dest_p.stat().st_size // 1024} Ko)")
             time.sleep(1)
         urls_phrases.append(f"/audio/dictees/{nom_p}")
