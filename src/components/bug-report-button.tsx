@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
+import TeacherQuestions, { loadQuestionsFor } from "@/components/teacher-questions";
 import { toast } from "sonner";
 import ReactCrop, { type Crop, type PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
@@ -84,7 +85,9 @@ function getCroppedImage(
 
 export default function BugReportButton() {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"new" | "history">("new");
+  const [tab, setTab] = useState<"new" | "history" | "questions">("new");
+  // Nombre de questions en attente de réponse de cet enseignant.
+  const [questionsEnAttente, setQuestionsEnAttente] = useState(0);
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<Category>("avis");
   const [rawScreenshot, setRawScreenshot] = useState<string | null>(null);
@@ -268,8 +271,27 @@ export default function BugReportButton() {
     }
   };
 
+  // Compte les questions ouvertes auxquelles ce prof n'a pas encore répondu.
+  const rafraichirQuestions = useCallback(async () => {
+    if (!isTeacher || !reporterName) return;
+    try {
+      const { questions, answers } = await loadQuestionsFor(reporterName);
+      const repondues = new Set(answers.map((a) => a.question_id));
+      setQuestionsEnAttente(questions.filter((q) => !repondues.has(q.id)).length);
+    } catch {
+      // silencieux : la table peut ne pas encore exister
+    }
+  }, [isTeacher, reporterName]);
+
+  useEffect(() => { rafraichirQuestions(); }, [rafraichirQuestions]);
+
   const handleOpen = () => {
     setOpen(true);
+    // Une question en attente prime : c'est ce qu'on attend d'elle.
+    if (isTeacher && questionsEnAttente > 0) {
+      setTab("questions");
+      return;
+    }
     if (hasNews && reporterName) {
       setTab("history");
       markResolvedAsSeen();
@@ -308,6 +330,11 @@ export default function BugReportButton() {
         )}
         {hasNews && (
           <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[8px] font-bold border-2 border-white">!</span>
+        )}
+        {isTeacher && questionsEnAttente > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">
+            {questionsEnAttente}
+          </span>
         )}
       </button>
 
@@ -356,7 +383,7 @@ export default function BugReportButton() {
                 </div>
 
                 {/* Onglets */}
-                {reports.length > 0 && (
+                {(reports.length > 0 || (isTeacher && questionsEnAttente > 0)) && (
                   <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1">
                     <button
                       onClick={() => setTab("new")}
@@ -375,7 +402,30 @@ export default function BugReportButton() {
                       Mes signalements
                       {hasNews && <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />}
                     </button>
+                    {isTeacher && (
+                      <button
+                        onClick={() => setTab("questions")}
+                        className={`flex-1 text-sm font-medium py-1.5 rounded-md transition-colors relative ${
+                          tab === "questions" ? "bg-white shadow-sm text-gray-800" : "text-gray-500"
+                        }`}
+                      >
+                        Questions
+                        {questionsEnAttente > 0 && (
+                          <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-violet-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                            {questionsEnAttente}
+                          </span>
+                        )}
+                      </button>
+                    )}
                   </div>
+                )}
+
+                {/* TAB: Questions posées à l'enseignant */}
+                {tab === "questions" && isTeacher && reporterName && (
+                  <TeacherQuestions
+                    teacherName={reporterName}
+                    onAnsweredChange={rafraichirQuestions}
+                  />
                 )}
 
                 {/* TAB: Nouveau signalement */}
