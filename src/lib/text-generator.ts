@@ -16,6 +16,7 @@ export interface GeneratedText {
     word: string;             // Le mot a deviner (forme utilisee dans le texte)
     originalWord: string;     // Le mot original de la liste
     position: number;         // Position du trou dans le texte
+    rule?: string;            // Accord teste par ce trou (textes d'entrainement)
   }[];
 }
 

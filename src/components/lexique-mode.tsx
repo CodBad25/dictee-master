@@ -270,7 +270,9 @@ export default function LexiqueMode() {
           ))}
         </div>
         <p className="text-xs text-gray-400 -mt-3">
-          {selectedTag ? "Maintenant, clique sur une case." : "Clique sur une étiquette, puis sur une case."}
+          {selectedTag
+            ? "Maintenant, clique sur une case."
+            : "Clique sur une étiquette, puis sur une case. Une étiquette mal placée ? Clique dessus pour la reprendre."}
         </p>
 
         {/* Trois cases */}
@@ -279,10 +281,20 @@ export default function LexiqueMode() {
             const inBin = round.tags.filter((t) => placed[t.text] === b.id);
             const clickable = !!selectedTag && !checked;
             return (
-              <button
+              // Volontairement une <div> et non un <button> : un bouton désactivé
+              // bloque aussi les clics sur ses enfants, ce qui empêchait de
+              // reprendre une étiquette déjà posée quand aucune n'était
+              // sélectionnée (signalé par Nadia le 20/09/2026).
+              <div
                 key={b.id}
-                onClick={() => assign(b.id)}
-                disabled={!clickable}
+                role={clickable ? "button" : undefined}
+                tabIndex={clickable ? 0 : -1}
+                aria-disabled={!clickable}
+                onClick={() => { if (clickable) assign(b.id); }}
+                onKeyDown={(e) => {
+                  if (!clickable) return;
+                  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); assign(b.id); }
+                }}
                 className={`rounded-2xl border-2 p-3 min-h-[120px] text-left transition-all flex flex-col ${b.color}
                   ${clickable ? `cursor-pointer ring-2 ring-offset-1 ${b.ring} hover:brightness-95` : "cursor-default"}`}
               >
@@ -298,7 +310,7 @@ export default function LexiqueMode() {
                       tabIndex={0}
                       onClick={(e) => { e.stopPropagation(); unassign(t.text); }}
                       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); unassign(t.text); } }}
-                      title={checked ? undefined : "Retirer de la case"}
+                      title={checked ? undefined : "Cliquer pour la reprendre et la mettre dans une autre case"}
                       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-sm font-medium bg-white ${tagClass(t)}`}
                     >
                       {checked && (placed[t.text] === t.bin
@@ -308,7 +320,7 @@ export default function LexiqueMode() {
                     </span>
                   ))}
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>

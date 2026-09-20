@@ -15,9 +15,10 @@ import { playWordAudio } from "@/lib/audio";
 import AudioRecorder from "@/components/audio-recorder";
 import type { WordConfigRow } from "@/components/word-config-modal";
 import VariantesTab from "@/components/variantes-tab";
+import TrainingTextEditor from "@/components/training-text-editor";
 import LexiconEditor from "@/components/lexicon-editor";
 
-type TabId = "spelling_choice" | "grammar_class" | "definitions" | "lexique" | "audio_word" | "genre" | "variantes";
+type TabId = "spelling_choice" | "grammar_class" | "definitions" | "lexique" | "audio_word" | "genre" | "variantes" | "training";
 
 const TABS: { id: TabId; icon: string; label: string; short: string }[] = [
   { id: "spelling_choice", icon: "✏️", label: "Choix orthographique",  short: "Pièges" },
@@ -27,6 +28,7 @@ const TABS: { id: TabId; icon: string; label: string; short: string }[] = [
   { id: "audio_word",      icon: "🎧", label: "Audio mot",             short: "Audio mot" },
   { id: "genre",           icon: "🏷️", label: "Genre",                 short: "Genre" },
   { id: "variantes",       icon: "📝", label: "Variantes texte à trous", short: "Variantes" },
+  { id: "training",        icon: "🎯", label: "Texte d'entraînement",    short: "Entraînement" },
 ];
 
 const FIXED_EXOS = [
@@ -69,6 +71,11 @@ const TAB_COLORS: Record<TabId, { active: string; banner: string; chip: string }
   },
   variantes: {
     active: "border-b-[3px] border-orange-400 bg-orange-50 text-orange-900",
+    banner: "bg-orange-50 border-orange-100 text-orange-800",
+    chip: "bg-orange-100 text-orange-700 border border-orange-300",
+  },
+  training: {
+    active: "border-b-[3px] border-orange-500 bg-orange-50 text-orange-900",
     banner: "bg-orange-50 border-orange-100 text-orange-800",
     chip: "bg-orange-100 text-orange-700 border border-orange-300",
   },
@@ -242,6 +249,7 @@ export default function WordConfigSection({
       case "audio_word":      return localWords.filter((w) => w.audio_url).length;
       case "genre":           return localWords.filter((w) => w.article).length;
       case "variantes":       return variants.filter((v) => v.status === "validated").length;
+      case "training":        return 0; // un seul texte par dictée : compteur sans objet
     }
   };
 
@@ -526,7 +534,9 @@ export default function WordConfigSection({
           </button>
         )}
         <span className={`${activeTab === "lexique" ? "" : "ml-auto "}text-xs font-medium px-2 py-0.5 rounded-full ${colors.chip}`}>
-          {activeTab === "variantes"
+          {activeTab === "training"
+            ? "1 texte par dictée"
+            : activeTab === "variantes"
             ? `${count("variantes")} / ${variants.length} validée${variants.length !== 1 ? "s" : ""}`
             : activeTab === "lexique"
             ? `${count("lexique")} / ${n} mots validés`
@@ -546,8 +556,13 @@ export default function WordConfigSection({
         </div>
       )}
 
-      {/* En-tête tableau (masqué sur l'onglet Variantes) */}
-      {activeTab !== "variantes" && (
+      {/* Onglet Texte d'entraînement — rendu propre, sans le tableau de mots */}
+      {activeTab === "training" && (
+        <TrainingTextEditor dicteeId={dicteeId} words={words.map((w) => w.word)} />
+      )}
+
+      {/* En-tête tableau (masqué sur les onglets Variantes et Entraînement) */}
+      {activeTab !== "variantes" && activeTab !== "training" && (
       <div className="flex-shrink-0 bg-gray-50 border-b border-gray-200">
         <div className="grid px-5 py-1.5" style={{ gridTemplateColumns: "28px 48px 150px 1fr 80px" }}>
           <span className="text-[10px] font-semibold uppercase text-gray-400">#</span>

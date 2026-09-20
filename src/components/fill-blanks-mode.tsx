@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { dicteeMp3Path } from "@/lib/dictee-service";
+import { dicteeMp3Path, parseTrainingText, type TrainingText } from "@/lib/dictee-service";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -74,11 +74,38 @@ export default function FillBlanksMode() {
       const sb = (await import("@/lib/supabase/client")).createClient();
       const { data: dictee } = await sb
         .from("dictees")
-        .select("fill_blanks_text, position")
+        .select("fill_blanks_text, training_text, position")
         .eq("id", dicteeId)
         .maybeSingle();
 
       if (dictee?.position) setDicteePosition(dictee.position);
+
+      // 0. Texte d'ENTRAÎNEMENT (retour de Nadia, 20/09/2026) : prioritaire sur
+      // le texte du jour J, que l'élève finissait par apprendre par cœur. Ses
+      // trous sont écrits à la main et portent sur des accords ; on n'utilise
+      // donc PAS la liste de vocabulaire pour les placer.
+      const training = dictee?.training_text as TrainingText | null;
+      if (training?.validated && training.marked) {
+        const parsed = parseTrainingText(training);
+        setIsTrainingText(true);
+        setTrainingAudioUrl(training.audio_url ?? null);
+        setGeneratedText({
+          fullText: parsed.fullText,
+          displayText: parsed.displayText,
+          blanks: parsed.blanks.map((b) => ({
+            word: b.answer,
+            originalWord: b.answer,
+            position: b.position,
+            rule: b.rule,
+          })),
+        });
+        setUserAnswers({});
+        setCheckedAnswers({});
+        setIsGenerating(false);
+        return;
+      }
+      setIsTrainingText(false);
+      setTrainingAudioUrl(null);
 
       if (dictee?.fill_blanks_text) {
         // Utiliser le texte pré-écrit : trouver les mots à transformer en trous
@@ -154,6 +181,11 @@ export default function FillBlanksMode() {
 
   // Position de la dictée (chargée dans generateText)
   const [dicteePosition, setDicteePosition] = useState<number | null>(null);
+  // Vrai quand on joue le texte d'entraînement (trous d'accord) et non le texte du jour J.
+  const [isTrainingText, setIsTrainingText] = useState(false);
+  // MP3 propre au texte d'entraînement (ElevenLabs). Le MP3 de la dictée ne
+  // correspond pas à ce texte : on ne doit jamais le jouer ici.
+  const [trainingAudioUrl, setTrainingAudioUrl] = useState<string | null>(null);
   const dicteeAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Lecture du texte via fichier MP3 pré-enregistré
@@ -166,6 +198,28 @@ export default function FillBlanksMode() {
       dicteeAudioRef.current = null;
     }
     stopAudio();
+
+    // Texte d'entraînement : son propre MP3, ou la voix système tant qu'il n'a
+    // pas été généré. Jamais le MP3 de la dictée, qui dirait un autre texte.
+    if (isTrainingText) {
+      if (!trainingAudioUrl) {
+        playTextAudio(generatedText.fullText, () => setIsPlaying(true), () => setIsPlaying(false));
+        return;
+      }
+      const audio = new Audio(trainingAudioUrl);
+      dicteeAudioRef.current = audio;
+      audio.onplay = () => setIsPlaying(true);
+      audio.onended = () => { setIsPlaying(false); dicteeAudioRef.current = null; };
+      audio.onerror = () => {
+        dicteeAudioRef.current = null;
+        playTextAudio(generatedText.fullText, () => setIsPlaying(true), () => setIsPlaying(false));
+      };
+      audio.play().catch(() => {
+        dicteeAudioRef.current = null;
+        playTextAudio(generatedText.fullText, () => setIsPlaying(true), () => setIsPlaying(false));
+      });
+      return;
+    }
 
     if (currentList) {
       const audio = new Audio(dicteeMp3Path(currentList.id));
@@ -184,7 +238,7 @@ export default function FillBlanksMode() {
     }
 
     playTextAudio(generatedText.fullText, () => setIsPlaying(true), () => setIsPlaying(false));
-  }, [generatedText, dicteePosition]);
+  }, [generatedText, dicteePosition, isTrainingText, trainingAudioUrl]);
 
   const stopSpeaking = () => {
     if (dicteeAudioRef.current) {
@@ -518,6 +572,11 @@ export default function FillBlanksMode() {
 
               {/* Texte à trous */}
               <div className="bg-white rounded-3xl border-2 border-purple-100 shadow-xl p-6 mb-6">
+                {isTrainingText && (
+                  <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-4">
+                    ✏️ Attention aux <strong>accords</strong> : regarde les mots qui entourent chaque trou.
+                  </p>
+                )}
                 <p className="text-lg leading-relaxed text-gray-700">
                   {renderTextWithBlanks()}
                 </p>
@@ -591,7 +650,10 @@ export default function FillBlanksMode() {
             onKeyDown={(e) => handleKeyDown(index, e)}
             onBlur={() => handleBlur(index)}
             disabled={showResults}
-            style={{ width: `${Math.max(8, blank.word.length + 2)}ch` }}
+            // Sur un texte d'entraînement, les trous testent des accords : une
+            // case taillée à la longueur exacte trahirait le pluriel ou le
+            // féminin. Largeur uniforme pour tous les trous.
+            style={{ width: isTrainingText ? "12ch" : `${Math.max(8, blank.word.length + 2)}ch` }}
             className={`h-8 px-2 text-center font-bold rounded-lg border-2 outline-none transition-all ${
               isChecked
                 ? isCorrect
@@ -609,6 +671,11 @@ export default function FillBlanksMode() {
           {isWrong && (
             <span className="ml-1 text-green-600 font-bold">
               ({blank.word})
+            </span>
+          )}
+          {isWrong && blank.rule && (
+            <span className="ml-1 text-xs text-amber-700 italic">
+              — {blank.rule}
             </span>
           )}
         </span>

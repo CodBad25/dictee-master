@@ -11,8 +11,9 @@ import { toast } from "sonner";
 import { useAppStore } from "@/lib/store";
 import { useSupabaseSync } from "@/hooks/useSupabaseSync";
 import { createClient } from "@/lib/supabase/client";
-import { dicteeMp3Path } from "@/lib/dictee-service";
+import { dicteeMp3Path, parseTrainingText, type TrainingText } from "@/lib/dictee-service";
 import confetti from "canvas-confetti";
+import { playTextAudio, stopAudio } from "@/lib/audio";
 
 type Phase = "loading" | "firstListen" | "dictation" | "result";
 
@@ -80,24 +81,48 @@ export default function AudioDictationMode() {
     const sb = createClient();
     const { data } = await sb
       .from("dictees")
-      .select("fill_blanks_text, position")
+      .select("fill_blanks_text, training_text, position")
       .eq("id", currentList.id)
       .maybeSingle();
 
-    if (!data?.fill_blanks_text) {
+    // Texte d'ENTRAÎNEMENT prioritaire (retour de Nadia, 20/09/2026) : dicter le
+    // texte du jour J revenait à le faire apprendre par cœur avant l'évaluation.
+    // Le déroulé qu'elle apprécie — écoute complète puis dictée phrase par
+    // phrase — est identique, seul le texte change.
+    const training = data?.training_text as TrainingText | null;
+    const useTraining = !!(training?.validated && training.marked);
+    const text = useTraining
+      ? parseTrainingText(training!).fullText
+      : (data?.fill_blanks_text as string | undefined);
+
+    if (!text) {
       toast.error("Texte non trouvé pour cette dictée");
       clearCurrentTraining();
       return;
     }
 
-    const text = data.fill_blanks_text as string;
     const p = splitIntoPhrases(text);
     setFullText(text);
     setPhrases(p);
-    setDicteePosition(data.position);
+    setDicteePosition(data?.position ?? null);
 
-    // Préparer l'audio (chemin dérivé de l'id — les positions ne sont plus uniques entre niveaux)
-    const audio = new Audio(dicteeMp3Path(currentList.id));
+    // Audio : MP3 propre au texte d'entraînement s'il a été généré, sinon celui
+    // de la dictée. Tant que l'audio d'entraînement n'existe pas, on retombe sur
+    // la voix système (le MP3 du jour J ne correspondrait pas au texte lu).
+    const audioSrc = useTraining
+      ? training!.audio_url || ""
+      : dicteeMp3Path(currentList.id);
+    if (useTraining && !audioSrc) {
+      // Pas encore de MP3 pour ce texte : on garde le déroulé complet (écoute
+      // intégrale puis dictée phrase par phrase, ce que Nadia apprécie) avec la
+      // voix de l'ordinateur. audioRef reste null : les lectures passent par le
+      // fallback de playFullText / playCurrentPhrase.
+      toast.info("Audio en cours de préparation : lecture par la voix de l'ordinateur");
+      setPhase("firstListen");
+      setStartTime(Date.now());
+      return;
+    }
+    const audio = new Audio(audioSrc);
     audioRef.current = audio;
 
     audio.addEventListener("loadedmetadata", () => {
@@ -137,6 +162,7 @@ export default function AudioDictationMode() {
     if (phase === "loading") loadData();
     return () => {
       cancelAutoReplay();
+      stopAudio();
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -147,7 +173,11 @@ export default function AudioDictationMode() {
   // Écouter le texte complet (première écoute)
   const playFullText = () => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) {
+      // Pas de MP3 (texte d'entraînement pas encore vocalisé) : voix système.
+      playTextAudio(fullText, () => setIsPlaying(true), () => setIsPlaying(false));
+      return;
+    }
     audio.playbackRate = speed;
     audio.currentTime = 0;
     setIsPlaying(true);
@@ -210,7 +240,16 @@ export default function AudioDictationMode() {
     isPausedRef.current = false;
     const audio = audioRef.current;
     const ts = phraseTimestampsRef.current[phraseIndex];
-    if (!audio || !ts) return;
+    if (!audio || !ts) {
+      // Pas de MP3 : la phrase courante est lue par la voix système. Le quota
+      // d'écoutes reste compté à l'identique.
+      const phrase = phrases[phraseIndex];
+      if (!phrase) return;
+      replayCountRef.current += 1;
+      setReplayCount(replayCountRef.current);
+      playTextAudio(phrase, () => setIsPlaying(true), () => setIsPlaying(false));
+      return;
+    }
 
     const isFirstPlay = replayCountRef.current === 0;
 

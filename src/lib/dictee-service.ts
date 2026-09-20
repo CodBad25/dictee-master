@@ -820,3 +820,100 @@ export async function saveFillBlanksVariants(
     .eq("id", dicteeId);
   if (error) throw new Error(error.message);
 }
+
+// === TEXTE D'ENTRAÎNEMENT (retour de Nadia, 20/09/2026) ===
+//
+// Les modes « dictée audio » et « texte à trous » servaient le texte du jour J,
+// que l'élève finissait par connaître par cœur. Chaque dictée a donc un texte
+// d'entraînement distinct, court (≤ 25 mots, ≤ 3 phrases courtes).
+//
+// Les trous ne sont plus déduits de la liste de vocabulaire mais écrits à la
+// main dans le texte, entre guillemets français : «curieuses». Ils portent sur
+// un ACCORD (pluriel du nom ou de l'adjectif, féminin de l'adjectif, verbe,
+// participe passé) et jamais sur l'orthographe du mot seul — c'est le rôle du
+// mode « audio mot ». Le contexte qui donne l'indice (déterminant, sujet) reste
+// visible, sinon l'accord est indevinable.
+
+export interface TrainingText {
+  marked: string;                    // texte avec les trous entre «…»
+  rules?: Record<string, string>;    // réponse → règle d'accord testée (feedback élève)
+  validated: boolean;                // visible des élèves ; dévalidable par l'enseignant
+  audio_url?: string | null;         // MP3 (généré dans un second temps)
+  updated_at?: string;
+}
+
+export interface TrainingBlank {
+  answer: string;   // la forme attendue, accordée
+  rule?: string;    // ce que le trou teste, affiché dans la correction
+  position: number; // position dans le texte affiché
+}
+
+export interface ParsedTrainingText {
+  fullText: string;      // texte complet, sans marqueurs (lecture audio)
+  displayText: string;   // texte avec ______ à la place des trous
+  blanks: TrainingBlank[];
+}
+
+const BLANK_RE = /«([^»]+)»/g;
+
+// Découpe le texte marqué en texte complet + texte à trous + réponses.
+export function parseTrainingText(t: TrainingText): ParsedTrainingText {
+  const fullText = t.marked.replace(/[«»]/g, "");
+  const blanks: TrainingBlank[] = [];
+  let displayText = "";
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+
+  BLANK_RE.lastIndex = 0;
+  while ((match = BLANK_RE.exec(t.marked)) !== null) {
+    const answer = match[1];
+    displayText += t.marked.slice(cursor, match.index);
+    blanks.push({
+      answer,
+      rule: t.rules?.[answer],
+      position: displayText.length,
+    });
+    displayText += "_".repeat(Math.max(5, answer.length));
+    cursor = match.index + match[0].length;
+  }
+  displayText += t.marked.slice(cursor);
+
+  return { fullText, displayText, blanks };
+}
+
+// Contrôles mécaniques des consignes de Nadia : ≤ 25 mots, ≤ 3 phrases, au
+// moins un trou. Utilisé par l'éditeur enseignant pour signaler un dépassement.
+export function checkTrainingText(t: TrainingText): string[] {
+  const { fullText, blanks } = parseTrainingText(t);
+  const problems: string[] = [];
+  const wordCount = fullText.split(/\s+/).filter((w) => /\p{L}/u.test(w)).length;
+  const sentenceCount = fullText.split(/(?<=[.!?])\s+/).filter((p) => p.trim().length > 0).length;
+
+  if (wordCount > 25) problems.push(`${wordCount} mots (Nadia demande 25 au maximum)`);
+  if (sentenceCount > 3) problems.push(`${sentenceCount} phrases (3 au maximum)`);
+  if (blanks.length === 0) problems.push("aucun trou : entoure les mots à trouer avec « et »");
+  return problems;
+}
+
+export async function loadTrainingText(dicteeId: string): Promise<TrainingText | null> {
+  const sb = createClient();
+  const { data, error } = await sb
+    .from("dictees")
+    .select("training_text")
+    .eq("id", dicteeId)
+    .maybeSingle();
+  if (error) {
+    console.error("loadTrainingText:", error.message);
+    return null;
+  }
+  return (data?.training_text as TrainingText) || null;
+}
+
+export async function saveTrainingText(dicteeId: string, text: TrainingText): Promise<void> {
+  const sb = createClient();
+  const { error } = await sb
+    .from("dictees")
+    .update({ training_text: { ...text, updated_at: new Date().toISOString() } })
+    .eq("id", dicteeId);
+  if (error) throw new Error(error.message);
+}
