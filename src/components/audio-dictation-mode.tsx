@@ -71,6 +71,9 @@ export default function AudioDictationMode() {
   // est jouée entière, sans estimer d'instants dans un fichier unique.
   const [phraseAudios, setPhraseAudios] = useState<string[]>([]);
   const phraseAudioRef = useRef<HTMLAudioElement | null>(null);
+  // Fichiers de phrase qui n'ont pas pu être lus : on ne les retente pas et on
+  // bascule sur le découpage du fichier complet.
+  const phraseAudioEnEchec = useRef<Set<string>>(new Set());
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const phraseTimestampsRef = useRef<{ start: number; end: number }[]>([]);
@@ -265,9 +268,10 @@ export default function AudioDictationMode() {
     }
     cancelAutoReplay();
     isPausedRef.current = false;
-    // Fichier dédié à la phrase : aucun découpage, donc aucun mot rogné.
+    // Fichier dédié à la phrase : aucun découpage, donc aucun mot rogné, et
+    // c'est lui qui porte la ponctuation énoncée.
     const dedie = phraseAudios[phraseIndex];
-    if (dedie) {
+    if (dedie && !phraseAudioEnEchec.current.has(dedie)) {
       cancelAutoReplay();
       if (phraseAudioRef.current) phraseAudioRef.current.pause();
       const a = new Audio(dedie);
@@ -277,7 +281,16 @@ export default function AudioDictationMode() {
       setReplayCount(replayCountRef.current);
       a.onplay = () => setIsPlaying(true);
       a.onended = () => { setIsPlaying(false); phraseAudioRef.current = null; };
-      a.onerror = () => { setIsPlaying(false); phraseAudioRef.current = null; };
+      // Fichier absent ou illisible : on ne laisse pas la phrase muette, on
+      // retombe sur le découpage du fichier complet (ou la voix système).
+      a.onerror = () => {
+        phraseAudioRef.current = null;
+        setIsPlaying(false);
+        phraseAudioEnEchec.current.add(dedie);
+        replayCountRef.current = Math.max(0, replayCountRef.current - 1);
+        setReplayCount(replayCountRef.current);
+        playCurrentPhrase();
+      };
       a.play().catch(() => setIsPlaying(false));
       return;
     }
