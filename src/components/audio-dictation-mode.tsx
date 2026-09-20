@@ -136,9 +136,17 @@ export default function AudioDictationMode() {
         const rawStart = (cumChars / totalChars) * duration;
         cumChars += p[i].length;
         const rawEnd = (cumChars / totalChars) * duration;
-        // Marges : +0.5s au début (sauf phrase 1), -0.5s à la fin (sauf dernière phrase)
-        const start = i === 0 ? 0 : rawStart + 0.5;
-        const end = i === p.length - 1 ? rawEnd : rawEnd - 0.5;
+        // Les instants sont estimés au prorata des caractères : c'est approximatif,
+        // la vitesse de parole n'étant pas constante. Les marges doivent donc
+        // ÉLARGIR la phrase, jamais la rogner.
+        //
+        // Avant : +0.5s au début et -0.5s à la fin. Sur les dictées 6e (9 phrases,
+        // ~10s chacune) c'était invisible ; sur un texte d'entraînement (3 phrases,
+        // ~3s chacune) cela mangeait 15 % de la phrase, et le premier mot devenait
+        // inaudible — signalé par Nadia le 20/09/2026.
+        const MARGE = 0.3;
+        const start = i === 0 ? 0 : Math.max(0, rawStart - MARGE);
+        const end = i === p.length - 1 ? rawEnd : rawEnd + MARGE;
         timestamps.push({ start, end: Math.max(start + 1, end) });
       }
       phraseTimestampsRef.current = timestamps;
