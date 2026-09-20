@@ -348,7 +348,7 @@ export default function BugReportButton() {
                 <div className="mb-4 bg-gray-50 rounded-lg px-3 py-2 flex items-center gap-2 text-sm">
                   <span className="text-gray-500">Connecté :</span>
                   <span className="font-medium text-gray-800">
-                    {isTeacher ? "Enseignant" : connectedEleve?.prenom}
+                    {isTeacher ? reporterName : connectedEleve?.prenom}
                   </span>
                   {!isTeacher && connectedEleve?.classe && (
                     <span className="text-gray-400">({connectedEleve.classe})</span>
@@ -508,7 +508,7 @@ export default function BugReportButton() {
                       ) : (
                         <Send className="w-4 h-4 mr-2" />
                       )}
-                      Envoyer le signalement
+                      {isTeacher && category !== "bug" ? "Envoyer à Mohamed" : "Envoyer le signalement"}
                     </Button>
                   </>
                 )}
