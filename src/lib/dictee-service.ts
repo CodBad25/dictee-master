@@ -838,7 +838,12 @@ export interface TrainingText {
   marked: string;                    // texte avec les trous entre «…»
   rules?: Record<string, string>;    // réponse → règle d'accord testée (feedback élève)
   validated: boolean;                // visible des élèves ; dévalidable par l'enseignant
-  audio_url?: string | null;         // MP3 (généré dans un second temps)
+  audio_url?: string | null;         // MP3 du texte complet (première écoute)
+  audio_phrases?: string[];          // un MP3 par phrase : la dictée phrase par
+                                     // phrase les joue entiers, au lieu de
+                                     // découper le fichier complet en estimant
+                                     // les instants — ce qui rognait le premier
+                                     // mot (signalé par Nadia le 20/09/2026)
   updated_at?: string;
 }
 

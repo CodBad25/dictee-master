@@ -67,6 +67,10 @@ export default function AudioDictationMode() {
   const [replayCount, setReplayCount] = useState(0);
   const [startTime, setStartTime] = useState(0);
   const [dicteePosition, setDicteePosition] = useState<number | null>(null);
+  // Un MP3 par phrase (textes d'entraînement). Quand ils existent, chaque phrase
+  // est jouée entière, sans estimer d'instants dans un fichier unique.
+  const [phraseAudios, setPhraseAudios] = useState<string[]>([]);
+  const phraseAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const phraseTimestampsRef = useRef<{ start: number; end: number }[]>([]);
@@ -90,6 +94,7 @@ export default function AudioDictationMode() {
     // Le déroulé qu'elle apprécie — écoute complète puis dictée phrase par
     // phrase — est identique, seul le texte change.
     const training = data?.training_text as TrainingText | null;
+    setPhraseAudios(training?.audio_phrases ?? []);
     const useTraining = !!(training?.validated && training.marked);
     const text = useTraining
       ? parseTrainingText(training!).fullText
@@ -171,6 +176,10 @@ export default function AudioDictationMode() {
     return () => {
       cancelAutoReplay();
       stopAudio();
+      if (phraseAudioRef.current) {
+        phraseAudioRef.current.pause();
+        phraseAudioRef.current = null;
+      }
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -196,12 +205,21 @@ export default function AudioDictationMode() {
   const isPausedRef = useRef(false);
 
   const pauseAudio = () => {
+    phraseAudioRef.current?.pause();
     audioRef.current?.pause();
     isPausedRef.current = true;
     setIsPlaying(false);
   };
 
   const resumeAudio = () => {
+    // Fichier dédié à la phrase : reprise simple, il n'y a pas d'instant de fin
+    // à surveiller puisque le fichier ne contient que cette phrase.
+    if (phraseAudioRef.current) {
+      isPausedRef.current = false;
+      setIsPlaying(true);
+      phraseAudioRef.current.play().catch(() => setIsPlaying(false));
+      return;
+    }
     const audio = audioRef.current;
     const ts = phraseTimestampsRef.current[phraseIndex];
     if (!audio || !ts) return;
@@ -220,6 +238,7 @@ export default function AudioDictationMode() {
 
   // Passer en mode dictation phrase par phrase
   const startDictation = () => {
+    phraseAudioRef.current?.pause();
     audioRef.current?.pause();
     setIsPlaying(false);
     setPhraseIndex(0);
@@ -246,6 +265,23 @@ export default function AudioDictationMode() {
     }
     cancelAutoReplay();
     isPausedRef.current = false;
+    // Fichier dédié à la phrase : aucun découpage, donc aucun mot rogné.
+    const dedie = phraseAudios[phraseIndex];
+    if (dedie) {
+      cancelAutoReplay();
+      if (phraseAudioRef.current) phraseAudioRef.current.pause();
+      const a = new Audio(dedie);
+      phraseAudioRef.current = a;
+      a.playbackRate = speed;
+      replayCountRef.current += 1;
+      setReplayCount(replayCountRef.current);
+      a.onplay = () => setIsPlaying(true);
+      a.onended = () => { setIsPlaying(false); phraseAudioRef.current = null; };
+      a.onerror = () => { setIsPlaying(false); phraseAudioRef.current = null; };
+      a.play().catch(() => setIsPlaying(false));
+      return;
+    }
+
     const audio = audioRef.current;
     const ts = phraseTimestampsRef.current[phraseIndex];
     if (!audio || !ts) {

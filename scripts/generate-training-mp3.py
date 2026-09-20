@@ -110,6 +110,12 @@ def texte_lu(marked: str) -> str:
     return marked.replace("«", "").replace("»", "").strip()
 
 
+def decouper_phrases(texte: str) -> list:
+    """Découpage identique à splitIntoPhrases() côté client (audio-dictation-mode).
+    Toute divergence décalerait les fichiers par rapport aux phrases affichées."""
+    return [p for p in re.split(r"(?<=[.!?])\s+", texte) if p.strip()]
+
+
 cible = sys.argv[1] if len(sys.argv) > 1 else None
 filtre = f"&id=eq.{cible}" if cible else ""
 dictees = supabase_get(f"dictees?select=id,title,training_text{filtre}&order=position")
@@ -131,10 +137,32 @@ for d in avec_texte:
         print(f"  {nom} : OK ({dest.stat().st_size // 1024} Ko)")
         time.sleep(1)
 
-    # Renseigner audio_url sans écraser le reste du JSON (texte, règles, validation)
-    if d["training_text"].get("audio_url") != url_publique:
-        nouveau = {**d["training_text"], "audio_url": url_publique}
+    # Un MP3 PAR PHRASE en plus du fichier complet.
+    #
+    # La dictée phrase par phrase découpait le MP3 complet en estimant les
+    # instants au prorata des caractères — approximatif, et le premier mot de
+    # chaque phrase se retrouvait coupé (signalé par Nadia le 20/09/2026).
+    # Un fichier par phrase supprime tout calcul : chaque phrase est jouée du
+    # début à la fin. Le fichier complet reste utilisé pour la première écoute.
+    phrases = decouper_phrases(texte_lu(d["training_text"]["marked"]))
+    urls_phrases = []
+    for n, phrase in enumerate(phrases, start=1):
+        nom_p = f"{d['id'].replace('-', '_')}_entrainement_p{n}.mp3"
+        dest_p = AUDIO_DIR / nom_p
+        if dest_p.exists() and dest_p.stat().st_size > 10_000:
+            print(f"  {nom_p} : déjà présent, ignoré")
+        else:
+            print(f"  {nom_p} : génération ({len(phrase)} caractères)…")
+            tts(phrase, dest_p)
+            print(f"  {nom_p} : OK ({dest_p.stat().st_size // 1024} Ko)")
+            time.sleep(1)
+        urls_phrases.append(f"/audio/dictees/{nom_p}")
+
+    # Renseigner audio_url et audio_phrases sans écraser le reste du JSON
+    actuel = d["training_text"]
+    if actuel.get("audio_url") != url_publique or actuel.get("audio_phrases") != urls_phrases:
+        nouveau = {**actuel, "audio_url": url_publique, "audio_phrases": urls_phrases}
         supabase_patch(f"dictees?id=eq.{d['id']}", {"training_text": nouveau})
-        print(f"  {d['id']} : audio_url → {url_publique}")
+        print(f"  {d['id']} : audio_url + {len(urls_phrases)} phrases enregistrées")
 
 print("Terminé.")
