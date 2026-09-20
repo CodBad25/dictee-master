@@ -508,7 +508,7 @@ export default function BugReportButton() {
                       ) : (
                         <Send className="w-4 h-4 mr-2" />
                       )}
-                      {isTeacher && category !== "bug" ? "Envoyer à Mohamed" : "Envoyer le signalement"}
+                      {isTeacher && category !== "bug" ? "Envoyer à Badri" : "Envoyer le signalement"}
                     </Button>
                   </>
                 )}
