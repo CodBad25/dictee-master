@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 // POST — Créer un signalement
 export async function POST(request: Request) {
   const body = await request.json();
-  const { description, screenshot, pageUrl, userAgent, reporterName, reporterType } = body;
+  const { description, screenshot, pageUrl, userAgent, reporterName, reporterType, category } = body;
 
   if (!description || description.length < 1) {
     return NextResponse.json({ error: "Description requise" }, { status: 400 });
@@ -21,6 +21,9 @@ export async function POST(request: Request) {
     user_agent: userAgent?.slice(0, 500) || null,
     reporter_name: reporterName?.slice(0, 100) || null,
     reporter_type: reporterType === "teacher" ? "teacher" : "student",
+    // Les élèves signalent toujours un problème ; seuls les enseignants
+    // choisissent entre avis, suggestion et bug.
+    category: ["bug", "suggestion", "avis"].includes(category) ? category : "bug",
     status: "new",
   });
 

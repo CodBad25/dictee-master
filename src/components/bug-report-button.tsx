@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Bug, Camera, Send, X, Loader2, CheckCircle2,
-  Clock, MessageSquare, Upload, CropIcon,
+  Clock, MessageSquare, Upload, CropIcon, MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/lib/store";
@@ -28,18 +28,33 @@ interface BugReport {
   resolved_at: string | null;
 }
 
+// Catégories proposées aux enseignants. Les élèves envoient toujours un « bug » :
+// Nadia passait par WhatsApp parce que le bouton ne parlait que de bugs, alors
+// qu'elle voulait donner un avis pédagogique et proposer des idées.
+type Category = "bug" | "suggestion" | "avis";
+
+const CATEGORIES: { id: Category; icon: string; label: string; hint: string; placeholder: string }[] = [
+  { id: "avis",       icon: "💬", label: "Mon avis",   hint: "ce que tu penses d'un exercice",
+    placeholder: "Ex : l'exercice de tri est très réussi, mais les étiquettes sont un peu petites…" },
+  { id: "suggestion", icon: "💡", label: "Une idée",   hint: "une amélioration à proposer",
+    placeholder: "Ex : il faudrait pouvoir choisir les dictées qui comptent pour la note…" },
+  { id: "bug",        icon: "🐞", label: "Un problème", hint: "quelque chose ne marche pas",
+    placeholder: "Ex : quand je clique sur Vérifier, rien ne se passe…" },
+];
+
 // Extraire le contexte depuis le DOM (titre de la page, dictée en cours, etc.)
-function detectContext(): string {
+function detectContext(dicteeTitle?: string | null): string {
   const pathname = window.location.pathname;
+  const dictee = dicteeTitle ? ` · ${dicteeTitle}` : "";
   if (pathname === "/") return "[Accueil]";
-  if (pathname.startsWith("/teacher")) return "[Espace enseignant]";
+  if (pathname.startsWith("/teacher")) return `[Espace enseignant${dictee}]`;
 
   // Page élève : lire le titre visible dans le DOM
   const heading = document.querySelector("h1, h2");
   if (heading?.textContent) {
-    return `[${heading.textContent.trim().slice(0, 60)}]`;
+    return `[${heading.textContent.trim().slice(0, 60)}${dictee}]`;
   }
-  return "[Espace élève]";
+  return `[Espace élève${dictee}]`;
 }
 
 // Appliquer le crop sur l'image via canvas
@@ -71,6 +86,7 @@ export default function BugReportButton() {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"new" | "history">("new");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState<Category>("avis");
   const [rawScreenshot, setRawScreenshot] = useState<string | null>(null);
   const [croppedScreenshot, setCroppedScreenshot] = useState<string | null>(null);
   const [crop, setCrop] = useState<Crop>();
@@ -85,12 +101,14 @@ export default function BugReportButton() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cropImageRef = useRef<HTMLImageElement>(null);
 
-  const { connectedEleve, user } = useAppStore();
+  const { connectedEleve, user, currentList } = useAppStore();
 
-  // Déterminer le type et le nom du reporter
+  // Déterminer le type et le nom du reporter. Le nom du prof vient du Hub :
+  // avant, tous les enseignants étaient enregistrés comme « Enseignant », donc
+  // on ne savait pas qui avait écrit et ils partageaient le même historique.
   const isTeacher = user?.role === "teacher";
   const reporterName = isTeacher
-    ? "Enseignant"
+    ? (user?.name?.trim() || "Enseignant")
     : connectedEleve
       ? `${connectedEleve.prenom} (${connectedEleve.classe || "?"})`
       : null;
@@ -215,7 +233,7 @@ export default function BugReportButton() {
     if (!description.trim() || !reporterName) return;
     setSubmitting(true);
 
-    const context = detectContext();
+    const context = detectContext(currentList?.title);
     const fullDescription = context ? `${context}\n${description.trim()}` : description.trim();
 
     try {
@@ -229,6 +247,7 @@ export default function BugReportButton() {
           userAgent: navigator.userAgent,
           reporterName,
           reporterType,
+          category: isTeacher ? category : "bug",
         }),
       });
 
@@ -267,13 +286,26 @@ export default function BugReportButton() {
   return (
     <>
       {/* Bouton flottant */}
+      {/* Côté enseignant, le bouton invite à donner un avis : discret et
+          intitulé « bug », il poussait les collègues à passer par WhatsApp. */}
       <button
         id="bug-report-fab"
         onClick={handleOpen}
-        className="fixed bottom-4 right-16 z-50 w-9 h-9 rounded-full bg-red-400 hover:bg-red-500 text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center active:scale-95 opacity-60 hover:opacity-100"
-        title="Signaler un problème"
+        className={`fixed bottom-4 right-16 z-50 rounded-full text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center active:scale-95 ${
+          isTeacher
+            ? "px-4 h-10 gap-2 bg-violet-500 hover:bg-violet-600 text-sm font-semibold"
+            : "w-9 h-9 bg-red-400 hover:bg-red-500 opacity-60 hover:opacity-100"
+        }`}
+        title={isTeacher ? "Donner mon avis, proposer une idée, signaler un problème" : "Signaler un problème"}
       >
-        <Bug className="w-4 h-4" />
+        {isTeacher ? (
+          <>
+            <MessageCircle className="w-4 h-4" />
+            Mon avis
+          </>
+        ) : (
+          <Bug className="w-4 h-4" />
+        )}
         {hasNews && (
           <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[8px] font-bold border-2 border-white">!</span>
         )}
@@ -303,7 +335,9 @@ export default function BugReportButton() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Bug className="w-5 h-5 text-red-500" />
-                    <h2 className="text-lg font-bold text-gray-800">Signaler un problème</h2>
+                    <h2 className="text-lg font-bold text-gray-800">
+                      {isTeacher ? "Vos retours" : "Signaler un problème"}
+                    </h2>
                   </div>
                   <button onClick={() => setOpen(false)} className="p-1 rounded-full hover:bg-gray-100">
                     <X className="w-5 h-5" />
@@ -348,13 +382,49 @@ export default function BugReportButton() {
                 {tab === "new" && (
                   <>
                     <div className="mb-3">
+                      {/* Enseignants : choix du type de message en chips
+                          (jamais de <select> — convention UI du projet). */}
+                      {isTeacher && (
+                        <div className="mb-3">
+                          <label className="text-sm font-medium text-gray-600 mb-1.5 block">
+                            De quoi s&apos;agit-il ?
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {CATEGORIES.map((c) => (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => setCategory(c.id)}
+                                className={`px-3 py-1.5 rounded-xl border-2 text-sm font-semibold transition-all ${
+                                  category === c.id
+                                    ? "bg-violet-600 border-violet-700 text-white shadow"
+                                    : "bg-white border-gray-300 text-gray-700 hover:border-violet-400 hover:bg-violet-50"
+                                }`}
+                                title={c.hint}
+                              >
+                                {c.icon} {c.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <label className="text-sm font-medium text-gray-600 mb-1 block">
-                        Décris le problème *
+                        {isTeacher
+                          ? `${CATEGORIES.find((c) => c.id === category)!.label} *`
+                          : "Décris le problème *"}
                       </label>
+                      {isTeacher && currentList?.title && (
+                        <p className="text-xs text-gray-400 mb-1.5">
+                          Message rattaché à <strong>{currentList.title}</strong> — inutile de préciser de quelle dictée il s&apos;agit.
+                        </p>
+                      )}
                       <textarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Ex : Quand je clique sur Vérifier, rien ne se passe..."
+                        placeholder={isTeacher
+                          ? CATEGORIES.find((c) => c.id === category)!.placeholder
+                          : "Ex : Quand je clique sur Vérifier, rien ne se passe..."}
                         rows={3}
                         className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-300 focus:border-red-400 outline-none resize-none"
                       />

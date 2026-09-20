@@ -17,6 +17,7 @@ interface BugReport {
   user_agent: string | null;
   reporter_name: string | null;
   reporter_type: string;
+  category?: string;
   status: string;
   admin_note: string | null;
   created_at: string;
@@ -175,6 +176,17 @@ export default function AdminBugs({ open, onClose }: AdminBugsProps) {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
+                        {report.category && report.category !== "bug" && (
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md border ${
+                              report.category === "avis"
+                                ? "bg-violet-50 border-violet-300 text-violet-700"
+                                : "bg-amber-50 border-amber-300 text-amber-700"
+                            }`}
+                          >
+                            {report.category === "avis" ? "💬 Avis" : "💡 Idée"}
+                          </span>
+                        )}
                         <span className="text-xs font-medium text-gray-500">
                           {report.reporter_name || "Anonyme"}
                         </span>
