@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Shield, Eye, EyeOff, Loader2, Bug, X, CheckCircle2,
   MessageSquare, Trash2, ChevronDown, ChevronUp, Users,
-  BookOpen, BarChart3, GraduationCap, LogOut, RefreshCw,
+  BookOpen, BarChart3, GraduationCap, LogOut, RefreshCw, MessageCircleQuestion,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { getClasses, getEleves, type HubClasse, type HubEleve } from "@/lib/hub";
 import { toast } from "sonner";
+import AdminQuestions from "@/components/admin-questions";
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface BugReport {
@@ -116,7 +117,7 @@ function AdminLogin({ onLogin }: { onLogin: (pwd: string) => void }) {
 // ─── Page Admin ──────────────────────────────────────────────────────
 export default function AdminPage() {
   const [adminPwd, setAdminPwd] = useState<string | null>(null);
-  const [tab, setTab] = useState<"stats" | "bugs" | "classes" | "dictees">("stats");
+  const [tab, setTab] = useState<"stats" | "bugs" | "questions" | "classes" | "dictees">("stats");
 
   // Vérifier une session admin existante
   useEffect(() => {
@@ -134,6 +135,7 @@ export default function AdminPage() {
   const tabs = [
     { id: "stats" as const, label: "Vue d'ensemble", icon: BarChart3 },
     { id: "bugs" as const, label: "Signalements", icon: Bug },
+    { id: "questions" as const, label: "Questions aux profs", icon: MessageCircleQuestion },
     { id: "classes" as const, label: "Classes", icon: Users },
     { id: "dictees" as const, label: "Dictées", icon: BookOpen },
   ];
@@ -173,6 +175,7 @@ export default function AdminPage() {
       <main className="p-4 max-w-6xl mx-auto">
         {tab === "stats" && <StatsTab adminPwd={adminPwd} />}
         {tab === "bugs" && <BugsTab adminPwd={adminPwd} />}
+        {tab === "questions" && <AdminQuestions adminPwd={adminPwd} />}
         {tab === "classes" && <ClassesTab />}
         {tab === "dictees" && <DicteesTab />}
       </main>
