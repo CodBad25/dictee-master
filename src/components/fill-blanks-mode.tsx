@@ -26,6 +26,29 @@ import { playWordAudio, playTextAudio, stopAudio } from "@/lib/audio";
 
 type Phase = "setup" | "dictation" | "result";
 
+// Égalité « de professeur » entre la réponse attendue et ce que l'élève a tapé.
+//
+// Les accents restent exigés : c'est l'orthographe que le texte à trous évalue.
+// En revanche ce qui relève du clavier et non de l'orthographe est neutralisé :
+// l'apostrophe typographique ’ que mettent iOS et Word face à l'apostrophe
+// droite des textes en base (7 réponses des 5e commencent par « s' »), la
+// ligature œ qu'aucun élève ne sait taper, et la casse.
+// Signalement de Nadia du 21/09/2026, même famille que le « sœurs / soeurs » de
+// la dictée audio.
+function normaliseSaisie(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u02bc]/g, "'")
+    .replace(/\u0153/g, "oe")
+    .replace(/\u00e6/g, "ae")
+    .replace(/\s+/g, " ");
+}
+
+function memeMot(saisi: string, attendu: string): boolean {
+  return normaliseSaisie(saisi) === normaliseSaisie(attendu);
+}
+
 export default function FillBlanksMode() {
   const {
     currentList,
@@ -297,7 +320,7 @@ export default function FillBlanksMode() {
       return {
         word: blank.word,
         userAnswer: userAnswers[index] || "",
-        isCorrect: userAnswer.toLowerCase() === correctAnswer.toLowerCase(), // casse ignorée, accents conservés (orthographe exigée)
+        isCorrect: memeMot(userAnswer, correctAnswer), // casse et clavier ignorés, accents conservés (orthographe exigée)
       };
     });
 
@@ -375,7 +398,7 @@ export default function FillBlanksMode() {
       return {
         word: blank.word,
         userAnswer: userAnswers[index] || "",
-        isCorrect: userAnswer.toLowerCase() === correctAnswer.toLowerCase(), // casse ignorée, accents conservés (orthographe exigée)
+        isCorrect: memeMot(userAnswer, correctAnswer), // casse et clavier ignorés, accents conservés (orthographe exigée)
       };
     });
 
@@ -621,7 +644,9 @@ export default function FillBlanksMode() {
       // Feedback live au blur OU à la validation finale
       const isChecked = checkedAnswers[index] || showResults;
       const userValue = (userAnswers[index] || "").trim();
-      const isCorrect = isChecked && userValue === blank.word;
+      // Même règle que le score final : le feedback live marquait faux une simple
+      // majuscule, puis le score la comptait juste.
+      const isCorrect = isChecked && memeMot(userValue, blank.word);
       const isWrong = isChecked && !isCorrect;
 
       parts.push(

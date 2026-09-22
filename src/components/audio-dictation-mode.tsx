@@ -25,13 +25,40 @@ interface PhraseResult {
   totalWords: number;
 }
 
+// Comparaison « comme un professeur » : ce qui ne s'entend pas ne se compte pas.
+//
+// Signalement de Nadia (21/09/2026) : « Les deux sœurs sont curieuses. » comptée
+// fausse alors qu'elle avait écrit exactement la phrase. Elle avait tapé
+// « soeurs » — impossible de faire autrement sur un clavier de collège — et la
+// ligature œ n'est PAS décomposée par normalize("NFD"), contrairement aux
+// accents. Le mot était donc systématiquement faux pour tout le monde.
+// Même logique pour l'apostrophe typographique ’ (celle d'iOS et de Word) face
+// à l'apostrophe droite des textes en base : « s'aventurent » est dans presque
+// tous les textes d'entraînement des 5e.
 function normalizeText(text: string): string {
-  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[.,;:!?'"()]/g, "").trim();
+  return text
+    .toLowerCase()
+    .replace(/[\u2018\u2019\u02bc]/g, "'")   // apostrophes typographiques
+    .replace(/[\u201c\u201d\u00ab\u00bb]/g, '"') // guillemets
+    .replace(/\u0153/g, "oe")                 // œ
+    .replace(/\u00e6/g, "ae")                 // æ
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.,;:!?'"()]/g, "")
+    .trim();
+}
+
+// Un signe de ponctuation isolé (« : » entouré d'espaces) est un mot pour
+// split(/\s+/), mais pas pour un élève : la phrase « Elles observent la vitrine :
+// leurs regards… » était notée sur 12 mots au lieu de 11. On ne le compte donc
+// ni dans le total, ni comme une faute.
+function isWord(token: string): boolean {
+  return normalizeText(token).length > 0;
 }
 
 function comparePhrase(original: string, userAnswer: string): PhraseResult {
-  const origWords = original.split(/\s+/).filter(w => w.length > 0);
-  const userWords = userAnswer.split(/\s+/).filter(w => w.length > 0);
+  const origWords = original.split(/\s+/).filter(isWord);
+  const userWords = userAnswer.split(/\s+/).filter(isWord);
   let correct = 0;
   for (let i = 0; i < Math.min(origWords.length, userWords.length); i++) {
     if (normalizeText(origWords[i]) === normalizeText(userWords[i])) correct++;
